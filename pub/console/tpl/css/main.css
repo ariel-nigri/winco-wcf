@@ -1,0 +1,165 @@
+html,body {
+	height: 100%;
+}
+
+iframe {
+	width: 100%;
+}
+
+#env {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	min-width: 530px;
+}
+
+#nav {
+	height: 53px;
+	background: url(../imgs/topo_degrade.png) repeat-x;
+}
+
+#item_actions {
+	float: right;
+	margin-top: 15px;
+	margin-right: 5px;
+}
+
+#item_del, #item_new, #item_properties {
+	float: left;
+	display: block;
+	height: 24px;
+	width: 39px;
+	cursor: default;
+}
+
+#item_new {
+	background: url(../css/img/mais.png);
+}
+
+#item_del {
+	background: url(../css/img/menos.png);
+}
+
+#item_properties {
+	background: url(../css/img/propriedades.png);
+}
+
+#center {
+	width: 100%;
+}
+
+#tree {
+	width: 195px;
+	background: #d9dee5;
+}
+
+#tree_div, #tree_iframe, #main_iframe {
+	height: 510px; /* this is the initial size.. */
+}
+
+#hresize {
+	width: 3px;
+	background-color: #f4f4f4;
+	border-right: solid 1px #ececec;
+	cursor: col-resize;
+}
+
+#vresize {
+	border-top: solid 1px #888;
+	background: url(../imgs/topo_degrade.png);
+	height: 4px;
+	cursor: row-resize;
+}
+
+*
+#center {
+	border-collapse:collapse;
+}
+
+/*---------menu------------------------*/
+#topMenu {
+	float:right;
+	margin-top:14px;
+	position: absolute;
+	right: 20px;
+	top: 0px;
+}
+#topMenu a {
+	padding:6px 15px 7px 5px;
+	font-size:14px;
+	color:#141414;
+	display:block;
+	margin-right:10px;
+	position:relative;
+	float:left;
+	text-decoration:none;
+}
+#topMenu a:hover {
+	text-decoration:none;
+}
+.ddMenu {
+	margin-right:10px;
+	position:relative;
+	float:left;
+}
+.ddMenu .ddButon {
+	padding:6px 15px 6px 5px;
+	margin:0px;
+	height:16px;
+	overflow:visible;
+	position:relative;
+	border: 1px solid transparent;
+	border-bottom:0px;
+	z-index:1;
+	font-size:14px;
+	color:#141414;
+	cursor:pointer;
+
+}
+.ddMenu .DropDownBox {
+	z-index:2;
+	overflow:visible;
+	text-align:right;
+	position:absolute;
+	border:0px;
+	top:28px;
+	left:0;
+	display:block;
+	margin:0px;
+	background-color:#fafafa;
+	visibility:hidden;
+	white-space: nowrap;
+	border: 1px solid #cfd1d2;
+	overflow-x:hidden;
+	width:167px;
+}
+.ddMenu .ddbContent {
+	z-index:1;
+	margin-top:10px;
+	overflow:visible;
+	text-align:left;
+	position:relative;
+	margin-bottom:3px;
+	width:100%;
+}
+#topMenu .ddMenu .ddbContent  a {
+	font-size:12px;
+	width:100%;
+	color:#585858;
+	text-decoration:none;
+	display:block;
+}
+.ddMenu .ddbContent  a:hover {
+	background-color:#dde0e4;
+}
+.ddMenu:hover  .DropDownBox {
+	z-index:2;
+	visibility:visible;
+}
+.ddMenu:hover  .ddButon {
+	color:#141414;
+	border: 1px solid #cfd1d2;
+	background-color:#fafafa;
+	border-bottom:0px;
+	z-index:10;
+}

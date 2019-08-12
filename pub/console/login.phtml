@@ -1,0 +1,75 @@
+<?php require "login.php"; ?>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+	<meta charset="UTF-8" />
+	<title>Console de Gerenciamento</title>
+	<link rel="shortcut icon" href="tpl/imgs/favicon.ico" />
+	<link rel="icon" href="tpl/imgs/favicon.ico" />
+	<style>
+		*{margin:0; padding:0;}
+		.clear{clear:both;}
+		p{font:12px verdana, geneva, sans-serif;}
+
+		#barra-superior{background: url('tpl/imgs/login-bg.png') repeat-x; height:123px; width:100%;}
+			.barra-logo{width:auto;}
+
+		#meio-conteudo{width:880px; margin:8% auto;}
+			.left-content{width:552px; height:250px; float:left;}
+				.left-content ul{list-style-type:none;}
+					.left-content ul li{float:left;}			
+			.descricao p{font:18px 'Open Sans', arial, sans-serif; color:#428BD1; text-align:center;}
+			.right-content{background:url('tpl/imgs/box-login.png') no-repeat; width:328px; height:220px; float:right; margin-top:22px;}
+				.right-content form{position:relative;}
+				.tlogin {font:20px verdana, geneva, sans-serif; color:#585858; margin:16px 20px 10px 23px;}
+				.tlogin-cpanel{padding-top:15px;}
+				html.ie7 .tlogin-cpanel{padding-top:0;}
+				html.ie8 .tlogin-cpanel{padding-top:15px	;}
+					.tableLogin{font:12px verdana, geneva, sans-serif; color:#585858; margin-left:20px;}
+						.tableLogin  tr td input{width:224px; height:28px; line-height:28px;}
+				.checkbox{float:left; position:absolute; left:26px; top:113px;}
+					.checkbox input{margin-right:5px;}
+					.checkbox span{font:12px verdana, geneva, sans-serif; color:#585858;}				
+				.btn-submit{position:absolute; left:225px; top:105px; width:70px; height:32px; }		
+				.btn-submit input{width:70px; height:32px;}
+				.loginError {margin-left:68px!important; font: 10px verdana; color: red;}	
+			
+		#barra-inferior{position:absolute; bottom:0; width:100%; height:44px; background-color:#e9e9e9;}	
+			small p{font:11px verdana, geneva, sans-serif; color:#585858; text-align:center; line-height:44px;}
+	</style>
+</head>
+<body onload="document.form_login.username.focus();">
+	<div id="barra-superior">
+		<div class="barra-logo" style="padding-top: 25px;">
+			<center>
+				<table><tr><td><img src="tpl/imgs/logo-console_ext.png"></td><td style="color: white; font-size: 25px; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif; padding-left: 10px;">WINCO CLOUD MANAGEMENT</td></tr></table>
+			</center>
+		</div>
+	</div>
+	<div id="meio-conteudo">
+		<div class="right-content" style="margin:8% auto; float:none;">	
+			<div class="loginDiv">
+				<p class="tlogin" style="padding-top: 10px;">Login</p>
+				<form name="form_login" method="post" action="login.phtml<?= (isset($_GET['report'])) ? "?report" : "" ?>">	
+					<table class="tableOut">		
+						<tr>
+							<td>
+								<table class="tableLogin">						
+									<tr height="33"><td style="padding-right: 5px;"><?= LOGIN_MSG_LOGIN ?></td><td><input type="text" id="username" name="username" value="<?=htmlspecialchars($username);?>"></td></tr>	
+									<tr height="33"><td><?= LOGIN_MSG_PASSWORD ?></td><td><input type="password" id="pass" name="pass"></td></tr>						
+								</table>	
+							</td>
+						</tr>
+					</table>
+					<div class="checkbox"><div style="width:20px; float:left; margin-top:1px;"><input type="checkbox" name="continue_connected" /></div><span><?= LOGIN_MSG_CONTINUE_CONNECTED ?></span></div>
+					<div class="btn-submit"><input type="submit" name="submit" value="<?= LOGIN_MSG_BUTTON ?>" class="button" /></div>
+					<? if (!empty($erromsg)): ?>
+						<p class="loginError" style="margin-left: 10px;"> <?= $erromsg ?><br /><br /></p>
+					<? endif; ?>		
+				</form>
+			</div>
+		</div>
+	</div>
+	<div id="barra-inferior"><small><p>Winco Tecnologia & Sistemas. Todos os direitos reservados</p></small></div>
+</body>
+</html>

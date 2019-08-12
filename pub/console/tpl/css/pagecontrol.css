@@ -1,0 +1,80 @@
+.pagecontrol ul{
+	padding: 0;
+	margin: 0;
+	display: block;
+	height: 30px;	
+	border-bottom: 2px solid #f8a860;
+}
+
+.pagecontrol ul li{
+	padding: 9px 0 0 2px;
+	_padding: 7px 0 0 6px;
+	float: left;
+	_float: left;
+	height: 10px;
+	list-style-type: none;
+}
+
+.pagecontrol div.pad {
+	height: 25px;
+}
+
+.pagecontrol ul li a{	
+	font-size: 14px;
+	color: rgba(0,0,0,.5);
+	border-style: solid;
+	border-color: #cacaca;
+	border-width: 1px 1px 0 1px;
+	/*background:url(../imgs/fundos/degrade-aba-servicos.png);	*/
+	background: #fafafa;
+	text-decoration:none;
+	padding: 5px 20px 5px 20px;
+	-webkit-transition: all .2s ease-in-out;
+    -moz-transition: all .2s ease-in-out;
+    -o-transition: all .2s ease-in-out;
+    -ms-transition: all .2s ease-in-out;
+    transition: all .2s ease-in-out;
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+	cursor: pointer;
+}
+
+.pagecontrol ul li a:hover{	color: rgba(0,0,0,.7);}
+
+.pagecontrol ul li.padding {
+	background: transparent;
+	width: 100%;
+}
+
+.pagecontrol ul li.active a{
+	font-size: 14px;
+	color: rgba(255,255,255,1);
+	/*background:url(../imgs/fundos/degrade-aba-servicos_selecionada.png);*/
+	background: #f8a860;
+	padding: 5px 20px 5px 20px;
+}
+
+hr{
+	background-color: #f8e0cb; 
+	height: 1px; 
+	border: 0
+}
+
+.pagecontrol div.page {
+	border-style: solid;
+	border-color: #f8e0cb;
+	border-width: 0 0 1px 0;
+	padding: 10px;
+	height: 100%;
+	width: auto;	
+	background-color: #fff;
+}
+
+.pagecontrol div.pageCpanel {
+	border-style: solid;
+	border-color: #b8b8b8;
+	border-width: 2px 0 0 0;
+	padding: 10px;
+	height: 100%;
+	width: auto;	
+	background-color: #fff;
+}

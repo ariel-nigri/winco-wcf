@@ -1,0 +1,70 @@
+<? require "accounts.php"; ?>
+<html>
+<head>
+	<title>Administradores</title>
+	<link rel="shortcut icon" href="tpl/imgs/favicon.ico" />
+	<link rel="icon" href="tpl/imgs/favicon.ico" />	
+	<style>
+		table {	
+			border-collapse: separate;
+			border-spacing: 1px;
+			border-color: #f0f3f4;
+			font: 12px arial, sans-serif;
+			color: #585858;
+			height: 30px;
+			width: 80%;
+		}
+		tr td {
+			border: 1px solid #f0f3f4;
+			border-color: #f0f3f4;
+			color: #585858;
+			height: 30px;
+			padding-left: 10px;
+		}
+		th {
+			border-collapse: separate;
+			border-spacing: 1px;
+			border-color: #f0f3f4;
+			background-color: #e8e8e8!important;
+			font: 16px arial, sans-serif;
+			height: 50px;
+		}
+		h3 {
+			font-size: 23px;
+			font-weight: normal;
+			color: #6f7a8a;
+			font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+		}		
+	</style>
+</head>
+<body>	
+	<center><h3>Lista de Administradores</h3></center></br>	
+	<div id="sel_panel">		
+		<center>			
+			<table class="result">
+				<tbody>		
+					<tr>
+						<th>Nome</th>
+						<th>Login (e-mail)</th>
+						<th>Permissões</th>
+						<th>Idioma</th>													
+					</tr>
+					<? foreach ($result as $admin): ?>
+						<tr>
+							<td>
+								<?= $admin[0]  ?>
+								<?php if ($admin[4] > 0) : ?>
+									<strong>(Master)</strong>
+								<?php endif; ?>
+							</td>
+							<td><?= $admin[1] ?></td>
+							<td><?= $admin[2] ?></td>
+							<td><?= $admin[3]  ?></td>													
+						</tr>
+					<? endforeach; ?>
+				</tbody>
+			</table>
+		</center>			
+	</div>
+</body>
+</html>

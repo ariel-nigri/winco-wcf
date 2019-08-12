@@ -1,0 +1,27 @@
+#!/usr/bin/php
+<?php
+
+require_once dirname(__DIR__)."/common/wcf.php";
+
+if ($argc < 2) {
+	echo "ERROR: use {$argv['0']} inst_id [pname]\n";
+	exit(1);
+}
+
+$instances = new $instance_classname;
+$instances->inst_seq = $argv[1];
+$instances->inst_active = true;
+
+if (!$instances->select(getDbConn()))
+	die("Instance not found\n");
+
+if (!empty($argv[2])) {
+    echo $instances->{$argv[2]};
+}
+else {
+    foreach ($instances->columns as $col) {
+        $k = $col['OBJ'];
+        $v = addslashes($instances->{$k});
+        echo $k = "{$k}='{$v}'\n";
+    }
+}

@@ -1,0 +1,161 @@
+<?php
+
+/* This file receives communication from the sales backend to activate/upgrade a vpn instance.
+
+Parameters:
+
+access_token: Mandatory, it is a pre-shared key between the sales backend and this site. The key will be in the config directory
+oper:
+
+user_data = 
+    instname
+    instlang
+    name (opcional)
+    email (opcional)
+
+NEWLICENSE
+    - CAPS
+    - inst_seq  OR - user data
+    - period
+    Returns:
+        => rcode
+        => licence with caps, inst_seq and period (days).
+DEACTIVATE
+    - inst_seq
+    returns:
+        => rcode.
+EXTEND
+    - inst_seq
+    - period(months)
+    Returns:
+        => rcode
+        => license with caps, inst_seq and period.
+CHANGECAPS
+    - inst_seq
+    - caps
+    RETURNS:
+        => rcode
+        => license with caps, inst_seq and period.
+ACTIVATE
+
+QUERY
+    - usu_email
+    -
+
+Return em JSON
+
+{
+  "success": (bool),
+  "message": (string),
+  "license", (string)
+}
+
+License: VPND-[INSTID]-[CAPS]-[EXPIRATION]
+
+CAPS: USERS=5
+EXPIRATION: YYYYMMDD
+
+VALID CAPS:
+    USERS=<nusers>
+    TRIAL=Y
+    *caps are separated by commas.
+    
+*/
+$common_dir = dirname(dirname(__DIR__)).'/common';
+require "{$common_dir}/wcf.php";
+require "{$common_dir}/wcf_config.php";
+
+// Read params from request
+$params = ['oper', 'inst_lic', 'inst_caps', 'inst_name', 'usu_email', 'usu_name', 'lic_period', 'password'];
+foreach ($params as $p)
+    ${$p} = @$_REQUEST[$p];
+
+if ($_POST['access_token'] != $vpnd_access_token) {
+    header('HTTP/1.1 403 Forbidden');
+    die('ACCESS DENIED');
+}
+
+
+$result = (object) [ 'success' => false, 'message' => '', 'license' => '', 'info' => '' ];
+
+$inst_id = null;
+
+if (!empty($inst_lic)) {
+    $prd = strtok($inst_lic, '-');
+    $inst_id = strtok('-');
+    if ($prd != 'VPND' || empty($inst_id)) {
+        $result->message = "this operation requires inst_lic";
+        die (json_encode($result));
+    }
+}
+
+
+switch ($oper) {
+case 'NEWLICENSE':
+    if (empty($inst_caps) || empty($lic_period) || (!$inst_lic && !$usu_email)) {
+        $result->message = 'Missing license, email, caps or period';
+        break;
+    }
+
+    $inst_expiration = date('Ymd', time() + round($lic_period * 86400));
+    $result->success = wcf_create_or_update($inst_id, $inst_caps, $inst_name, 'br', $usu_email, $usu_name, $inst_expiration, $result->message);
+    $result->license = "VPND-{$inst_id}-{$inst_caps}-{$inst_expiration}";
+    break;
+case 'EXTEND':
+    // renew, same everything.
+    if (empty($inst_lic)) {
+        $result->message = "this operation requires inst_lic";
+        break;
+    }
+    $result->success = wcf_extend_license($inst_id, $lic_period, $new_lic, $inst_caps, $result->message);
+    $inst_expiration = date('Ymd', time() + ($lic_period * 86400));
+    $result->license = "VPND-{$inst_id}-{$inst_caps}-{$inst_expiration}";
+    break;
+case 'CHANGECAPS':
+    // add/remove users, add/remove features.
+    if (empty($inst_lic)) {
+        $result->message = "this operation requires inst_lic";
+        break;
+    }
+    if (empty($inst_id)) {
+        $result->message = "Change";
+        break;
+    }
+    $result->success = wcf_change_caps($inst_id, $inst_caps, $inst_expiration, $result->message);
+    $result->license = "VPND-{$inst_id}-{$inst_caps}-{$inst_expiration}";
+    break;
+case 'ACTIVATE':
+    // reactivate an deactivated instance
+    $result->message = 'Uninmplemented function';
+    break;
+case 'DEACTIVATE':
+    // deactivate the instance, but dont kill it.
+    $result->message = 'Uninmplemented function';
+    break;
+case 'QUERY':
+    if (empty($usu_email)) {
+        $result->message = 'Missing email';
+        break;
+    }
+    $info = array();
+    $result->info = array();
+    $result->success = wcf_list_info($usu_email, $result->info, $result->message);
+    break;
+	 
+case 'SETPASS':
+	if (empty($password)) {
+		$result->message = 'Missing password';
+		break;
+	}
+	if (empty($usu_email)) {
+		$result->message = 'This operation requires usu_email';
+		break;
+	}
+	$result->success = wcf_set_password($usu_email, $password, $result->message);
+	break;
+default:
+    $result->message = 'invalid operation';
+}
+
+
+die (json_encode($result));

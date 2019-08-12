@@ -1,0 +1,70 @@
+<? require "instance_info.php" ?> 
+<html>
+<head>
+	<title>Instância</title>
+	<link rel="shortcut icon" href="tpl/imgs/favicon.ico" />
+	<link rel="icon" href="tpl/imgs/favicon.ico" />	
+	<style>
+		table {	
+			border-collapse: separate;
+			border-spacing: 1px;
+			border-color: #f0f3f4;
+			font: 12px arial, sans-serif;
+			color: #585858;
+			height: 30px;
+			width: 80%;
+		}
+		tr td {
+			border: 1px solid #f0f3f4;
+			border-color: #f0f3f4;
+			color: #585858;
+			height: 30px;
+			padding-left: 10px;
+		}
+		h3 {
+			font-size: 23px;
+			font-weight: normal;
+			color: #6f7a8a;
+			position: relative;
+			font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+		}
+	</style>
+</head>
+<body>	
+	<center><h3>Dados da Instância</h3></center></br>	
+	<div id="sel_panel">		
+		<center>			
+			<table class="result">
+				<tbody>		
+					<tr><td><strong>Instância:</strong></td><td><?= $instance->inst_seq ?></td></tr>
+					<tr><td><strong>Ativa:</strong></td><td><?= $instance->inst_active ? "Sim" : "Não" ?></td></tr>
+					<tr><td><strong>Status:</strong></td><td><?= !empty($status->inst_status) ? $status->inst_status . " (desde " . $status->inst_last_change . ")" : "-" ?></td></tr>
+					<tr><td><strong>ID:</strong></td><td><?= $instance->inst_id ?></td></tr>
+					<tr><td><strong>Data de criação:</strong></td><td><?= $instance->inst_created ?></td></tr>
+					<tr><td><strong>Registrado para:</strong></td><td><?= $instance->inst_name ?></td></tr>
+					<? if ($product_code == "WTM"): ?>
+					<tr><td><strong>CPF/CNPJ:</strong></td><td><?= $instance->inst_cnpj ?></td></tr>
+					<tr><td><strong>E-mail:</strong></td><td><?= $instance->inst_email ?></td></tr>
+					<tr><td><strong>Telefone:</strong></td><td><?= $instance->inst_phone ?></td></tr>
+					<? endif; ?>
+					<tr><td><strong>Licença:</strong></td><td><?= $instance->inst_license ?></td></tr>
+					<? if ($product_code == "WTM"): ?>
+					<tr><td><strong>Tipo:</strong></td><td><?= $inst_type ?></td></tr>
+					<tr><td><strong>Usuários:</strong></td><td><?= $instance->inst_nusers ?></td></tr>
+					<? endif; ?>
+					<tr><td><strong>Worker:</strong></td><td><?= $workers->worker_hostname ?></td></tr>
+					<tr><td><strong>Admin port:</strong></td><td><?= $instance->inst_adm_port ?></td></tr>
+					<? if ($product_code == "WTM"): ?>
+					<tr><td><strong>MSN port:</strong></td><td><?= $instance->inst_msn_port ?></td></tr>
+					<tr><td><strong>Policy port:</strong></td><td><?= $instance->inst_pol_port ?></td></tr>
+					<tr><td><strong>AD Sync port:</strong></td><td><?= 10003 + 4 * $instance->inst_seq ?></td></tr>
+					<? else: ?>
+					<tr><td><strong>Sync port:</strong></td><td><?= $instance->inst_sync_port ?></td></tr>
+					<? endif; ?>					
+					<tr><td><strong>Idioma:</strong></td><td><?= $instance->inst_lang == "us" ? "Inglês" : "Português"; ?></td></tr>
+				</tbody>
+			</table>			
+		</center>			
+	</div>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Lista de serviços disponiveis</title>
+	<script type="text/javascript" src="tpl/js/async_xhr.js"></script>
+	<script type="text/javascript" src="services.js"></script>
+	<style>
+		html body {
+			border: 0px;
+			margin: 0px;
+		}
+		body {
+			background: #f4f4f4;
+			font-family: Arial;
+			font-size: 12px;	
+			white-space: nowrap;
+			overflow-x: hidden;
+		}
+		a {
+			text-decoration: none;
+			color: #141414;
+		}
+		.selected_link {
+			left: 2.2em;
+			padding: 0px;
+			padding-top: 15px;
+			float: left;
+			color: #f7941d;
+		}
+		.group_header {
+			color: #5c6572;
+			background: url(tpl/imgs/degrade-menu-lateral.png) repeat-x;
+			cursor: pointer;
+			height: 45px;
+			font-size: 14px;
+		}
+		.group_header .img {
+			padding: 8px 8px 3px 10px;
+			float: left;
+		}
+		.group_header .text {
+			left: 2.2em;
+			padding: 0px;
+			padding-top: 15px;
+			float: left;
+		}
+		.group_header .addbt {
+			position: absolute;
+			right: 0.3em;
+			padding: 6px 0 0 0;
+		}
+		.hidden{
+			visibility:hidden;
+		}
+		.grp_content a {
+			display: block;
+			margin-top: 1px;
+			padding: 4px 1px 4px 14px;
+			white-space: no-wrap;
+		}
+		.grp_content .disabled {
+			color: #a1a1a1;
+		}
+		.grp_content .selected {
+			background: #fff;
+			color: #f7941d;
+			font-weight: bold;
+		}
+		.grp_content .stopped {
+			color: #a1a1a1;
+			background: #fff;
+		}
+	</style>
+</head>
+<body onload="init()">
+	<div id="env"></div>
+</body>
+</html>

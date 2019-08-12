@@ -1,0 +1,46 @@
+<?php include "service_defs.php"; ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+	<meta http-equiv="MSThemeCompatible" content="Yes" />
+	<link rel="stylesheet" type="text/css" href="tpl/css/layout.css" />		
+	<link rel="stylesheet" type="text/css" href="tpl/css/pagecontrol.css" />
+	<?php if (file_exists("svc_forms/".$form->data->service.".js")) : ?>
+		<script type="text/javascript" src="svc_forms/<?= $form->data->service ?>.js"></script>
+	<?php endif; ?>	
+</head>
+<body>
+	<div id="topsvc">	
+		<h1>
+			<?php if (isset($form->servicePanel->title)): ?>
+				<?= $form->servicePanel->title; ?>
+			<?php else: ?>
+				<?= $service_defs[$form->data->service]['desc']; ?>
+			<?php endif; ?>
+		</h1>
+	</div>
+	<?php $form->printForm(); ?>
+	<div id="alert" class="modal_dialog" style="display: none;">
+		<div class="modal_block"></div>
+		<div class="modal_dialog_in" id="modal_dialog_in">
+			<h2><?= $modal_error_title;?></h2>
+			<p><?= str_replace(array("\"", "'"), "", $modal_error); ?></p>
+			<span>
+				<input type="button" class="button" style="width: 50px;" value="OK" onclick="javascript:document.getElementById('alert').style.display = 'none';">	
+			</span>
+		</div>
+	</div>
+	<?php if (!empty($modal_error)): ?>
+		<script>document.getElementById('alert').style.display = '';</script>
+	<?php endif;?>
+	<?php if (!empty($modal_width)): ?>
+		<script>document.getElementById('modal_dialog_in').style.width = "<?= $modal_width ?>";</script>
+	<?php endif;?>
+	<?php if (!empty($modal_height)): ?>
+		<script>document.getElementById('modal_dialog_in').style.height = "<?= $modal_height ?>";</script>
+	<?php endif;?>
+	<?php if (!empty($modal_left)): ?>
+		<script>document.getElementById('modal_dialog_in').style.left = "<?= $modal_left ?>";</script>
+	<?php endif;?>
+</body>
+</html>

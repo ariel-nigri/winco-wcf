@@ -1,0 +1,108 @@
+.summaryText {
+	display:inline; 
+	zoom:1;
+}
+#GraphViewIconBox {
+	display:inline; 
+	zoom:1;
+}
+.checkBoxes {
+	width:170px;
+}
+#filterDiv > div {
+	display:inline; 
+	zoom:1;
+}
+#filterDiv form {
+	margin:0px;
+	overflow:visible;
+}
+#GraphSelection select {
+	width:177px;
+}
+#reportTypeDiv select {
+	width:180px;
+}
+#reportTB {
+	table-layout:auto;
+}
+#reportTB th {
+	width:10px;
+	border:solid 1px;
+	padding:0 50px;
+}
+#tbTopBar {
+	z-index:2;
+	position:relative;
+}
+.filterTypeIcon {
+	display:inline; 
+	zoom:1;
+}
+.filterType {
+	display:inline; 
+	zoom:1;
+}
+#graphCanvas {
+	z-index:0;
+}
+#acessedBy {
+	position:relative;
+}
+#selection {
+	position:relative;
+	z-index:0;
+}
+#filtratedBy {
+	float:none;
+	position:absolute;
+	right:7px;
+	overflow:auto;
+}
+#webaccessReport .cbApply {
+	position:relative;
+	display:block;
+	width:148px;
+	margin:0px;
+}
+#filterDiv .DropDownBox {
+	overflow:visible;
+	z-index:2;
+}
+#rTBCol1 {
+	
+}
+.ddMenu {
+	position:relative;
+	z-index:10;
+}
+.ddMenu .DropDownBox	{
+	overflow:visible;
+	z-index:10;
+}
+
+.statusTable th {
+	position:static;
+}
+#status .cbApply	{
+	position:relative;
+	display:block;
+	margin:0px;
+}
+#status form {
+	margin:0px;
+	overflow:visible;
+}
+#topMenu {
+	float:right;
+	margin-top:14px;
+	position: absolute;
+	right: 80px;
+	top: 0px;
+}
+#graphBox {
+	height: 235px;
+	clear:both;
+	overflow:auto;
+	margin: 4px 4px 0px 4px;
+}

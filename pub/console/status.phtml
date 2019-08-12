@@ -1,0 +1,483 @@
+<?php
+
+require "config.php";
+
+$not = array('INSTANCE', "WORKER", "ADMIN", "LICENSE");
+		
+?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title><?= $STR7_sts_title ?></title>
+	<link rel="shortcut icon" href="tpl/imgs/favicon.ico" />
+	<link rel="stylesheet" type="text/css" href="tpl/css/style.css">
+	<!--[if IE 7]><link rel="stylesheet" type="text/css" href="tpl/css/styleIE7.css"></script><![endif]-->
+	<script type="text/javascript" src="tpl/js/resizing.js"></script>
+	<script type="text/javascript" src="tpl/js/GroupListView.js"></script>
+	<script type="text/javascript" src="tpl/js/async_xhr.js"></script>
+	<script type="text/javascript" src="status.js"></script>
+	<script language="javascript">
+	var __h_textConverter = document.createElement('PRE');
+	__h_textConverter.appendChild(document.createTextNode(''));
+	function escapeHTML(string) {
+		__h_textConverter.firstChild.nodeValue = string;
+		return __h_textConverter.innerHTML;
+	}
+
+	function arrayToURLvar(varName, array) {
+		var ret="";
+		for(element in array)
+			ret+="&"+varName+"[]="+encodeURIComponent(array[element]);  
+		return ret;
+	}
+					
+	//state
+	var visibleMenuButton=null;
+	var stopped=false;
+	//aux functions
+
+	// add indexOf() on old ie
+	if (!Array.prototype.indexOf) {
+		Array.prototype.indexOf = function (searchElement /*, fromIndex */ ) {
+			"use strict";
+			if (this == null)
+				throw new TypeError();
+			var t = Object(this);
+			var len = t.length >>> 0;
+			if (len === 0)			
+				return -1;
+			var n = 0;
+			if (arguments.length > 1) {
+				n = Number(arguments[1]);
+				if (n != n) // shortcut for verifying if it's NaN
+					n = 0;
+				else if (n != 0 && n != Infinity && n != -Infinity)
+					n = (n > 0 || -1) * Math.floor(Math.abs(n));
+			}
+			if (n >= len)
+				return -1;				
+			var k = n >= 0 ? n : Math.max(len - Math.abs(n), 0);
+			for (; k < len; k++) {
+				if (k in t && t[k] === searchElement)
+					return k;
+			}
+			return -1;
+		}
+	}
+	function alternateTbTdClass(id,c1Name,c2Name,c3Name,c4Name){
+		var table = document.getElementById(id);
+		var rows = table.getElementsByTagName("tr");  
+		for(var i = 0; i < rows.length; i++){
+			var columns = rows[i].getElementsByTagName('td');
+			if (i % 2 == 0){ 
+				for(var j = 0; j < columns.length; j++){
+					if(j % 2 == 0)
+						columns[j].className=c1Name;
+					else
+						columns[j].className=c2Name;
+				}
+			}else{ 
+				for(var j = 0; j < columns.length; j++){
+					if(j % 2 == 0)
+						columns[j].className=c3Name;
+					else
+						columns[j].className=c4Name;
+				}
+			}
+			if (typeof columns[0]!="undefined")
+				columns[0].className+=" col1Td";			
+		}
+	}
+	function set_columns_CBs(id,rformat,rdefcols){
+		var columnsCBs=document.getElementById(id);
+		var html="";
+		for(var column=0; column<rformat.length; column++ ){
+			var ck=(rdefcols.indexOf(parseInt(column))!=-1)?" checked='checked' ":"";
+			html+="<input type='checkbox' id='fCB"+column+"' value='"+column+"'"+ck+"/>&nbsp;"+rformat[column].label.replace("<br/>"," ");
+			if (column<rformat.length-1)
+				html+="<hr>";
+		}
+		columnsCBs.innerHTML=html;		
+	}
+	function set_titleH1(id,title,label){
+		var titleH1=document.getElementById(id);
+		titleH1.innerHTML=title ? title : label;
+	}
+	function play_stop(divId,cmd){
+		var divp=document.getElementById(divId);
+		if (cmd=='stop'){
+			stopped=true;
+			divp.innerHTML="<img style=\"cursor: pointer;\" onclick=\"play_stop('play_stop','play');\" src='../tpl/tpl7/imgs/icones/botao-play_ativo.png' title='<?= $STR7_sts_play ?>'/>";
+		}else{
+			stopped=false;
+			divp.innerHTML="<img style=\"cursor: pointer;\" onclick=\"play_stop('play_stop','stop');\" src='../tpl/tpl7/imgs/icones/botao-stop_ativo.png' title='<?= $STR7_sts_stop ?>'/>";
+		}
+		divp.innerHTML+="&nbsp;&nbsp;&nbsp;<img src='../tpl/tpl7/imgs/fundos/separacao-play-stop_menor.png'>&nbsp;&nbsp;&nbsp;";
+	}
+			
+	function filterListView(textInpId,listview,data,dataFormat){		
+		var input=document.getElementById(textInpId);
+		input.onkeyup=function(){return true;}
+			setTimeout(function(){
+					var newData=[];
+					var filter = new RegExp("", 'i');
+					var filterText=input.value;
+					filter.compile(filterText.replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1"),'i');
+					for(var element=0;element<data.length;element++){
+						if(!data[element])
+							continue;
+						for( var i=0; i<defcols.length;i++){
+		
+							if (dataFormat[defcols[i]].type!='quantity' && filter.test(data[element][defcols[i]])){
+	
+								newData.push(data[element])
+								break;
+							}
+						}
+					}
+					listview.sync(newData);
+					if(listview.selected_row){
+						enable_disable_list_filter('ddmView',response.label,'enable');
+					}else{
+						enable_disable_list_filter('ddmView',response.label,'disable');
+					}
+					//verifica se houve mudança no valor de input durante a renderização. 
+					if( filterText==input.value){
+						//Não mudou, esperar mudança;
+						input.onkeyup=function(){filterListView(textInpId,listview,data,dataFormat,defcols);};
+					}else{
+						//Mudou -> disparar evento
+						filterListView(textInpId,listview,data,dataFormat,defcols);
+					}
+				},300
+			)
+	}	
+		
+	function applyColumnsDisplay(evt, id,listview){
+		defcols=[];
+		var columnsCB=document.getElementById(id).getElementsByTagName('input');
+		for (var i=0;i<columnsCB.length;i++){
+			if (columnsCB[i].checked==true){
+					defcols.push(columnsCB[i].value);
+			}
+		}
+		//console.log(defcols);
+		listview.setHeaders(defcols);
+		//refresh list;
+		listview.clear();
+		filterListView('filterInput',listview,response.data,response.format);
+		hideDropDown(evt);
+	}
+		
+	var _status = [];
+	function applyFilters(evt,id,name,groupsArray){
+		//_status.shift();
+		_status.length = 0;
+		var checkBox=document.getElementById(id).getElementsByTagName('input');        
+		for (var i=0; i < groupsArray.length; i++) {            
+			if (groupsArray[i]["name"] === name && groupsArray[i]["multi"] === true){                                     
+				for (var i=0;i<checkBox.length;i++){
+					if (checkBox[i].checked==true){
+						_status.push(checkBox[i].value);                                       
+					}
+				}     
+			}
+		}
+		hideDropDown(evt);        
+		listview.sync([]);
+		init(_status);                    
+	}
+			
+	var myEvt = null;
+	var noEvt = false;
+	
+	function showDropDown(evt,menuButton){
+		
+		myEvt = evt;
+		
+		if (noEvt) {
+			noEvt = false;
+			return;
+		}
+		
+		if (menuButton!=visibleMenuButton){
+			hideDropDown(evt);
+		} 		
+		menuButton.className="ddMenu visible";
+		menuButton.getElementsByTagName("div")[0].onclick=hideDropDown;
+		document.onclick=hideDropDown;	
+		visibleMenuButton=menuButton;
+			
+		if(evt && evt.stopPropagation){
+			evt.stopPropagation();
+		}else{
+			evt=window.event;
+			if (evt)
+				evt.cancelBubble = true;
+		}	
+	}
+	function hideDropDown(evt){
+		if(visibleMenuButton){
+			var vb=visibleMenuButton;
+			visibleMenuButton.className="ddMenu";
+			visibleMenuButton.getElementsByTagName("div")[0].onclick=function(event){showDropDown(event,vb);};
+			document.onclick="";
+		}
+		visibleMenuButton="";
+		if(evt && evt.stopPropagation){
+			evt.stopPropagation();
+		}else{
+			evt=window.event;
+			if (evt)
+				evt.cancelBubble = true;
+			else {
+				evt=myEvt;
+				noEvt = true;
+				if (evt)
+					evt.cancelBubble = true;
+			}
+		}
+	}	
+		
+	var config_form = null;
+	var instance = '<?=$_REQUEST['instance'];?>';
+	var service = '<?=$_REQUEST['service']?>';
+	var new_item = null;
+	var listview = null;
+	var view_mode = 'normal';
+
+	function list_dbl_click(el, id) {
+		
+		if (view_mode != 'group'){
+			on_list_edit(id);
+		}	
+		else {
+			list_set_view('filter', listview.group_col, listview.selected_group);
+		}
+	}
+
+	var filtersChoices = [];
+	var filtersList = [];
+	function getFiltersChoices(filName, filValue, textInpId, filterArray) { 
+		filtersChoices = [];
+		filtersList = [];
+		filtersList = eval(filterArray);    
+		for (var i=0; i < filtersList.length; i++) {
+			if (filtersList[i]["name"] === filValue)
+				filtersChoices = filtersList[i]["choices"];
+		}
+		for (var filterType in filtersChoices){
+			var cbDiv=document.getElementById(textInpId);					
+			if (cbDiv) {
+				var append = "";
+				for (var element in filtersChoices){
+					append += "<input type='checkbox' name="+filterType+"Filter[] id='fCB"+escapeHTML(filtersChoices[element])+"' value='"+escapeHTML(filtersChoices[element])+"'/>&nbsp;"+escapeHTML(filtersChoices[element]);
+
+					if (element<filtersChoices[filterType].length - 1)
+						append += "<hr>";
+				}
+				cbDiv.innerHTML=append;
+			}
+		}     
+	}
+
+	var refresh = 0;
+	function init(_status) {
+		
+		listview = new GroupListView(document.getElementById('datatable'));
+		
+		//extend listview.sync method to paint the cells
+		var oldsync = listview.sync;
+		listview.sync=function(event,data){
+		   oldsync.call(listview,event, data);
+		   alternateTbTdClass("datatable","c1","c1","c2","c2");
+		}
+		listview.onclick = function(el, id) {
+			on_list_select(id);
+			enable_disable_list_filter('ddmView',response.label,'enable');
+		}
+		listview.ondblclick = list_dbl_click;
+		//parent.list_set_view = list_set_view;
+		if(typeof(_status)=="undefined"){
+		xhr = new XHRUpdater('status_feed.php?service='+service+'&instance='
+						+escape(instance)+'&refresh='+refresh+'&cache_bust='+(new Date().getTime()), 1000);
+				
+			}else{
+				xhr = new XHRUpdater('status_feed.php?service='+service+'&instance='+escape(instance)
+						+'&refresh='+refresh+arrayToURLvar('fW',_status)+'&cache_bust='+(new Date().getTime()), 1000);              
+			}
+		xhr.onUpdate = function(request) {
+			if(stopped){
+			 return;
+			}
+					if(typeof(_status)=="undefined"){               
+			this.url = 'status_feed.php?service='+service+'&instance='
+						+escape(instance)+'&refresh='+refresh+'&cache_bust='+(new Date().getTime());
+					}else{
+						this.url = 'status_feed.php?service='+service+'&instance='+escape(instance)
+						+'&refresh='+refresh+arrayToURLvar('fW',_status)+'&cache_bust='+(new Date().getTime());  
+					}
+					console.log(this.url);
+			try {
+				response = eval(request.responseText);
+			} catch(e) {
+				if (typeof(console) == 'object') {
+					console.error('Erro decodificando json');
+					console.warn('Texto ruim:' + request.responseText);
+					return;
+				}
+			}
+			if (!listview.dataFormat) {
+				// first call
+				listview.setDataFormat(response.format);
+				defcols=response.defcols;
+				listview.setHeaders(defcols);
+				listview.setSorting(0, true);
+				set_columns_CBs("columnsCheckBoxes",response.format,response.defcols);
+				set_titleH1('titleH1',response.title,response.label);
+				set_list_filter('ddmView',response.label);
+				<? if (!in_array($_REQUEST['service'], $not)) : ?>	
+					play_stop('play_stop','play');
+				<? endif; ?>
+				if (parent) {				
+					if (response.actions) {
+						set_list_actions("ddmActions", response.actions, 'actionsList');
+						set_list_filter('ddmView', response.label);
+					}
+					if (response.register) {
+						set_list_actions("ddmRegister", response.register, 'registerList');
+						set_list_filter('ddmView', response.label);
+					}
+					<? if ($_REQUEST['service'] ==  $product_code . '_INSTANCE') : ?>
+						if (response.filters && refresh == 0)                                                              
+							getFiltersChoices('name', 'Workers', 'workerCheckBoxes', response.filters); 
+					<? endif; ?>
+				}
+			}
+			//console.log(response);
+			filterListView('filterInput',listview,response.data,response.format);
+			if(listview.selected_row){
+				enable_disable_list_filter('ddmView',response.label,'enable');
+			}else{
+				enable_disable_list_filter('ddmView',response.label,'disable');
+			}
+					refresh = 1;
+		}
+		xhr.start();	
+	}
+
+	function list_set_view(type, id, val) {
+		var msggrp_div = document.getElementById('msggrp_div');
+		var msgflt_div = document.getElementById('msgflt_div');
+		switch(type) {
+		case 'group':		
+			msgflt_div.style.display = 'none';
+			msggrp_div.style.display = '';
+			msggrp_div.firstChild.innerHTML = '<?= $STR7_sts_showing_conn_by ?> "'+listview.dataFormat[id].label.replace("<br/>"," ")+'". <?= $STR7_sts_click_to_opengrp ?> ';
+			listview.setGrouping(id);
+			_gaq.push(["_trackPageview", "STATUS_" + service + "_grp_" + listview.dataFormat[id].label]);		
+			break;
+		case 'filter':
+			if(listview.selected_row){
+				msggrp_div.style.display = 'none';
+				msgflt_div.style.display = '';
+				msgflt_div.firstChild.innerHTML = '<?= $STR7_sts_showing_conn_with ?> "'+listview.dataFormat[id].label.replace("<br/>"," ")
+					+'" = "'+listview.data[listview.selected_row.sectionRowIndex][id]+'"';
+				listview.setFilter(id,listview.data[listview.selected_row.sectionRowIndex][id]);
+				_gaq.push(["_trackPageview", "STATUS_" + service + "_flt_" + listview.dataFormat[id].label]);
+			}else{
+				alert("<?= $STR7_sts_choose_an_item ?>");
+			}
+			break;
+		default:
+		//case 'normal':
+			msggrp_div.style.display = 'none';
+			msgflt_div.style.display = 'none';
+			listview.setGrouping(null);
+			_gaq.push(['_trackPageview', '<?=$_REQUEST['service']?>']);
+			break;
+		}
+		view_mode = type;
+		hideDropDown();
+	}
+	</script>
+</head>
+<body onload="init(_status)">
+	<div id='status'>
+		<div id="top">
+			<h1 id="titleH1"></h1>
+			<div id="topRight">		
+				<? if (!in_array($_REQUEST['service'], $not)) : ?>	
+					<div id="play_stop"></div>
+				<? endif; ?>
+				<div id="statusMenu">
+					<div class="ddMenu" id="ddmView" onclick="showDropDown(event,this);" style="display: none"><div class="ddButon"><?= $STR7_sts_show ?></div>
+						<div class="DropDownBox">
+							<div class="ddbContent" id="viewList">							
+								<span id="aggList"></span>
+								<span id="filterList"></span>
+							</div>
+						</div>
+					</div >					
+					<div class="ddMenu" id="ddmActions" onclick="showDropDown(event,this);" style="display: none"><div class="ddButon"><?= $STR7_sts_actions ?></div>
+						<div class="DropDownBox">
+							<div class="ddbContent" id="actionsList">
+							</div>
+						</div>
+					</div >		
+					<div class="ddMenu" id="ddmRegister" onclick="showDropDown(event,this);" style="display: none"><div class="ddButon">Cadastro</div>
+						<div class="DropDownBox">
+							<div class="ddbContent" id="registerList">
+							</div>
+						</div>
+					</div >
+					<? if ($_REQUEST['service'] == $product_code . '_INSTANCE') : ?>
+						<div class="ddMenu" id="ddmDetailGroup" onclick="showDropDown(event,this);"><div class="ddButon">Workers</div>
+							<div class="DropDownBox">
+								<div class="ddbContent">
+									<form action="#" method="post">                                                                
+										<div class="checkBoxes" id="workerCheckBoxes"></div>
+									</form>
+									<div class="cbApply" onclick="applyFilters(event, 'workerCheckBoxes', 'Workers', response.filters);"><?= $STR7_sts_apply ?></div>
+								</div>
+							</div>
+						</div >                     
+					<? endif; ?>       
+					<div class="ddMenu" id="ddmDetail" onclick="showDropDown(event,this);"><div class="ddButon"><?= $STR7_sts_columns ?></div>
+						<div class="DropDownBox">
+							<div class="ddbContent">
+								<form action="#" method="post">
+									<div class="checkBoxes" id="columnsCheckBoxes"></div>
+								</form>
+								<div class="cbApply" onclick="applyColumnsDisplay(event, 'columnsCheckBoxes',listview);"><?= $STR7_sts_apply ?></div>
+							</div>
+						</div>
+					</div >
+				</div>
+				<input type=text id="filterInput" placeholder="<?= $STR_WTM_filter_placeholder ?>" onkeyup="filterListView(this.id,listview,response.data,response.format)">
+			</div>			
+		</div>		
+		<div id="msggrp_div" class="msg_div" style="display: none;">
+			<em><?= $STR7_sts_showing_conn_grp_by_users ?></em> <a href="#none" onclick="list_set_view('normal'); return false; "><?= $STR7_sts_ungroup ?></a>
+		</div>
+		<div id="msgflt_div" class="msg_div" style="display: none;">
+			<em><?= $STR7_sts_showing_conn_grp_by_users ?></em> <a href="#none" onclick="list_set_view('normal'); return false; "><?= $STR7_sts_remove_filter ?></a>
+		</div>
+		<div id="table_env">
+			<table id="datatable" class="statusTable">
+				<thead></thead><tbody></tbody>
+			</table>
+		</div>
+	</div>
+	<div id="alert" class="modal_dialog" style="display: none;">
+		<div class="modal_block"></div>
+		<div class="modal_dialog_in">
+			<h2>Comando remoto</h2>
+			<p id="alert_msg"></p>
+			<span>
+				<input type="button" id="button_close" class="button" style="width: 50px;" value="OK" onclick="javascript:document.getElementById('alert').style.display = 'none';">	
+			</span>
+		</div>
+	</div>
+</body>
+</html>

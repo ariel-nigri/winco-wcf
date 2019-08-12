@@ -1,0 +1,53 @@
+#!/bin/bash
+
+if [ "${EXEC_CMD}" != "" ]; then
+	cd ${WCDIR}
+	eval ${EXEC_CMD}
+	exit
+fi
+
+me=$0
+
+if [ "$1" = "-v" ]; then
+	shift
+	verbose=1
+else
+	verbose=0
+fi
+
+instance=$1
+shift
+
+if [ "$1" = "" ]; then	
+	prog=$(basename ${me})
+	echo "usage: ${prog} <instance> <command>";
+	exit 1
+fi
+
+get_version_dir()
+{
+	wcpid=$(cat $1/var/run/wc7.pid 2>/dev/null)
+	if [ "${wcpid}" = "" ]; then
+		exit
+	fi
+	dirname $(readlink /proc/$wcpid/cwd) 2>& 1
+}
+
+INSTANCE_DIR=/home/instances/${instance}
+	if [ ! -d ${INSTANCE_DIR} ]; then
+		echo "ERROR: Instance does not exist"
+		exit
+	fi
+WCDIR=$(get_version_dir $INSTANCE_DIR)
+
+	if [ "${WCDIR}" = "" ]; then
+		echo "ERROR: Instance ${instance} is not running"
+		exit
+	fi
+
+[ -z "${WCDIR}" ] && exit
+if [ ${verbose} -eq 1 ]; then
+	echo "Running from directory ${WCDIR}"
+fi
+
+sudo -u \#${instance} -gapache WCDIR=${WCDIR} WCDATADIR=${INSTANCE_DIR}/var/winco EXEC_CMD="$*" ${me}

@@ -1,0 +1,45 @@
+<?php require "config.php"; ?>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+	<meta charset="UTF-8" />
+	<title>Console de Gerenciamento</title>
+	<link rel="shortcut icon" href="tpl/imgs/favicon.ico" />
+	<link rel="icon" href="tpl/imgs/favicon.ico" />
+	<link rel="stylesheet" type="text/css" href="tpl/css/layout.css">
+	<link rel="stylesheet" type="text/css" href="tpl/css/main.css">
+	<script type="text/javascript" src="tpl/js/resizing.js"></script>
+	<script type="text/javascript" src="tpl/js/async_xhr.js"></script>
+	<script type="text/javascript" src="main.js"></script>
+	<script type="text/javascript" src="tpl/js/chrome.js">
+	/***********************************************
+	* Chrome CSS Drop Down Menu- © Dynamic Drive DHTML code library (www.dynamicdrive.com)
+	* This notice MUST stay intact for legal use
+	* Visit Dynamic Drive at http://www.dynamicdrive.com/ for full source code
+	***********************************************/
+	</script>			
+</head>
+<body style="height: 100%" onload="init()">
+	<div id="env">
+		<div id="nav"> 	
+			<div style="padding-top: 1px; padding-left: 5px; color: black; font-size: 15px; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;">
+				<table>
+					<tr>
+						<td><img src="tpl/imgs/logo-console_int.png"></td><td style="font-size: 15px; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif; padding-left: 10px;">WINCO CLOUD MANAGEMENT</td>
+					</tr>
+				</table>
+			</div>
+			<div id="topMenu">
+				<a href="logout.php">Logout</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</div>
+		</div>
+		<table id="center">
+			<tr>
+				<td id="tree"><iframe frameborder="0" id="tree_iframe" src="services.html"></iframe></td>
+				<td id="hresize" onmousedown="resizing.startResizeEx(event, 'h', 'tree');"></td>
+				<td id="main"><iframe frameborder="0" id="main_iframe" src=""></iframe></td>
+			</tr>
+		</table>
+	</div>
+</body>
+</html>
