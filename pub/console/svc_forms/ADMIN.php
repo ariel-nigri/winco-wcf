@@ -1,5 +1,8 @@
 <?php
 
+require "gauth/sasdf.php";
+require "bizobj/Users.php";
+
 define("CHECK_PASS", "XXX_check_123");
 
 class ServicePanel extends ServicePanelBase {	
@@ -14,7 +17,7 @@ class ServicePanel extends ServicePanelBase {
 	
 	function init() {
 		global $db_conn, $product_code;
-
+		unset($_SESSION['temp_usu_twofact_token']);
 		$classname = $product_code.'_Instances';
 
 		if (!empty($_REQUEST['instance'])) {
@@ -89,6 +92,14 @@ class ServicePanel extends ServicePanelBase {
 		$user->usu_language = $this->params['usu_language'];	
 		$user->usu_email = $this->params['usu_email'];
 		$user->usu_twofact_type = $this->params['usu_twofact_type'];
+
+		if (isset($_SESSION['temp_usu_twofact_token']) && $user->usu_twofact_type) {
+			$user->usu_twofact_token = $_SESSION['temp_usu_twofact_token'];
+			unset($_SESSION['temp_usu_twofact_token']);
+		} else {
+			$user->usu_twofact_token = "NULL";
+		}
+
 		$user->usu_caps = $this->params['usu_caps'];
 
 		if ($this->form->data->password != CHECK_PASS) {
@@ -113,7 +124,46 @@ class ServicePanel extends ServicePanelBase {
 		}
 
 		return true;
-	}	
+	}
+
+	function gauth_generate_code() {
+		$secret = "";
+		$qr_code_url = "";
+		genGoogleAuthenticatorSecretAndUrl("Winco Cloud Management", $secret, $qr_code_url);
+		$_SESSION['temp_usu_twofact_token'] = $secret;
+		echo "
+		<div style=\"
+			position:absolute;
+			top:0;
+			left:0;
+			right:0;
+			bottom:0;
+			background-color:rgba(0, 0, 0, 0.5);
+			display:flex;
+			flex-direction:column;
+			align-items:center;
+			justify-content:center;
+		\" id=\"gauth_qrcode_container\">
+			<div style=\"
+				position:absolute;
+				padding:100px;
+				background-color:white;
+				border-radius:15px;
+			\" id=\"gauth_qrcode_box\">
+				<a href=\"#\" onclick=\"javascript:gauth_close_qrcode()\" style=\"
+					position:absolute;
+					right:15px;
+					top:15px;
+					font-size:30px;
+					font-weight:bold;
+					text-decoration:none;
+				\">X</a>
+				<div style=\"font-size:20px;font-weight:bold;width:200px;text-align:center;margin-bottom:25px;\">Leia o qrcode abaixo usando o seu aplicativo Google Authenticator</div>
+				<img src=\"$qr_code_url\"\>
+			</div>
+		</div>
+		";
+	}
 	
 	function beforeShow() {			
 		global $db_conn;
@@ -139,7 +189,8 @@ class ServicePanel extends ServicePanelBase {
 		$config->addControl(new PasswordControl('password', 'Senha:', "size=\"40\""));
 		$config->addControl(new PasswordControl('password_again', 'Confirmação de senha:', "size=\"40\""));
 		$config->addControl(new SelectControl("usu_language", 'Idioma:', $this->lang));
-		$config->addControl(new SelectControl("usu_twofact_type", 'Autenticação com 2 fatores:', $this->twofact));
+		$config->addControl(new SelectControl("usu_twofact_type", 'Autenticação com 2 fatores:', $this->twofact), CTLPOS_NOBREAK);
+		$config->addControl(new ButtonControl("gauth_generate_code", 'Gerar código', 'style="display:none;"'));
 
 		if (!empty($this->params['usu_caps_special'])) {
 			$config->addControl(new EditControl("usu_caps", 'Permissões especiais'), CTLPOS_NOBREAK);
