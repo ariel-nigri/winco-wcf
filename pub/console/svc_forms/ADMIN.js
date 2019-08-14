@@ -1,5 +1,11 @@
 document.addEventListener("DOMContentLoaded", (event) => {
     console.log(document.getElementById('usu_twofact_type'));
+    if (document.getElementById("usu_twofact_type").options[document.getElementById("usu_twofact_type").selectedIndex].value == "GOGLE")
+    {
+        document.getElementById("gauth_generate_code").style.display = "inline-block";
+        document.getElementById("gauth_generate_code").value = "Redefinir Código";
+    }
+
     document.getElementById('usu_twofact_type').onchange = function() {
         if (document.getElementById("usu_twofact_type").options[document.getElementById("usu_twofact_type").selectedIndex].value == "GOGLE")
         {

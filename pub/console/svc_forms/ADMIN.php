@@ -1,5 +1,6 @@
 <?php
 
+@require "../../config/install_params.php";
 require "gauth/sasdf.php";
 require "bizobj/Users.php";
 
@@ -127,9 +128,10 @@ class ServicePanel extends ServicePanelBase {
 	}
 
 	function gauth_generate_code() {
+		global $product_name;
 		$secret = "";
 		$qr_code_url = "";
-		genGoogleAuthenticatorSecretAndUrl("Winco Cloud Management", $secret, $qr_code_url);
+		genGoogleAuthenticatorSecretAndUrl($product_name, $secret, $qr_code_url);
 		$_SESSION['temp_usu_twofact_token'] = $secret;
 		echo "
 		<div style=\"
