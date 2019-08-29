@@ -50,6 +50,40 @@ class Instances extends SqlToClass {
     }
 
     function getInstanceDir() {
-        return "vpn5";
+        die('unimplemented');
+    }
+
+    public function init_directory() {
+        if (empty($this->inst_version) || empty($this->inst_seq)) {
+            die("Before calling create_files(), please set the inst_seq and inst_version paramenters");
+            return false;
+        }
+        $output = array();
+        exec("cd /home/instances/versions/{$this->inst_version}/util; sudo ./create_instance.sh {$this->inst_seq}", $output);
+
+        // must find 2 OK in the output.
+        $n = 0;
+        foreach ($output as $l) {
+            if (trim($l) == 'OK')
+                ++$n;
+        }
+        if ($n != 2) {
+            $this->error = implode(': ', $output);
+            return false;
+        }
+        return true;
+    }
+
+    public function remove_directory() {
+        if (empty($this->inst_version) || empty($this->inst_seq)) {
+            die("Before calling create_files(), please set the inst_seq and inst_version paramenters");
+            return false;
+        }
+        $output = array();
+        exec("cd /home/instances/versions/{$this->inst_version}/util; sudo ./delete_instance.sh {$this->inst_seq}", $output);
+        if (!empty($output))
+            return false;
+        // FIXME: parse output for errors.
+        return true;
     }
 }

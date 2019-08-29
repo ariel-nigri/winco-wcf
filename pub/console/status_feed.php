@@ -15,6 +15,7 @@ $instance_actions = "[
 $instance_register = "[
 	{ cmd: 'NEW', 				label: 'Criar instância',			item: false},
 	{ cmd: 'EDIT', 				label: 'Ver / Alterar cadastro',	item: true},
+	{ cmd: 'DEL',				label: 'Excluir instância',			item: true}
 ]";
 //	{ cmd: 'NEW_ACCOUNT', 	    label: 'Criar e adicionar administrador',	item: true},
 
@@ -91,7 +92,7 @@ switch ($_REQUEST['service']) {
 				$lang = $instances->inst_lang == "us" ? "Ingl&ecirc;s" : "Portugu&ecirc;s";
 				$act =  $instances->inst_active ? "Sim" : "N&atilde;o";
 				$response[] = array($instances->inst_seq, $instances->inst_id, $instances->inst_created,
-									utf8_encode($instances->inst_name),
+									$instances->inst_name,
 									$instances->inst_license, $instances->inst_type,
 									$workername[$instances->worker_seq], $instances->inst_adm_port, $lang, $act,
 									!empty($inst_status[$instances->inst_seq]['status']) ? $inst_status[$instances->inst_seq]['status'] : 'off',
@@ -103,16 +104,16 @@ switch ($_REQUEST['service']) {
 		{ label:'Inst&acirc;ncia', id: true, width: 60 },
 		{ label:'ID', width: 120 },
 		{ label:'Criação', width: 90 },
-		{ label:'Registrado para', width: 250 },
+		{ label:'Registrado para', width: 200 },
 		{ label:'Licença', width: 250 },
-		{ label:'Recursos', width: 95 },
+		{ label:'Recursos', width: 150 },
 		{ label:'Worker', width: 230 },
 		{ label:'Admin port', width: 80 },
 		{ label:'Idioma do servidor', width: 110 },
 		{ label:'Ativa', width: 45 },
 		{ label:'Status', width: 70, sync: true },
 		{ label:'Status time', width: 120 }],  
-			defcols: [0, 1, 3, 5, 8, 9, 10], actions: $instance_actions, register: $instance_register, filters: [{
+			defcols: [0, 1, 3, 5, 8, 9, 10], actions: {$instance_actions}, register: {$instance_register}, filters: [{
                     multi: true,
                     name: 'Workers',
                     choices: ".$string_workers."}], ";
@@ -133,7 +134,7 @@ switch ($_REQUEST['service']) {
 		{ label:'Criação', width: 120 },
 		{ label:'Último boot', width: 120 },
 		{ label:'IP anterior', width: 130 }], 
-			defcols: [1, 2, 3, 4], actions: $worker_actions, ";
+			defcols: [1, 2, 3, 4], register: {$worker_actions}, ";
 		break;
 	case 'ADMIN':
 		$inst_users = UsersInstances::getUsersByInstance(getDbConn());
@@ -142,7 +143,7 @@ switch ($_REQUEST['service']) {
 		if ($admins->select(getDbConn())) {
 			while ($admins->fetch()) {
 				$lang = $admins->usu_language == "us" ? "Ingl&ecirc;s" : "Portugu&ecirc;s";
-				$usu_name = utf8_encode($admins->usu_name);
+				$usu_name = $admins->usu_name;
 				$inst = '';
 				if (!empty($inst_users[$admins->usu_seq]))
 					$inst = implode(', ', $inst_users[$admins->usu_seq]);
@@ -157,7 +158,7 @@ switch ($_REQUEST['service']) {
 		{ label:'Permiss&otilde;es', width: 100 },
 		{ label:'Idioma do portal', width: 110 },
 		{ label:'Inst&acirc;ncia', width: 70 }], 
-			defcols: [1, 2, 3, 4, 5], actions: $admin_actions, ";
+			defcols: [1, 2, 3, 4, 5], register: $admin_actions, ";
 		break;
 	case 'LICENSE':
 		$instname = array();
@@ -184,7 +185,7 @@ switch ($_REQUEST['service']) {
 		{ label:'Nome instância', width: 250 },
 		{ label:'Criação', width: 130 },
 		{ label:'Alocação', width: 130 }], 
-			defcols: [1, 2, 3, 4, 5, 6], actions: $license_actions, ";
+			defcols: [1, 2, 3, 4, 5, 6], register: $license_actions, ";
 		break;
 	case 'CONNECTIONS':
 		// list workers

@@ -317,7 +317,7 @@ $not = array('INSTANCE', "WORKER", "ADMIN", "LICENSE");
 						this.url = 'status_feed.php?service='+service+'&instance='+escape(instance)
 						+'&refresh='+refresh+arrayToURLvar('fW',_status)+'&cache_bust='+(new Date().getTime());  
 					}
-					console.log(this.url);
+					// console.log(this.url);
 			try {
 				response = eval(request.responseText);
 			} catch(e) {

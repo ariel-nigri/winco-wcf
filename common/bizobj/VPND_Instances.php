@@ -29,15 +29,4 @@ class VPND_Instances extends Instances {
             die("Before starting an instance, please set the inst_seq paramenter");
         system("nohup sudo /etc/init.d/vpnd-{$this->inst_seq} stop > /dev/null 2>&1 < /dev/null");
     }
-
-    public function init_directory() {
-        if (empty($this->inst_version) || empty($this->inst_seq)) {
-            die("Before calling create_files(), please set the inst_seq and inst_version paramenters");
-            return false;
-        }
-        $output = array();
-        exec("cd /home/instances/versions/{$this->inst_version}/util; sudo ./create_instance.sh {$this->inst_seq}", $output);
-        // FIXME: parse outptu for errors.
-        return true;
-    }
 }

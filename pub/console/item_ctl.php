@@ -30,7 +30,8 @@ if ($svc == "WORKER") {
 			$result->error = "Erro excluindo {$svc}";
 		}	
 	}
-} else if ($svc == "ADMIN") {
+}
+else if ($svc == "ADMIN") {
 	if ($cmd == "DEL") {
 		$users = new Users;
 		$users->usu_seq = $id;
@@ -42,12 +43,14 @@ if ($svc == "WORKER") {
 		else
 			$result->error = "Erro excluindo usuário. Verifique se tem alguma instância associada";
 	}
-} else if ($svc == "INSTANCE") {
-	$inst = $instance_classname::find(getDbConn(), array('inst_seq' => $id));
-	if (!$inst)
-		die("Instancia inexistente");
+}
+else if ($svc == "INSTANCE") {
+	$dbconn = getDbConn();
+	$inst = $instance_classname::find($dbconn, array('inst_seq' => $id, 'inst_active' => null));
+	if (!$inst || !$inst->valid)
+		die("Instancia {$id} inexistente");
 	if ($my_worker_hostname != $inst->worker_hostname)
-		die('wrong worker');
+		die("$my_worker_hostname != $inst->worker_hostname");
 
 	switch ($cmd) {
 	case 'START':
@@ -67,11 +70,51 @@ if ($svc == "WORKER") {
 		$result->error = "Commando executado";
 		break;
 	case 'STATUS':
-		$result->error = "Comando nÃ£o implementado";
+		$result->error = "Comando não implementado";
+		break;
+	case 'DEL':
+		if (strpos($inst->inst_type, 'TRIAL=Y') === false) {
+			$result->error = "Somente instancias do tipo TRIAL podem ser excluídas";
+			break;
+		}
+
+		// excluir usuario.
+		$dbconn->begin();
+		$usuinst = UsersInstances::find($dbconn, ['inst_seq' => $inst->inst_seq]);
+		if ($usuinst->valid) {
+			$ui = new UsersInstances;
+			do {
+				$del_users[] = $usuinst->usu_seq;
+				$ui->usuinst_seq = $usuinst->usuinst_seq;
+				$ui->delete($dbconn);
+			} while ($usuinst->fetch());
+	
+			foreach ($del_users as $useq) {
+				$usuinst = UsersInstances::find($dbconn, ['usu_seq' => $useq]);
+				if (!$usuinst->valid) {
+					$user = new Users;
+					$user->usu_seq = $useq;
+					if ($user->select($dbconn) && strpos($user->usu_caps, 'ADMIN') === false)
+						$user->delete($dbconn);
+				}
+			}
+		}
+
+		// excluir
+		// apagar diretorio.
+		if ($inst->remove_directory() && $inst->delete($dbconn) && $dbconn->commit()) {
+			$result->status = true;
+			$result->error = "Instância excluída";
+		}
+		else {
+			$result->error = $inst->error ? $inst->error : "Erro excluindo instância";
+			$dbconn->rollback();
+		}
 		break;
 	default:
 		$result->error = "Unknown command";
 	}
+
 	/*
 	$c = curl_init('https://'.$base_domain.'/wsvc/instanceControl.wsvc'); 
 	curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
@@ -89,7 +132,9 @@ if ($svc == "WORKER") {
 	echo $result;
 	exit;
 	*/
-} else if ($svc == "LICENSE") {
+
+}
+else if ($svc == "LICENSE") {
 	if ($cmd == "DEL") {
 		$db_conn->begin();
 		$license = new NTP_RouterLicenses;
@@ -104,4 +149,4 @@ if ($svc == "WORKER") {
 	}
 }
 
-echo "(",json_encode($result),")";
+echo json_encode($result);

@@ -21,3 +21,19 @@ function gauth_close_qrcode() {
         document.getElementById("gauth_qrcode_container").style.display = "none";
     }
 }
+
+function check_gauth_code() {
+    
+    xhr = new XHRUpdater('gauth_verify_code.php?code=' + document.getElementById('gauth_code').value);
+    xhr.onUpdate = function(request) {
+        response = JSON.parse(request.response);
+        if (response.response == 'success')
+        {
+            document.getElementById("gauth_qrcode_container").style.display = "none";
+            document.getElementById("gauth_generate_code").style.display = "none";
+        }
+        else
+            document.getElementById("gauth_feedback").innerText = "Código incorreto!";
+    }
+    xhr.start();	
+}

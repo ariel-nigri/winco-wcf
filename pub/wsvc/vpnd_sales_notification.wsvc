@@ -16,7 +16,7 @@ user_data =
 NEWLICENSE
     - CAPS
     - inst_seq  OR - user data
-    - period
+    - period (days)
     Returns:
         => rcode
         => licence with caps, inst_seq and period (days).
@@ -36,11 +36,18 @@ CHANGECAPS
     RETURNS:
         => rcode
         => license with caps, inst_seq and period.
+SETPASS
+	- usu_email
+	-password
+	RETURNS:
+		=> rcode
+
 ACTIVATE
 
 QUERY
     - usu_email
-    -
+    
+
 
 Return em JSON
 

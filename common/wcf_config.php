@@ -1,9 +1,9 @@
 <?php
 
 
-function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $user_email, $user_name, $inst_expiration, &$error)
+function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $user_email, $user_name, $inst_expiration, &$error, $pwd = null)
 {
-    global $instance_classname, $product_code, $default_license;
+    global $instance_classname, $product_code, $default_license, $my_worker_hostname;
 
     $dbconn = getDbConn();
 
@@ -23,11 +23,19 @@ function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $us
                 $user->usu_email = $user_email;
                 $user->usu_language = $inst_lang;
                 $user->usu_name = $user_name;
-                $user->setPassword(uniqid());
+                if (empty($pwd))
+                    $pwd = uniqid();
+                $user->setPassword($pwd);
                 if (!$user->insert($dbconn)) {
                     $error = 'Cannot create administrator';
                     break;
                 }
+            }
+            // get our own worker_seq;
+            $worker = Workers::find($dbconn, ['worker_hostname' => $my_worker_hostname, 'worker_active' => true]);
+            if (!$worker->valid) {
+                $error = 'Cannot find worker or it is not active';
+                break;
             }
 
             // create a new instance
@@ -37,7 +45,7 @@ function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $us
             $instance->inst_type = $inst_caps;
             $instance->inst_license = $default_license;
 			$instance->inst_expiration = substr($inst_expiration, 0, 4).'-'.substr($inst_expiration, 4, 2).'-'.substr($inst_expiration, 6, 2);
-            $instance->worker_seq = 1;
+            $instance->worker_seq = $worker->worker_seq;
             $instance->inst_version = trim(file_get_contents(__DIR__."/../config/current_version_{$product_code}.cfg"));
             if (!$instance->insert($dbconn)) {
                 $error = 'Cannot create or start the new instance: '.$instance->error;
@@ -62,6 +70,7 @@ function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $us
 
             $instance->init_directory();
             $instance->start();
+
         }
         else
             $dbconn->rollback();
@@ -139,10 +148,12 @@ function wcf_list_info($usu_email, &$info, &$error)
     }
 
     $info['user'] = [
-        'usu_email'     => $user->usu_email,
-        'usu_name'      => $user->usu_name,
-        'usu_language'  => $user->usu_language,
-        'usu_caps'      => $user->usu_caps
+        'usu_email'     			=> $user->usu_email,
+        'usu_name'      			=> $user->usu_name,
+        'usu_language'  			=> $user->usu_language,
+		'usu_updated_passwd_at'	    => $user->usu_updated_passwd_at,
+		'usu_passwd_digest'         => $user->usu_passwd_digest,
+        'usu_caps'      			=> $user->usu_caps
     ];
 
     $usu_inst = UsersInstances::find($db, ['usu_seq' => $user->usu_seq]);
