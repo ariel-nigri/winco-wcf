@@ -141,7 +141,7 @@ function on_list_action(el, cmd) {
 		myxhr.onUpdate = function(request) {
 			var response = null;
 			try {
-				response = eval(request.responseText);
+				response = JSON.parse(request.responseText);
 			} catch (e) {}
 			if (response == null)
 				response = { "error" : 'Invalid JSON: '+ request.responseText }
@@ -177,7 +177,7 @@ function on_list_del() {
 	} else if (confirm('Confirma a exclusão do item?')) {
 		var myxhr = new XHRUpdater('item_ctl.php?service='+service+'&instance='+escape(instance)+'&cmd=DEL&id='+escape(list_obj_id));
 		myxhr.onUpdate = function(request) {
-			var response = eval(request.responseText);
+			var response = JSON.parse(request.responseText);
 			if (!response.status)
 				alert(response.error);
 		}
