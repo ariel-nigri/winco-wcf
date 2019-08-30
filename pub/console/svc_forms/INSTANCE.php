@@ -148,6 +148,8 @@ class ServicePanel extends ServicePanelBase {
 		global $db_conn;
 		
 		exec("ls /home/instances/versions", $output);
+		if (empty($this->form->data->inst_version))
+			$this->form->data->inst_version = '-';
 		$output[] = $this->form->data->inst_version;
 
 		foreach ($output as $o)

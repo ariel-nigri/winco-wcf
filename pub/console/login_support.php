@@ -7,9 +7,9 @@ $inst->inst_seq = $_GET['inst_seq'];
 if (!$inst->select(getDbConn()))
     die('invalid instance');
 
-$ver = $inst->inst_version;
-if (empty($ver))
-    $ver = file_get_contents(__DIR__ ."/../../config/current_version_{$product_code}.cfg");
+//$ver = $inst->inst_version;
+//if (empty($ver))
+$ver = file_get_contents(__DIR__ ."/../../config/current_version_{$product_code}.cfg");
 
 $action = "https://{$inst->worker_hostname}/{$ver}/admin/login.php";
 $my_url = 'https://'.$_SERVER['HTTP_HOST'].strtok($_SERVER['REQUEST_URI'],'?')."?inst_seq=".htmlspecialchars($_GET['inst_seq']);
