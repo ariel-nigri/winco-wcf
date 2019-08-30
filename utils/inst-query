@@ -4,7 +4,7 @@
 require_once dirname(__DIR__)."/common/wcf.php";
 
 if ($argc < 2) {
-	echo "ERROR: use {$argv['0']} [-a] [-q p=val ..] [ pname ... ]\n";
+	echo "usage: ".basename($argv['0'])." [-a] [-q p=val ..] [ pname ... ]\n";
 	exit(1);
 }
 

@@ -1,6 +1,43 @@
 #!/bin/bash
 
-start | stop | status
+oper=$1
+inst=$2
 
+if [ -z "$oper" -o -z "$inst" ]; then
+    echo "usage: $(basename $0) [start|stop|status] inst_seq"
+    exit 1
+fi
 
+dir=$(dirname $(readlink -f $0))
+ver=$(${dir}/inst-query -q inst_seq=${inst} inst_version)
 
+if [ -z "$ver" ]; then
+    echo "Instance $inst was not found or has no version assigned."
+    echo "Devel computer and wrong product_code? (try export product_code=NTP|VPND|WTM)"
+    exit 1
+fi
+
+ctl=/home/instances/versions/${ver}/util/ctl.initd
+
+if [ ! -f ${ctl} ]; then
+    #
+    # Old version of the software. we try to find the old scripts.
+    #
+    if [ -f /etc/init.d/ntp-${inst} ]; then
+        ctl=/etc/init.d/ntp-${inst}
+    elif [ -f /etc/init.d/vpnd-${inst} ]; then
+        ctl=/etc/init.d/vpnd-${inst}
+    elif [ -f /etc/init.d/wtm-${inst} ]; then
+        ctl=/etc/init.d/wtm-${inst}
+    else
+        # lets create a startup script and call it!
+        ctl_link=/tmp/ctl-${inst}
+        ln -sf /home/instances/versions/${ver}/util/*.initd ${ctl_link}
+        ctl=${ctl_link}
+    fi
+    echo "calling old startup ${ctl}..."
+fi
+
+${ctl} ${oper} ${inst}
+
+[ ! -z "${ctl_link}" ] && rm -f ${ctl_link}

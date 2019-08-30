@@ -9,6 +9,8 @@ class ServicePanel extends ServicePanelBase {
 	var $title;
 	var $last_error;
 	var $instance_class;
+	var $do_stop;
+	var $do_start;
 
 	function __construct() {
 		global $product_code;
@@ -102,12 +104,22 @@ class ServicePanel extends ServicePanelBase {
 			}
 		}
 
-		if ($this->do_stop && !$this->instance_control('stop'))
-			return false;
-		
-		if ($this->do_start && !$this->instance_control('start'))
-			return false;
+		$should_start = $this->do_start;
 
+		if ($this->do_stop) {
+			$should_start = ($should_start && $instance->status());
+			$instance->stop();
+			$msg = "Instancia foi parada";
+		}
+
+		if ($should_start) {
+			$msg = "Instancia foi Iniciada";
+
+			if (!$instance->start())
+				$msg= "Erro iniciando instância";
+		}
+		if (!empty($msg))
+			$this->form->setError($msg);
 		return true;
 	}
 
@@ -135,6 +147,12 @@ class ServicePanel extends ServicePanelBase {
 	function beforeShow() {
 		global $db_conn;
 		
+		exec("ls /home/instances/versions", $output);
+		$output[] = $this->form->data->inst_version;
+
+		foreach ($output as $o)
+			$versions[trim($o)] = $o;
+
 		$mainLayout =  "| 50% | 50% |
 						-------------
 						|           |
@@ -150,7 +168,7 @@ class ServicePanel extends ServicePanelBase {
 		$config->addControl(new EditControl('inst_name', 'Nome da instância:', "size=\"40\""));
 		$config->addControl(new SelectControl("lang", 'Idioma:', $this->lang));
 		$config->addControl(new SelectControl("worker_seq", 'Worker:', $this->session->workers));
-		$config->addControl(new EditControl('inst_version', 'Versão do backend:', "size=\"40\""));
+		$config->addControl(new SelectControl('inst_version', 'Versão do backend:', $versions /*, "size=\"40\"" */));
 		$config->addControl(new EditControl('inst_type', 'Tipo ou Capabilites:', "size=\"40\""));
 		$config->addControl(new EditControl('inst_license', 'Licença:', "size=\"40\""));
 		$config->addControl(new RawControl('xx1', '<br />'));
@@ -241,13 +259,15 @@ class ServicePanel extends ServicePanelBase {
 			$this->form->setError($this->last_error);
 			return false;
 		}
-				
+
+		if (trim($this->params['inst_version']) != trim($this->form->data->inst_version))
+			$this->do_stop = $this->do_start = true;
+
 		$this->copyParamsTo($this->inst_params);
         if (empty($this->params['inst_license']))
             $this->params['inst_license'] = $GLOBALS['default_license'];
 
-		$this->do_stop = $this->do_start = false;
-		if (!$this->saveParamsToServer()) {			
+		if (!$this->saveParamsToServer()) {		
 			$this->form->setError($this->last_error);
 			return false;
 		}

@@ -134,18 +134,18 @@ else if ($svc == "INSTANCE") {
 	*/
 
 }
+
 else if ($svc == "LICENSE") {
 	if ($cmd == "DEL") {
-		$db_conn->begin();
 		$license = new NTP_RouterLicenses;
 		$license->rtlic_seq = $id;
-		if ($license->delete($db_conn)) {			
-			$db_conn->commit();
+		$db_conn = getDbConn();
+		if ($license->delete($db_conn)) {
 			$result->status = true;
-		} else {
-			$db_conn->rollback();	
+		}
+		else {
 			$result->error = "Erro excluindo {$svc}";
-		}	
+		}
 	}
 }
 

@@ -14,16 +14,4 @@ class NTP_Instances extends Instances {
         $instance->inst_sync_port = $instance->inst_adm_port + 1;
         return true; // this means that we have changed something. otherwise we should return false.
     }
-
-    public function start() {
-        if (!isset($this->inst_seq))
-            die("Before starting an instance, please set the inst_seq paramenter");
-        exec("nohup sudo /etc/init.d/ntp-{$this->inst_seq} start > /dev/null 2>&1 < /dev/null", $output);
-        return true;
-    }
-    public function stop() {
-        if (!isset($this->inst_seq))
-            die("Before starting an instance, please set the inst_seq paramenter");
-        system("nohup sudo /etc/init.d/ntp-{$this->inst_seq} stop > /dev/null 2>&1 < /dev/null");
-    }
 };

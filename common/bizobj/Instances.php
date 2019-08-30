@@ -53,6 +53,33 @@ class Instances extends SqlToClass {
         die('unimplemented');
     }
 
+    public function start() {
+        $array = $this->control('start');
+        return strpos(implode(' ', $array), 'is started') > 0;
+    }
+
+    public function stop() {
+        $this->control('stop');
+        return true;
+    }
+
+    public function status() {
+        $array = $this->control('status');
+        return strpos(implode(' ', $array), 'is started') > 0;
+    }
+
+    public function control($cmd) {
+        global $framework_dir, $product_code;
+
+        if (!isset($this->inst_seq))
+            die("Before calling '{$cmd}', please set the inst_seq parameter");
+        $output = [];
+        $tmp = '/tmp/wcf-control-$$.log';
+        exec("nohup sudo product_code={$product_code} ${framework_dir}/utils/inst-ctl {$cmd} {$this->inst_seq} > {$tmp} 2>&1 < /dev/null;".
+            " cat {$tmp}; rm -f {$tmp}", $output);
+        return $output;
+    }
+
     public function init_directory() {
         if (empty($this->inst_version) || empty($this->inst_seq)) {
             die("Before calling create_files(), please set the inst_seq and inst_version paramenters");
