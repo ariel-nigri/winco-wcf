@@ -41,8 +41,7 @@ while (!empty($argv[0])) {
 }
 
 if (empty($output_cols))
-    $output_cols = array('inst_seq', 'inst_id');
-
+    $output_cols = array('inst_seq', 'inst_id', 'inst_active', 'inst_version', 'inst_name');
 
 while ($instances->fetch()) {
     $space = false;
