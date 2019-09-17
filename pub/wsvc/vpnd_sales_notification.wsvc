@@ -26,7 +26,7 @@ DEACTIVATE
         => rcode.
 EXTEND
     - inst_seq
-    - period(months)
+    - period(days)
     Returns:
         => rcode
         => license with caps, inst_seq and period.
@@ -114,8 +114,10 @@ case 'EXTEND':
         $result->message = "this operation requires inst_lic";
         break;
     }
-    $result->success = wcf_extend_license($inst_id, $lic_period, $new_lic, $inst_caps, $result->message);
-    $inst_expiration = date('Ymd', time() + ($lic_period * 86400));
+	 $inst_expiration = date('Ymd', time() + round($lic_period * 86400));
+    $result->success = wcf_extend_license($inst_id, $inst_expiration, $result->message);
+	 $lic_array = explode('-',$inst_lic);
+	 $inst_caps = $lic_array[2];
     $result->license = "VPND-{$inst_id}-{$inst_caps}-{$inst_expiration}";
     break;
 case 'CHANGECAPS':
