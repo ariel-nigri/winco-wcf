@@ -5,7 +5,7 @@
 $group_defs = array();
 
 if ($product_code == "WTM")
-	$group_defs['REPORTS'] 	= array('ADMIN', 'INSTANCE', 'WORKER');
+	$group_defs['REPORTS'] 	= array('ADMIN', 'INSTANCE', 'WORKER', 'DEVICES');
 else
 	$group_defs['REPORTS'] 	= array('ADMIN', 'INSTANCE', 'WORKER', 'LICENSE');
 	
@@ -18,5 +18,7 @@ $service_defs['REPORTS'] 					= array('desc' => $product_name,		'virtual' => tru
 $service_defs['WORKER'] 					= array('desc' => "Workers", 			'virtual' => true);
 $service_defs['INSTANCE']					= array('desc' => "Inst&acirc;ncias", 	'virtual' => true);
 $service_defs['ADMIN'] 						= array('desc' => "Administradores", 	'virtual' => true);
-if ($console_caps['LICENSES'])
+if (!empty($console_caps['LICENSES']))
 	$service_defs['LICENSE'] 					= array('desc' => "Licen&ccedil;as", 	'virtual' => true);
+if (!empty($console_caps['DEVICES']))
+	$service_defs['DEVICES'] 					= array('desc' => "Devices", 			'virtual' => true);

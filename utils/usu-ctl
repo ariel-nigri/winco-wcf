@@ -1,0 +1,19 @@
+#!/usr/bin/php
+<?php
+
+require_once dirname(__DIR__)."/common/wcf.php";
+
+if ($argc != 5 || $argv[1] != 'regadmin') {
+	echo "usage: ".basename($argv['0'])." regadmin <name> <email> <pass>\n";
+	exit(1);
+}
+$dbconn = getDbConn();
+
+$users = new Users;
+$users->usu_name = $argv[2];
+$users->usu_email = $argv[3];
+$users->usu_lang = 'br';
+$users->usu_caps = 'ADMIN';
+$users->setPassword($argv[4]);
+if (!$users->insert($dbconn))
+    die($users->error."\n");

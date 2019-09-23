@@ -9,11 +9,6 @@ class WTM_Instances extends Instances {
         if (empty($usr_passwd_salt))
             die('ERROR: Global $usr_passwd_salt not defined');
 
-        $this->addColumn('instances.inst_email', 'inst_email', BZC_STRING);
-        $this->addColumn('instances.inst_passwd', 'inst_passwd', BZC_STRING);
-        $this->addColumn('instances.inst_passwd_digest', 'inst_passwd_digest', BZC_STRING);
-
-        $this->addColumn('instances.inst_msn_port', 'inst_msn_port', BZC_INTEGER);
         $this->addColumn('instances.inst_pol_port', 'inst_pol_port', BZC_INTEGER);
         $this->addColumn('instances.inst_cnpj', 'inst_cnpj', BZC_STRING);
         $this->addColumn('instances.inst_phone', 'inst_phone', BZC_STRING);

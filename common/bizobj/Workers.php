@@ -9,7 +9,6 @@ class Workers extends SqlToClass {
         $this->addColumn('workers.worker_created', 'worker_created', BZC_TIMESTAMP);
         $this->addColumn('workers.worker_last_boot', 'worker_last_boot', BZC_TIMESTAMP);
         $this->addColumn('workers.worker_ip', 'worker_ip', BZC_STRING);
-        $this->addColumn('workers.worker_old_ip', 'worker_old_ip', BZC_STRING);
         $this->addColumn('workers.worker_active', 'worker_active', BZC_BOOLEAN);
 	}
 };

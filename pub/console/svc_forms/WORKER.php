@@ -2,7 +2,7 @@
 
 class ServicePanel extends ServicePanelBase {	
 	
-	var $workerparams = array('worker_seq', 'worker_hostname', 'worker_frontend', 'worker_created', 'worker_last_boot', 'worker_ip', 'worker_old_ip', 'worker_active');
+	var $workerparams = array('worker_seq', 'worker_hostname', 'worker_frontend', 'worker_created', 'worker_last_boot', 'worker_ip', 'worker_active');
 	
 	var $title = "Worker";
 		

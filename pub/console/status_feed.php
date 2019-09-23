@@ -2,7 +2,6 @@
 
 require "config.php";
 
-
 // actions
 $instance_actions = "[
 	{ cmd: 'START', 			label: 'Iniciar', 					item: true},
@@ -17,7 +16,6 @@ $instance_register = "[
 	{ cmd: 'EDIT', 				label: 'Ver / Alterar cadastro',	item: true},
 	{ cmd: 'DEL',				label: 'Excluir instância',			item: true}
 ]";
-//	{ cmd: 'NEW_ACCOUNT', 	    label: 'Criar e adicionar administrador',	item: true},
 
 $admin_actions = $worker_actions = $license_actions = "[
 	{ cmd: 'NEW',				label: 'Cadastrar novo',		item: false},
@@ -47,24 +45,11 @@ function list_workers($refresh) {
 		$string_workers = '[]';
 }
 
-// $running_instances = file("ps aux | grep {$binname} | grep -v grep | awk '{ print \$15\" \"\$2}'");
-
 function get_inst_status(&$inst_status) {
 	global $binname;
 
 	$inst_status = $procs = array();
-	/*
-	return false;
 
-	global $db_conn;
-	$instanceSt = new InstancesStatus;
-	if ($instanceSt->select(getDbConn())) {
-		while ($instanceSt->fetch()) {
-			$inst_status[$instanceSt->inst_seq]['status'] = $instanceSt->inst_status;
-			$inst_status[$instanceSt->inst_seq]['last_change'] = $instanceSt->inst_last_change;	
-		}
-	}
-	*/
 	exec("ps aux | grep {$binname} | grep -v grep | awk '{ print \$15\" \"$2}'", $procs);
 	foreach ($procs as $proc)
 		$inst_status[strtok($proc, ' ')]['status'] = "PID ".strtok('');
@@ -122,7 +107,7 @@ switch ($_REQUEST['service']) {
 		$workers = new Workers;
 		if ($workers->select(getDbConn())) {			
 			while ($workers->fetch())   
-				$response[] = array($workers->worker_seq, $workers->worker_hostname, $workers->worker_frontend, $workers->worker_ip, $workers->worker_active ? "Sim" : "N&atilde;o", $workers->worker_created, $workers->worker_last_boot, $workers->worker_old_ip);
+				$response[] = array($workers->worker_seq, $workers->worker_hostname, $workers->worker_frontend, $workers->worker_ip, $workers->worker_active ? "Sim" : "N&atilde;o", $workers->worker_created, $workers->worker_last_boot);
 		}			
 
 		$list_format = 	"title:'Workers', label: 'Workers', format: [
@@ -132,8 +117,7 @@ switch ($_REQUEST['service']) {
 		{ label:'IP', width: 130 },
 		{ label:'Ativo', width: 60 },
 		{ label:'Criação', width: 120 },
-		{ label:'Último boot', width: 120 },
-		{ label:'IP anterior', width: 130 }], 
+		{ label:'Último boot', width: 120 }], 
 			defcols: [1, 2, 3, 4], register: {$worker_actions}, ";
 		break;
 	case 'ADMIN':
@@ -232,6 +216,25 @@ switch ($_REQUEST['service']) {
 		{ label:'Nome da instância', width: 300 },
 		{ label:'Hora inicial', width: 80 }], 
 			defcols: [1, 2, 3, 4, 5, 6], ";	
+		break;
+	case 'DEVICES':
+		// list workers
+		$devices = new VirtualDevice;
+		if ($devices->select(getDbConn())) {			
+			while ($devices->fetch())
+				$response[] = array("{$devices->vd_seq}", "{$devices->inst_seq}", "{$devices->vd_s_index}",
+					$devices->vd_owner,  $devices->vd_key, $devices->vd_number, "{$devices->vd_status}");
+		} 
+		
+		$list_format = 	"title:'Dispositivos', label: 'Dispositivos', format: [
+		{ label:'ID', width: 40, id: true },
+		{ label:'Inst.', width: 60 },
+		{ label:'Índice', width: 60 },
+		{ label:'Owner', width: 150 },				
+		{ label:'Chave', width: 150 },
+		{ label:'Número', width: 150 },
+		{ label:'Status', width: 60 }], 
+			defcols: [0, 1, 2, 3, 4, 5, 6], ";	
 		break;
 }
 

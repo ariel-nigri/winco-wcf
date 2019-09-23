@@ -8,11 +8,14 @@ spl_autoload_register(function($class_name) {
 	$dirs = array ('bizobj', 'mvc3/db', 'mvc', 'mvc3/form');
 
 	foreach ($dirs as $dir) {
-		if (file_exists(__DIR__."/$dir/$class_name.php")) {
-            require_once(__DIR__."/$dir/$class_name.php");
-            break;
+		if (file_exists(__DIR__."/$dir/{$class_name}.php")) {
+            require_once(__DIR__."/$dir/{$class_name}.php");
+            return;
         }
-	}
+    }
+
+    if (file_exists("{$GLOBALS['bizobj_extra']}/{$class_name}.php"))
+        require_once("{$GLOBALS['bizobj_extra']}/{$class_name}.php");
 });
 
 function getDbConn() {
