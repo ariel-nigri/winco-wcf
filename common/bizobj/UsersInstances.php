@@ -17,7 +17,8 @@ class UsersInstances extends SqlToClass {
         $this->addColumn('users_instances.usuinst_privs', 'usuinst_privs', BZC_STRING | BZC_NOTNULL);
         $this->addColumn('users_instances.usuinst_privs_groups', 'usuinst_privs_groups', BZC_STRING);
         
-        $this->addColumn('users_instances.usuinst_master', 'usuinst_master', BZC_INTEGER);
+	if ($GLOBALS['product_code'] == 'WTM')
+		$this->addColumn('users_instances.usuinst_master', 'usuinst_master', BZC_INTEGER);
 
         $this->addColumn('users.usu_seq', 'usu_seq', BZC_INTEGER | BZC_READONLY);
         $this->addColumn('users.usu_email', 'usu_email', BZC_STRING | BZC_READONLY);
