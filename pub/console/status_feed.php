@@ -24,13 +24,15 @@ $admin_actions = $worker_actions = $license_actions = "[
 ]";
 
 function list_workers($refresh) {
-	global $workername, $filtersList, $string_workers;
-	
+	global $workername, $my_worker_hostname, $our_worker_seq, $filtersList, $string_workers;
+
 	$db_conn = getDbConn();
 	$workers = new Workers;
 	if ($workers->select($db_conn)) {			
 		while ($workers->fetch()) {
 			$workername[$workers->worker_seq] = $workers->worker_hostname;
+			if ($workers->worker_hostname == $my_worker_hostname)
+				$our_worker_seq = $workers->worker_seq;
 			$filtersList['worker'][] = $workers->worker_hostname;
 		}
 	} 
@@ -57,6 +59,7 @@ function get_inst_status(&$inst_status) {
 
 $response = array();
 $workername = array();
+$our_worker_seq = null;
 $filtersList['worker'] = array();
 $string_workers = array();
 
@@ -78,9 +81,10 @@ switch ($_REQUEST['service']) {
 				$act =  $instances->inst_active ? "Sim" : "N&atilde;o";
 				$response[] = array($instances->inst_seq, $instances->inst_id, $instances->inst_created,
 									$instances->inst_name,
-									$instances->inst_license, $instances->inst_type,
+									$instances->inst_license, $instances->inst_type, $instances->inst_version,
 									$workername[$instances->worker_seq], $instances->inst_adm_port, $lang, $act,
-									!empty($inst_status[$instances->inst_seq]['status']) ? $inst_status[$instances->inst_seq]['status'] : 'off',
+									!empty($inst_status[$instances->inst_seq]['status']) ? $inst_status[$instances->inst_seq]['status'] : 
+									( $instances->worker_seq == $our_worker_seq ? 'off' : '-'),
 									!empty($inst_status[$instances->inst_seq]['last_change']) ? $inst_status[$instances->inst_seq]['last_change'] : 'unknown');
 			}
 		}
@@ -92,13 +96,14 @@ switch ($_REQUEST['service']) {
 		{ label:'Registrado para', width: 200 },
 		{ label:'Licença', width: 250 },
 		{ label:'Recursos', width: 150 },
+		{ label:'Versão', width: 60 },
 		{ label:'Worker', width: 230 },
 		{ label:'Admin port', width: 80 },
 		{ label:'Idioma do servidor', width: 110 },
 		{ label:'Ativa', width: 45 },
 		{ label:'Status', width: 70, sync: true },
 		{ label:'Status time', width: 120 }],  
-			defcols: [0, 1, 3, 5, 8, 9, 10], actions: {$instance_actions}, register: {$instance_register}, filters: [{
+			defcols: [0, 1, 3, 5, 6, 9, 10, 11], actions: {$instance_actions}, register: {$instance_register}, filters: [{
                     multi: true,
                     name: 'Workers',
                     choices: ".$string_workers."}], ";

@@ -83,7 +83,7 @@ class ServicePanel extends ServicePanelBase {
 			$abaConfig->addControl(new RawControl('br1', '<br />'));
 			
 			$owner = new MvcBoxedContainer($this->form, 'owner', 'Informações do dono');
-			$owner->addControl(new LabelControl('inst_seq', 'Instância:'));
+			$owner->addControl(new EditControl('inst_seq', 'Instância:'));
 			$owner->addControl(new EditControl('rtlic_owner', 'Pertence a:', 'size="40" '));
 			$abaConfig->addControl($owner);
 		} else {
