@@ -8,7 +8,7 @@ if [ -z "$oper" -o -z "$inst" ]; then
     exit 1
 fi
 
-dir=$(dirname $(readlink -f $0))
+dir=$(dirname $(readlink -f $(which $0)))
 ver=$(${dir}/inst-query -q inst_seq=${inst} inst_version)
 
 if [ -z "$ver" ]; then

@@ -82,7 +82,7 @@ switch ($_REQUEST['service']) {
 				$response[] = array($instances->inst_seq, $instances->inst_id, $instances->inst_created,
 									$instances->inst_name,
 									$instances->inst_license, $instances->inst_type, $instances->inst_version,
-									$workername[$instances->worker_seq], $instances->inst_adm_port, $lang, $act,
+									strtok($workername[$instances->worker_seq], '.'), $instances->inst_adm_port, $lang, $act,
 									!empty($inst_status[$instances->inst_seq]['status']) ? $inst_status[$instances->inst_seq]['status'] : 
 									( $instances->worker_seq == $our_worker_seq ? 'off' : '-'),
 									!empty($inst_status[$instances->inst_seq]['last_change']) ? $inst_status[$instances->inst_seq]['last_change'] : 'unknown');
@@ -97,13 +97,13 @@ switch ($_REQUEST['service']) {
 		{ label:'Licença', width: 250 },
 		{ label:'Recursos', width: 150 },
 		{ label:'Versão', width: 60 },
-		{ label:'Worker', width: 230 },
+		{ label:'Worker', width: 70 },
 		{ label:'Admin port', width: 80 },
 		{ label:'Idioma do servidor', width: 110 },
 		{ label:'Ativa', width: 45 },
 		{ label:'Status', width: 70, sync: true },
 		{ label:'Status time', width: 120 }],  
-			defcols: [0, 1, 3, 5, 6, 9, 10, 11], actions: {$instance_actions}, register: {$instance_register}, filters: [{
+			defcols: [0, 1, 3, 5, 6, 7, 9, 10, 11], actions: {$instance_actions}, register: {$instance_register}, filters: [{
                     multi: true,
                     name: 'Workers',
                     choices: ".$string_workers."}], ";
@@ -227,19 +227,19 @@ switch ($_REQUEST['service']) {
 		$devices = new VirtualDevice;
 		if ($devices->select(getDbConn())) {			
 			while ($devices->fetch())
-				$response[] = array("{$devices->vd_seq}", "{$devices->inst_seq}", "{$devices->vd_s_index}",
-					$devices->vd_owner,  $devices->vd_key, $devices->vd_number, "{$devices->vd_status}");
+				$response[] = array("{$devices->vd_seq}", "{$devices->inst_seq}", ''.strtok($devices->vds_name, '.'),
+					$devices->vd_owner,  $devices->vd_key, $devices->vd_number, VirtualDevice::$status_array[$devices->vd_status]);
 		} 
 		
 		$list_format = 	"title:'Dispositivos', label: 'Dispositivos', format: [
 		{ label:'ID', width: 40, id: true },
-		{ label:'Inst.', width: 60 },
-		{ label:'Índice', width: 60 },
-		{ label:'Owner', width: 150 },				
+		{ label:'Instância', width: 70 },
+		{ label:'VDS', width: 100 },
+		{ label:'Usuário', width: 150 },				
 		{ label:'Chave', width: 150 },
-		{ label:'Número', width: 150 },
-		{ label:'Status', width: 60 }], 
-			defcols: [0, 1, 2, 3, 4, 5, 6], ";	
+		{ label:'Número', width: 120 },
+		{ label:'Status', width: 100 }], 
+			defcols: [0, 1, 2, 3, 4, 5, 6], register: $admin_actions, ";
 		break;
 }
 

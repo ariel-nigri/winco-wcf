@@ -1,0 +1,5 @@
+Defaults:apache ! requiretty
+
+Defaults:apache env_keep += "product_code"
+
+apache	ALL = (root) NOPASSWD:/opt/winco/cloud_framework-min/utils/inst-ctl
