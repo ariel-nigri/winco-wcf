@@ -1,5 +1,4 @@
 <?php
-require_once "class/class-sqltoclass.php";
 
 class EikonInstances extends SqlToClass {
 	public function __construct() {

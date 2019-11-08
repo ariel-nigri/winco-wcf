@@ -1,7 +1,5 @@
 <?php
 
-require_once "class/class-sqltoclass.php";
-
 class ImportLog extends SqlToClass {
     public function __construct() {
         $this->addTable('import_log');

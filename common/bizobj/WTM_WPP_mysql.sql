@@ -85,11 +85,38 @@ CREATE TABLE virt_device_server (
 -- Name: virt_device; Type: TABLE; Schema: public; Owner: wtm; Tablespace: 
 --
 CREATE TABLE virt_device (
-    vd_seq        INTEGER NOT NULL,
+    vd_seq        INTEGER AUTO_INCREMENT PRIMARY KEY,
     vds_seq       INTEGER NOT NULL REFERENCES virt_device_server,
     inst_seq      INTEGER NOT NULL REFERENCES instances,
     vd_owner      VARCHAR(200) NOT NULL,
     vd_number     VARCHAR(100) NOT NULL,
     vd_key        VARCHAR(100) NOT NULL,
     vd_status     INTEGER NOT NULL DEFAULT 1
+);
+
+--
+-- Name: import_log (for Eikon and s4b)
+--
+CREATE TABLE import_log (
+    implog_seq               INTEGER AUTO_INCREMENT PRIMARY KEY,
+    inst_seq                 INTEGER NOT NULL REFERENCES instances,
+    implog_import_date       TIMESTAMP NOT NULL,
+    implog_dataset_name      VARCHAR(100) NOT NULL,
+    implog_imported_chats    INTEGER NOT NULL,
+    implog_imported_messages INTEGER NOT NULL,
+    implog_network           VARCHAR(50) NOT NULL
+);
+
+CREATE INDEX il_inst_seq_idx ON import_log (inst_seq);
+
+--
+-- Name eikon_instances (for Eikon import configuration per instance)
+--
+CREATE TABLE eikon_instances (
+    inst_seq                INTEGER PRIMARY KEY REFERENCES instances,
+    eikon_active            BOOLEAN DEFAULT 0,
+    eikon_server            VARCHAR(256),
+    eikon_user              VARCHAR(256),
+    eikon_passwd            VARCHAR(256),
+    eikon_company_id        VARCHAR(256)
 );

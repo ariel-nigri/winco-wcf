@@ -4,6 +4,7 @@
 ini_set("include_path", dirname(dirname(__DIR__))."/common");
 
 require "wcf.php";
+$wcf_search_dirs[] = 'mvc';
 
 if (defined("CFM_BASE_DOMAIN"))
 	session_set_cookie_params(0, '/', CFM_BASE_DOMAIN, true, true);

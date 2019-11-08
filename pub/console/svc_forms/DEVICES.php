@@ -47,10 +47,11 @@ class ServicePanel extends ServicePanelBase {
 		if ($device->vds_seq === '')
 			$device->vds_seq = SqlNull();
 
+		$dbconn = getDbConn();
 		if ($device->vd_seq)
-			$rc = $device->update(getDbConn());
+			$rc = $device->update($dbconn);
 		else
-			$rc = $device->insert(getDbConn());
+			$rc = $device->insert($dbconn);
 		
 		if (!$rc)
 			$this->form->setError($device->error);

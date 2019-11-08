@@ -4,10 +4,12 @@ require_once dirname(__DIR__)."/config/install_params.php";
 
 $wcf_db_conn = $wcf_db_conn_pdo = null;
 
-spl_autoload_register(function($class_name) {
-	$dirs = array ('bizobj', 'mvc3/db', 'mvc', 'mvc3/form');
+$wcf_search_dirs = ['bizobj', 'mvc3/db'];
 
-	foreach ($dirs as $dir) {
+spl_autoload_register(function($class_name) {
+    global $wcf_search_dirs;
+
+	foreach ($wcf_search_dirs as $dir) {
 		if (file_exists(__DIR__."/$dir/{$class_name}.php")) {
             require_once(__DIR__."/$dir/{$class_name}.php");
             return;
