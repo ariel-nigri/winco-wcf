@@ -18,18 +18,10 @@ class WTM_Instances extends Instances {
         $this->addColumn('instances.inst_max_pwd_age', 'inst_max_pwd_age', BZC_INTEGER);
 
 	}
-    public function validatePassword($pass) {
-        global $usr_passwd_salt;
-
-		  if (!empty($this->inst_passwd) && $this->inst_passwd == $pass)
-            return true;
-        $digest = md5($usr_passwd_salt.$pass);
-        return $digest == $this->inst_passwd_digest;
-    }
-    public function setPassword($pass) {
-        global $usr_passwd_salt;
-
-        $this->inst_passwd_digest = md5($usr_passwd_salt.$pass);
-        $this->inst_passwd = ''; // cannot be null or will not update!
+    // This function is called after a new instance is created in the database. At this time we can
+    // fill info that is pertinent to the database.
+    function onCreateInstance($instance, $sql) {
+        $instance->inst_pol_port = $instance->inst_adm_port - 1;
+        return true; // this means that we have changed something. otherwise we should return false.
     }
 };
