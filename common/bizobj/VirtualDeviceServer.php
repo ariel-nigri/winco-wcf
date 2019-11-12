@@ -6,6 +6,9 @@ class VirtualDeviceServer extends SqlToClass {
     var     $vds_name;
     var     $inst_seq;
     var     $vds_active;
+    var     $vds_remoteuser = 'android';
+    var     $vds_remotehost = '127.0.0.1';
+    var     $vds_remoteport =  22;
 
     // LOCAL VARS
     var     $avd_dir;
@@ -20,16 +23,15 @@ class VirtualDeviceServer extends SqlToClass {
         $this->addColumn('vds_maxdevs', 'vds_maxdevs', 'vd_s_max', BZC_INTEGER);
     }
 
-    public function list_devices($sql) {
-        // list the devices in the db and match them to the directories
-        return [];
+    function send_file($local, $remote) {
+        global $framework_dir;
+
+        exec("sudo -u{$this->vds_remoteuser} scp -P {$this->vds_remoteport} {$local} {$this->vds_remotehost}:{$remote}", $this->error);
     }
 
-    public function create_device($inst_seq, $phone_number) {
-        // insert into db but do not create the files.
-    }
+    function remote_exec($cmd) {
+        global $framework_dir;
 
-    public function activate() {
-        
+        exec("sudo -u{$this->vds_remoteuser} ssh -p {$this->vds_remoteport} {$this->vds_remotehost} '/opt/winco/vds/bin/$cmd'");
     }
 }

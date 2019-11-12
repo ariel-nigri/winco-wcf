@@ -12,16 +12,21 @@ class VirtualDevice extends SqlToClass {
     // status definitions for db/activation statuses.
     const   VDS_DBONLY      = 1;        // only on database.
     const   VDS_CREATED     = 2;        // device created and may be booted. Whastapp installed but not running.
-    const   VDS_ACTIVATING  = 3;        // in the process of activating whastapp to a phone number. must have a timeout.
+    const   VDS_CODESENT    = 3;        // in the process of activating whastapp to a phone number. must have a timeout.
     const   VDS_ACTIVATED   = 4;        // whastapp is activated in this device. (it may be assoiated with a browser or not)
-    const   VDS_ASSOCIATING = 5;        // the device is being associated to a browser (must have a timeout)
+    
+    const   VDS_PROCESSING  = 0x100;    // Same as a lock. It is bitwise-encoded.
+
+    // Whatsapp versions
+    const   VDWT_STANDARD    = 'wpp';
+    const   VDWT_BUSINESS    = 'w4b';
 
     static $status_array = array(
         VirtualDevice::VDS_DBONLY      => 'Cadastrado',
         VirtualDevice::VDS_CREATED     => 'Alocado',
-        VirtualDevice::VDS_ACTIVATING  => 'Em ativação',
+        VirtualDevice::VDS_CODESENT    => 'Código enviado',
         VirtualDevice::VDS_ACTIVATED   => 'Ativado',
-        VirtualDevice::VDS_ASSOCIATING => 'Lendo QR code'
+        VirtualDevice::VDS_PROCESSING  => 'Processando...'
     );
 
     //
@@ -53,6 +58,7 @@ class VirtualDevice extends SqlToClass {
         $this->addColumn('vd_number',   'vd_number', BZC_STRING);
         $this->addColumn('vd_key',      'vd_key', BZC_STRING | BZC_NOTNULL);
         $this->addColumn('vd_status',   'vd_status', BZC_INTEGER | BZC_NOTNULL);
+        $this->addColumn('vd_wtype',    'vd_wtype', BZC_STRING | BZC_NOTNULL);
 
         $this->addColumn('virt_device_server.vds_name', 'vds_name', BZC_STRING | BZC_READONLY);
         $this->addColumn('virt_device_server.vds_maxdevs', 'vds_maxdevs', BZC_INTEGER | BZC_READONLY);

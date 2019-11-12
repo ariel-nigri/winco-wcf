@@ -91,7 +91,8 @@ CREATE TABLE virt_device (
     vd_owner      VARCHAR(200) NOT NULL,
     vd_number     VARCHAR(100) NOT NULL,
     vd_key        VARCHAR(100) NOT NULL,
-    vd_status     INTEGER NOT NULL DEFAULT 1
+    vd_status     INTEGER NOT NULL DEFAULT 1,
+    vd_wtype      VARCHAR(20) NOT NULL
 );
 
 --

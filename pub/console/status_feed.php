@@ -226,9 +226,13 @@ switch ($_REQUEST['service']) {
 		// list workers
 		$devices = new VirtualDevice;
 		if ($devices->select(getDbConn())) {			
-			while ($devices->fetch())
+			while ($devices->fetch()) {
+				$ststr = VirtualDevice::$status_array[$devices->vd_status & 0xff];
+				if ($devices->vd_status & VirtualDevice::VDS_PROCESSING)
+					$ststr .= '(locked)';
 				$response[] = array("{$devices->vd_seq}", "{$devices->inst_seq}", ''.strtok($devices->vds_name, '.'),
-					$devices->vd_owner,  $devices->vd_key, $devices->vd_number, VirtualDevice::$status_array[$devices->vd_status]);
+					$devices->vd_owner,  $devices->vd_key, $devices->vd_number, $ststr);
+			}
 		} 
 		
 		$list_format = 	"title:'Dispositivos', label: 'Dispositivos', format: [

@@ -13,7 +13,7 @@ class ServicePanel extends ServicePanelBase {
 			if (!$device->valid)
 				die('invalid params');
 	
-			foreach ([ 'vd_seq', 'vds_seq', 'vd_owner', 'vd_number', 'vd_key', 'vd_status', 'vds_seq', 'vds_name', 'inst_seq' ] as $prop)
+			foreach ([ 'vd_seq', 'vds_seq', 'vd_owner', 'vd_number', 'vd_key', 'vd_status', 'vds_seq', 'vds_name', 'inst_seq', 'vd_wtype' ] as $prop)
 				$this->form->data->{$prop} = $device->{$prop};
 		}
 		else {
@@ -38,7 +38,7 @@ class ServicePanel extends ServicePanelBase {
 		$device = new VirtualDevice;
 		$device->vd_seq = $this->params['vd_seq'];
 
-		foreach ([ 'vd_owner', 'vd_number', 'vd_status', 'inst_seq', 'vds_seq' ] as $prop)
+		foreach ([ 'vd_owner', 'vd_number', 'vd_status', 'inst_seq', 'vds_seq', 'vd_wtype' ] as $prop)
 			$device->{$prop} = $this->form->data->{$prop};
 
 		if ($device->inst_seq === '')
@@ -78,6 +78,7 @@ class ServicePanel extends ServicePanelBase {
 		$config->addControl(new EditControl('inst_seq', 'Instância:', "size=\"40\""));
 		$config->addControl(new EditControl('vd_owner', 'Usuário:', "size=\"40\""));
 		$config->addControl(new EditControl('vd_number', 'Número:', "size=\"40\""));
+		$config->addControl(new SelectControl('vd_wtype', 'Vers. Whatsapp:', [ 'wpp' => 'wpp', 'w4b' => 'w4b' ]));
 		$config->addControl(new SelectControl('vd_status', 'Status:', VirtualDevice::$status_array));
 		$config->addControl(new LabelControl('vd_key', 'Chave:', "size=\"40\""));
 		$abaConfig->addControl($config);
