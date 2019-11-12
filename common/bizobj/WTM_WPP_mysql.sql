@@ -89,10 +89,11 @@ CREATE TABLE virt_device (
     vds_seq       INTEGER NOT NULL REFERENCES virt_device_server,
     inst_seq      INTEGER NOT NULL REFERENCES instances,
     vd_owner      VARCHAR(200) NOT NULL,
-    vd_number     VARCHAR(100) NOT NULL,
+    vd_number     VARCHAR(100) NOT NULL UNIQUE,
     vd_key        VARCHAR(100) NOT NULL,
     vd_status     INTEGER NOT NULL DEFAULT 1,
-    vd_wtype      VARCHAR(20) NOT NULL
+    vd_wtype      VARCHAR(20) NOT NULL,
+    vd_activated  TIMESTAMP NULL
 );
 
 --

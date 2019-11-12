@@ -59,12 +59,13 @@ class VirtualDevice extends SqlToClass {
         $this->addColumn('vd_key',      'vd_key', BZC_STRING | BZC_NOTNULL);
         $this->addColumn('vd_status',   'vd_status', BZC_INTEGER | BZC_NOTNULL);
         $this->addColumn('vd_wtype',    'vd_wtype', BZC_STRING | BZC_NOTNULL);
+        $this->addColumn('vd_activated','vd_activated', BZC_TIMESTAMP);
 
         $this->addColumn('virt_device_server.vds_name', 'vds_name', BZC_STRING | BZC_READONLY);
         $this->addColumn('virt_device_server.vds_maxdevs', 'vds_maxdevs', BZC_INTEGER | BZC_READONLY);
     }
 
-    public function beforeSave($create) {
+    public function beforeSave($create, $sql) {
         // Make sure vd_number is all numeric.
         if (!empty($this->vd_number)) {
             $c = strlen($this->vd_number);
@@ -84,6 +85,17 @@ class VirtualDevice extends SqlToClass {
             // for activation
             $this->vd_status = self::VDS_DBONLY;
             $this->vd_key = strtoupper(bin2hex(openssl_random_pseudo_bytes(8)));
+        }
+        else {
+            ini_set('display_errors', 'on');
+            error_reporting(E_ALL);
+            // cannot change activation time.
+            $this->vd_activated = null;
+            if ($this->vd_status == self::VDS_ACTIVATED) {
+                $sh = $this->getShadow($sql);
+                if (empty($sh->vd_activated))
+                    $this->vd_activated = date('Y-m-d H:i:s');
+            }
         }
         return true;
     }

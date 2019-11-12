@@ -1,0 +1,36 @@
+<?php
+
+require "../../common/wcf.php";
+
+header("Access-Control-Allow-Origin: *");
+header('Content-type: text/plain');
+
+$vd_number = @preg_replace('/[^0-9]/', '', $_REQUEST['vd_number']);
+
+if (!empty($vd_number)) {
+    $vd_key    = @preg_replace('/[^a-zA-Z0-9]/', '', $_REQUEST['vd_key']);
+
+    if (empty($vd_key))
+        die('ERROR: missing device Key');
+
+    $vd = VirtualDevice::find(getDbConn(), [ 'vd_number' => $vd_number, 'vd_key' => $vd_key ]);
+    if (!$vd->valid || !$vd->inst_seq)
+        die('ERROR: Bad device number or key');
+    
+    $inst = WTM_Instances::find(getDbConn(), [ 'inst_seq' => $vd->inst_seq, 'inst_active' => 1 ]);
+    if (!$inst)
+        die('ERROR: Inactive account');
+
+    $result = [
+        "vd_owner={$vd->vd_owner}",
+        "vd_status={$vd->vd_status}",
+        "service_uri=/{$inst->inst_version}/vds_scripts/"
+    ];
+
+    foreach ([ 'worker_frontend', 'inst_id', 'inst_version' ] as $k)
+        $result[] = $k.'='.$inst->{$k};
+
+    echo "OK\r\n", implode("\r\n", $result), "\r\n";
+    exit;
+}
+die("ERROR: Bad command");

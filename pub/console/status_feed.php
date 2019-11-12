@@ -231,7 +231,7 @@ switch ($_REQUEST['service']) {
 				if ($devices->vd_status & VirtualDevice::VDS_PROCESSING)
 					$ststr .= '(locked)';
 				$response[] = array("{$devices->vd_seq}", "{$devices->inst_seq}", ''.strtok($devices->vds_name, '.'),
-					$devices->vd_owner,  $devices->vd_key, $devices->vd_number, $ststr);
+					$devices->vd_owner,  $devices->vd_key, $devices->vd_number, $devices->vd_activated, $ststr);
 			}
 		} 
 		
@@ -242,8 +242,9 @@ switch ($_REQUEST['service']) {
 		{ label:'Usuário', width: 150 },				
 		{ label:'Chave', width: 150 },
 		{ label:'Número', width: 120 },
+		{ label:'Ativado em', width: 120 },
 		{ label:'Status', width: 100 }], 
-			defcols: [0, 1, 2, 3, 4, 5, 6], register: $admin_actions, ";
+			defcols: [0, 1, 2, 3, 4, 5, 6, 7], register: $admin_actions, ";
 		break;
 }
 
