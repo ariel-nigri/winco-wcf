@@ -2,7 +2,7 @@
 
 class ServicePanel extends ServicePanelBase {	
 	
-	var $inst_params = array('worker_seq', 'inst_active', 'inst_version', 'inst_type', 'inst_license', 'inst_lang', 'inst_name');
+	var $inst_params = array('worker_seq', 'inst_active', 'inst_version', 'inst_type', 'inst_license', 'inst_lang', 'inst_name',  'inst_cnpj');
 	var $inst_stat	 = array('inst_id', 'inst_created', 'inst_adm_port');
 
 	var $lang = array('br' => 'Português', 'us' => 'Inglês');
@@ -42,6 +42,7 @@ class ServicePanel extends ServicePanelBase {
 			$this->params['inst_name'] 		= '';
 			$this->params['inst_license'] 	= '';
 			$this->params['inst_type'] 		= '';
+			$this->params['inst_cnpj']		= '';
 			$this->params['inst_version'] 	= file_get_contents("{__DIR__}/../../../config/current_version_{$product_code}.cfg");
 		}
 		$this->copyParamsFrom($this->inst_params);
@@ -68,6 +69,7 @@ class ServicePanel extends ServicePanelBase {
 		$this->params['inst_license'] = $instance->inst_license;
 		$this->params['inst_lang'] = $instance->inst_lang;
 		$this->params['inst_name'] = $instance->inst_name;
+		@$this->params['inst_cnpj'] = $instance->inst_cnpj;
 	}
 		
 	function saveParamsToServer() {
@@ -81,6 +83,7 @@ class ServicePanel extends ServicePanelBase {
 		$instance->inst_license = $this->params['inst_license'];
 		$instance->inst_active = $this->params['inst_active'];
 		$instance->inst_version = $this->params['inst_version'];
+		$instance->inst_cnpj = $this->params['inst_cnpj'];
 
 		if (!empty($this->params['inst_seq'])) {
 			$instance->inst_seq = $this->params['inst_seq'];
@@ -168,6 +171,8 @@ class ServicePanel extends ServicePanelBase {
 
 		$config = new MvcBoxedContainer($this->form, 'config', 'Cadastro do contratante');
 		$config->addControl(new EditControl('inst_name', 'Nome da instância:', "size=\"40\""));
+		if ($GLOBALS['console_caps']['INST_CNPJ'])
+			$config->addControl(new EditControl("inst_cnpj", 'CNPJ:'));
 		$config->addControl(new SelectControl("lang", 'Idioma:', $this->lang));
 		$config->addControl(new SelectControl("worker_seq", 'Worker:', $this->session->workers));
 		$config->addControl(new SelectControl('inst_version', 'Versão do backend:', $versions /*, "size=\"40\"" */));
