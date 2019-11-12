@@ -7,7 +7,7 @@ class VirtualDeviceServer extends SqlToClass {
     var     $inst_seq;
     var     $vds_active;
     var     $vds_remoteuser = 'android';
-    var     $vds_remotehost = '127.0.0.1';
+    var     $vds_remotehost;
     var     $vds_remoteport =  22;
 
     // LOCAL VARS
@@ -24,13 +24,15 @@ class VirtualDeviceServer extends SqlToClass {
     }
 
     function send_file($local, $remote) {
-        global $framework_dir;
+        if (empty($this->vds_remotehost))
+            $this->vds_remotehost = $this->vds_name;
 
         exec("sudo -u{$this->vds_remoteuser} scp -P {$this->vds_remoteport} {$local} {$this->vds_remotehost}:{$remote}", $this->error);
     }
 
     function remote_exec($cmd) {
-        global $framework_dir;
+        if (empty($this->vds_remotehost))
+            $this->vds_remotehost = $this->vds_name;
 
         exec("sudo -u{$this->vds_remoteuser} ssh -p {$this->vds_remoteport} {$this->vds_remotehost} '/opt/winco/vds/bin/$cmd'");
     }
