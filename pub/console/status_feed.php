@@ -17,7 +17,11 @@ $instance_register = "[
 	{ cmd: 'DEL',				label: 'Excluir instância',			item: true}
 ]";
 
-$admin_actions = $worker_actions = $license_actions = "[
+$worker_actions = "[
+	{ cmd: 'LOST_MEDIA_REPORT',	label: 'Relatório de mídias para baixar', item: false }
+]";
+
+$admin_actions = $worker_register = $license_actions = "[
 	{ cmd: 'NEW',				label: 'Cadastrar novo',		item: false},
 	{ cmd: 'EDIT',				label: 'Ver / Alterar',			item: true},
 	{ cmd: 'DEL',				label: 'Excluir',				item: true}
@@ -128,7 +132,7 @@ switch ($_REQUEST['service']) {
 		{ label:'Ativo', width: 60 },
 		{ label:'Criação', width: 120 },
 		{ label:'Último boot', width: 120 }], 
-			defcols: [1, 2, 3, 4], register: {$worker_actions}, ";
+			defcols: [1, 2, 3, 4], actions: {$worker_actions}, register: {$worker_register}, ";
 		break;
 	case 'ADMIN':
 		$inst_users = UsersInstances::getUsersByInstance(getDbConn());
