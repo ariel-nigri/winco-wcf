@@ -119,7 +119,7 @@ function on_list_action(el, cmd) {
 	else if (cmd == 'SUPPORT_INST')
 		on_list_support("inst_seq");
 	else if (cmd == 'LOST_MEDIA_REPORT')
-		on_list_lost_medida_report();
+		on_list_lost_medida_report(list_obj_id);
 	else if (cmd == 'SUPPORT_ADM')
 		on_list_support("usu_seq");
 	else if (cmd == 'LOG_VIEW')
@@ -211,6 +211,6 @@ function on_list_logview(page) {
 	window.open("../wsvc/log.php?inst_seq="+list_obj_id+"&page="+page, '_blank');
 }
 
-function on_list_lost_medida_report() {
-	window.open('lost_media_report.phtml', '_blank');
+function on_list_lost_medida_report(vds_seq) {
+	window.open('lost_media_report.phtml?vds_seq='+vds_seq, '_blank');
 }

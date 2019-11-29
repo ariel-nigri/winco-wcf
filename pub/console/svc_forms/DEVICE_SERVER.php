@@ -38,8 +38,6 @@ class ServicePanel extends ServicePanelBase {
 			$rc = $device->update($dbconn);
 		else
             $rc = $device->insert($dbconn);
-        print_r($device);
-        exit;
 		
 		if (!$rc)
 			$this->form->setError($device->error);

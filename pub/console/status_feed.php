@@ -17,8 +17,8 @@ $instance_register = "[
 	{ cmd: 'DEL',				label: 'Excluir instância',			item: true}
 ]";
 
-$worker_actions = "[
-	{ cmd: 'LOST_MEDIA_REPORT',	label: 'Relatório de mídias para baixar', item: false }
+$vds_ops = "[
+	{ cmd: 'LOST_MEDIA_REPORT',	label: 'Relatório de mídias para baixar', item: true }
 ]";
 
 $admin_actions = $worker_register = $license_actions = "[
@@ -132,7 +132,7 @@ switch ($_REQUEST['service']) {
 		{ label:'Ativo', width: 60 },
 		{ label:'Criação', width: 120 },
 		{ label:'Último boot', width: 120 }], 
-			defcols: [1, 2, 3, 4], actions: {$worker_actions}, register: {$worker_register}, ";
+			defcols: [1, 2, 3, 4], register: {$worker_register}, ";
 		break;
 	case 'ADMIN':
 		$inst_users = UsersInstances::getUsersByInstance(getDbConn());
@@ -270,7 +270,7 @@ switch ($_REQUEST['service']) {
 			{ label:'Instancia', width: 60 },
 			{ label:'Status', width: 100 },
 			{ label:'Max. devices', width: 100 }],
-				defcols: [0, 1, 2, 3, 4], register: $vds_actions, ";
+				defcols: [0, 1, 2, 3, 4], actions: {$vds_ops}, register: $vds_actions, ";
 		break;
 }
 
