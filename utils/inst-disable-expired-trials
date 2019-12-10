@@ -1,0 +1,43 @@
+#!/bin/php
+<?php
+
+ini_set("include_path", dirname(dirname(__DIR__))."/common");
+require "wcf.php";
+
+$db_conn = getDbConn();
+
+//
+// Find expired  trial instances
+//
+$max_expiration_date = new DateTime();
+$max_expiration_date->modify('-2 day');			//We give 2 grace days
+$instances = $instance_classname::find($db_conn, array(
+    'inst_active' =>  true,
+    'inst_expiration' => SqlExpr('<', $max_expiration_date->format('Y-m-d')),
+	'inst_type' => SqlExpr('like', '%TRIAL=Y%')
+));
+
+if (!$instances->valid) {
+    echo "No expired trials to disable now.\r\n";  //*** usar slog()
+    exit;
+}
+
+while ($instances->fetch()) {
+	$to_disable = new $instance_classname;
+	$to_disable->inst_seq = $instances->inst_seq;
+
+	//
+	//Stop instance
+	//
+	$to_disable->stop();
+	 
+	//
+	// Disable instance
+	//
+	$to_disable->inst_active = false;
+	if (!$to_disable->update($db_conn)) {
+		echo 'Error disabling instance ' .  $to_disable->inst_seq . ':  ' . $to_disable->error .  "\r\n";
+	}
+
+	echo 'Instance ' . $instances->inst_seq . " disabled\r\n";	 
+}
