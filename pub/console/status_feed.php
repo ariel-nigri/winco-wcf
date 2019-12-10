@@ -17,10 +17,19 @@ $instance_register = "[
 	{ cmd: 'DEL',				label: 'Excluir instância',			item: true}
 ]";
 
-$admin_actions = $worker_actions = $license_actions = "[
+$vds_ops = "[
+	{ cmd: 'LOST_MEDIA_REPORT',	label: 'Relatório de mídias para baixar', item: true }
+]";
+
+$admin_actions = $worker_register = $license_actions = "[
 	{ cmd: 'NEW',				label: 'Cadastrar novo',		item: false},
 	{ cmd: 'EDIT',				label: 'Ver / Alterar',			item: true},
-	{ cmd: 'DEL',				label: 'Excluir',				item: true},
+	{ cmd: 'DEL',				label: 'Excluir',				item: true}
+]";
+
+$vds_actions = "[
+	{ cmd: 'NEW',				label: 'Cadastrar novo',		item: false},
+	{ cmd: 'EDIT',				label: 'Ver / Alterar',			item: true}
 ]";
 
 function list_workers($refresh) {
@@ -123,7 +132,7 @@ switch ($_REQUEST['service']) {
 		{ label:'Ativo', width: 60 },
 		{ label:'Criação', width: 120 },
 		{ label:'Último boot', width: 120 }], 
-			defcols: [1, 2, 3, 4], register: {$worker_actions}, ";
+			defcols: [1, 2, 3, 4], register: {$worker_register}, ";
 		break;
 	case 'ADMIN':
 		$inst_users = UsersInstances::getUsersByInstance(getDbConn());
@@ -245,6 +254,23 @@ switch ($_REQUEST['service']) {
 		{ label:'Ativado em', width: 120 },
 		{ label:'Status', width: 100 }], 
 			defcols: [0, 1, 2, 3, 4, 5, 6, 7], register: $admin_actions, ";
+		break;
+	case 'DEVICE_SERVER':
+		// list workers
+		$response = [];
+		$vds = new VirtualDeviceServer;
+		if ($vds->select(getDbConn())) {
+			while ($vds->fetch())
+				$response[] = array("{$vds->vds_seq}", "{$vds->vds_name}", "{$vds->inst_seq}",
+							$vds->vds_active ? 'Padrão' : '', "{$vds->vds_maxdevs}");
+		}
+		$list_format = 	"title:'Servidores de dispositivos', label: 'Servidores de dispositivos', format: [
+			{ label:'ID', width: 40, id: true },
+			{ label:'Virtual Device', width: 250 },
+			{ label:'Instancia', width: 60 },
+			{ label:'Status', width: 100 },
+			{ label:'Max. devices', width: 100 }],
+				defcols: [0, 1, 2, 3, 4], actions: {$vds_ops}, register: $vds_actions, ";
 		break;
 }
 

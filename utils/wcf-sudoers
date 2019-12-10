@@ -1,5 +1,9 @@
-Defaults:apache ! requiretty
+Defaults:apache   ! requiretty
 
 Defaults:apache env_keep += "product_code"
 
-apache	ALL = (root) NOPASSWD:/opt/winco/cloud_framework-min/utils/inst-ctl
+apache    ALL = (root)    NOPASSWD:/opt/winco/cloud_framework-min/utils/inst-ctl
+apache    ALL = (root)    NOPASSWD:/home/instances/versions/*/util/create_instance.sh
+apache    ALL = (android) NOPASSWD:/usr/bin/ssh,/usr/bin/scp
+apache    ALL = (root)    NOPASSWD:/home/instances/versions/*/util/listMissingFiles
+

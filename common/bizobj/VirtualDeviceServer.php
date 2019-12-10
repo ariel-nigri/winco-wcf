@@ -16,11 +16,11 @@ class VirtualDeviceServer extends SqlToClass {
 
     function __construct() {
         $this->addTable('virt_device_server');
-        $this->addColumn('vds_seq',     'vds_seq', 'vds_seq', BZC_INTEGER | BZC_TABLEKEY | BZC_READONLY);
-        $this->addColumn('vds_name',    'vds_name', 'vds_name', BZC_STRING | BZC_NOTNULL);
-        $this->addColumn('inst_seq',    'inst_seq', 'inst_seq', BZC_INTEGER | BZC_NOTNULL);
-        $this->addColumn('vds_active',  'vds_active', 'vds_active', BZC_BOOLEAN);
-        $this->addColumn('vds_maxdevs', 'vds_maxdevs', 'vd_s_max', BZC_INTEGER);
+        $this->addColumn('vds_seq',     'vds_seq', BZC_INTEGER | BZC_TABLEKEY | BZC_READONLY);
+        $this->addColumn('vds_name',    'vds_name', BZC_STRING | BZC_NOTNULL);
+        $this->addColumn('inst_seq',    'inst_seq', BZC_INTEGER | BZC_NOTNULL);
+        $this->addColumn('vds_active',  'vds_active', BZC_BOOLEAN);
+        $this->addColumn('vds_maxdevs', 'vds_maxdevs', BZC_INTEGER);
     }
 
     function send_file($local, $remote) {

@@ -76,7 +76,7 @@ CREATE TABLE auth_events(
 --
 CREATE TABLE virt_device_server (
     vds_seq       INTEGER AUTO_INCREMENT PRIMARY KEY,
-    vds_name      VARCHAR(200) NOT NULL,
+    vds_name      VARCHAR(200) NOT NULL UNIQUE,
     inst_seq      INTEGER REFERENCES instances,
     vds_active    BOOLEAN NOT NULL DEFAULT 0,
     vds_maxdevs   INTEGER NOT NULL DEFAULT 0
