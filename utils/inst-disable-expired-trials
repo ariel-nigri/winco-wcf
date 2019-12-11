@@ -1,7 +1,7 @@
 #!/bin/php
 <?php
 
-ini_set("include_path", dirname(dirname(__DIR__))."/common");
+ini_set("include_path", dirname(__DIR__)."/common");
 require "wcf.php";
 
 $db_conn = getDbConn();
