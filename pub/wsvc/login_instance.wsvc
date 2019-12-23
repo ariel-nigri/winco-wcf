@@ -3,7 +3,7 @@
 require_once dirname(dirname(__DIR__))."/common/wcf.php";
 $db_conn = getDbConn();
 
-$default_ver = trim(file_get_contents('../../config/current_version_WTM.cfg'));
+$default_ver = trim(file_get_contents("../../config/current_version_{$product_code}.cfg"));
 
 ini_set('include_path', ini_get('include_path').":/home/instances/versions/{$default_ver}/common");
 
