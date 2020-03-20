@@ -1,0 +1,638 @@
+#!/usr/bin/php
+<?php
+
+require dirname(__DIR__).'/common/wcf.php';
+require "{$awd_sdk_dir}/aws-autoloader.php";
+
+use Aws\S3\S3Client;
+use Aws\S3\Sync\UploadSync;
+use Aws\S3\Sync\UploadSyncBuilder;
+
+define('MULTIPART_SIZE', 5242880);
+
+$workers = new Workers;
+$workers->worker_hostname = $my_worker_hostname;
+if (!$workers->select(getDbConn()))
+		die("ERROR: unknown worker ".$workers->worker_hostname."\n");
+
+$instances = new Instances;
+$instances->worker_seq = $workers->worker_seq;
+$instances->inst_active = 1;
+//$instances->inst_seq = 1306;
+
+if (!$instances->select(getDbConn()))
+	die("ERROR: no instances found.\n");
+
+$audio  = false;
+$data   = false;
+$logs	= false;
+$regdb  = false;
+$rcfile = false;
+$full	= false;
+$verbose = false;
+$webdata = false;
+
+for ($i=1; $i<$argc; $i++) {
+	if ($argv[$i] ==  "webdata")
+		$webdata = true;
+
+	if ($argv[$i] ==  "verbose")
+		$verbose = true;
+
+	if ($argv[$i] ==  "full")
+		$full = true;
+
+	if ($argv[$i] == "dat" || $argv[$i] == "data")
+		$data = true;
+
+	if ($argv[$i] ==  "regdb")
+		$regdb = true;
+
+	if ($argv[$i] ==  "logs")
+		$logs = true;
+
+}
+
+$client = NULL;
+
+$client = S3Client::factory(array(
+	'key'    => $aws_key,
+	'secret' => $aws_secret,
+	'region' => 'sa-east-1',
+));
+
+$client->registerStreamWrapper();
+
+if (!$data && !$audio && !$logs && !$regdb && !$webdata)
+	exit (1);
+
+while($instances->fetch()) {
+	if ($verbose)
+		echo $instances->inst_seq, "\n";
+
+	if ($audio) {
+		sync_by_attrib_dir($client,
+			$aws_bucket,
+			$instances->inst_seq,
+			$instances->inst_seq."/dat/audio_files",
+			"/home/instances/".$instances->inst_seq."/var/winco/dat/audio_files");
+
+		purge_old_audio_files($instances->inst_seq);
+	}
+
+	if ($logs)
+		backup_log_files($client,
+				$aws_bucket,
+				$instances->inst_seq.'/logs',
+				'/home/instances/'.$instances->inst_seq.'/var/winco/logs');
+
+
+	if ($regdb) {
+		$archive = $instances->inst_seq.'/regdb.backup/regdb-'.timed_filename().".tgz";
+		archive_dir($client,
+			$aws_bucket,
+			$archive,
+			'/home/instances/'.$instances->inst_seq.'/var/winco/regdb');
+	}
+
+	if ($data) {
+		sync_file($client,
+			$aws_bucket,
+			$instances->inst_seq.'/dat/imfilter.bin',
+			'/home/instances/'.$instances->inst_seq.'/var/winco/dat/imfilter.bin');
+
+		backup_wtm_messages($instances->inst_seq, $full ? "full" : "incr");
+
+		sync_dir($client,
+			$aws_bucket,
+			$instances->inst_seq.'/dat/backup',
+			'/home/instances/'.$instances->inst_seq.'/var/winco/backup',
+			false);
+
+		purge_old_message_backups($instances->inst_seq);
+	}
+
+	if ($webdata) {
+		//We only need to backup hotspot.db. The other files can be generated from the log files.
+		if (file_exists('/home/instances/'.$instances->inst_seq.'/var/winco/dat/hotspot.db') )
+			backup_db_file($client,
+				$aws_bucket,
+				$instances->inst_seq.'/dat',
+				'/home/instances/'.$instances->inst_seq.'/var/winco/dat/hotspot.db',
+				false);
+		else {
+			//if ($verbose)
+			//	echo "File " . '/home/instances/'.$instances->inst_seq.'/var/winco/dat/hotspot.db' . "doesn�t exist\n";
+		}
+	}
+}
+//--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
+//
+// sqlretry()
+// Execs a sqlite command with up to 3 retries.
+// Params:
+//			- in $command - The complete command to be passed to exec()
+//			- out $output - Receives the sqlite results, if there is no error
+//	Returns:
+//			- true - OK
+//			- false - error
+
+function sqlretry($command, &$output)
+{
+	$retryCount = 0;
+	$sqlret = 1;
+	while ($retryCount < 3 && $sqlret) {
+		exec( $command, $output, $sqlret);
+		if ($sqlret) {
+			$retryCount++;
+			sleep(15);
+		}
+	}
+	return !$sqlret;
+}
+
+function exists_in_s3($client, $bucket, $object) {
+	try {
+		$result = $client->doesObjectExist($bucket, $object);
+	} catch (Exception $e) {
+		//echo 'Caught exception [', get_class($e), ']: ', $e->getMessage(), "\n";
+		return false;
+	}
+	return $result;
+}
+
+function backup_log_files($client, $bucket, $rdir, $sdir) {
+	@mkdir("$sdir/bcktmp");
+	$pattern = '/.*\.LOG_(((\d\d)-(\d\d))_(\d\d)-(\d\d))\.LOG/';		//Defines rotated files that should be backuped only once
+	foreach (glob("$sdir/*.LOG") as $filename) {
+		$basename = basename($filename);
+		if (preg_match($pattern, $basename)) {
+		//Rotated file
+		//If already exists, do nothing
+			if (exists_in_s3($client, $bucket, $rdir."/${basename}.gz"))
+				continue;
+		}
+		//Compress file
+		$compressedfile = "$sdir/bcktmp/$basename.gz";
+		exec("gzip -c $filename > $compressedfile ", $void, $ret);
+		if ($ret) {
+			echo "Error compressing file $filename";
+			continue;
+		}
+		
+		//Send it to S3
+		$rfile = "${rdir}/" . "${basename}.gz";
+		sync_file($client, $bucket, $rfile, $compressedfile);
+		unlink("${compressedfile}");
+		
+			
+	}
+	
+	
+}
+function backup_db_file($client, $bucket, $rdir, $db_file, $do_delete=false) {
+	global $verbose;
+	if ($verbose)
+		echo "backup_db_file: $bucket, $rdir, $db_file, $do_delete\n";
+	
+	//Generate the dump file
+	$year = date('Y');
+	$month = date('m');
+	$day = date('d');
+	$OUTPUT =  dirname($db_file).'/'.basename($db_file, '.db'). "_${year}_${month}_${day}.sql";		//Name of backup with current date
+	$cmd = "(".
+					"echo '.output $OUTPUT'; ".
+					"echo '.dump'".
+			   ")";
+	if (!sqlretry($cmd . " | sqlite3 $db_file 2> /dev/null", $void)) {
+		echo "Error generating dump of $db_file";
+		return false;
+	}
+	
+	//Compress file
+	exec("gzip $OUTPUT", $void, $ret);
+	if ($ret) {
+		echo "Error compressing file $OUTPUT";
+		return false;
+	}
+	
+	//Send it to S3
+	$rfile = "${rdir}/" . basename("${OUTPUT}.gz");
+	sync_file($client, $bucket, $rfile, "${OUTPUT}.gz");
+	unlink("${OUTPUT}.gz");
+	return true;
+	
+}
+
+function sync_dir($client, $bucket, $rdir, $sdir, $do_delete=false) {
+
+	global $verbose;
+
+	if ($verbose)
+		echo "sync_dir: $bucket, $rdir, $sdir, $do_delete\n";
+
+	$prefixlen = strlen($rdir);
+
+	$nretries = 3;
+	do {
+		$retry = false;
+		$opts['multipart_upload_size'] = MULTIPART_SIZE;
+		if ($verbose)
+			$opts['debug'] = true;
+
+		try {
+			$client->uploadDirectory($sdir, $bucket, $rdir, $opts);
+		} catch (Aws\S3\Exception\S3Exception $e) {
+			$retry = true;
+			echo "retry...\n";
+		} catch (Guzzle\Service\Exception\CommandTransferException $e) {
+			$retry = true;
+			echo "retry...\n";
+		} catch (Aws\S3\Exception\MalformedXMLException $e) {
+			$retry = true;
+			echo "retry...\n";
+		} catch (Aws\Common\Exception\MultipartUploadException $e) {
+			$retry = true;
+			echo "retry...\n";
+		} catch (Exception $e) {
+			echo 'Caught exception [', get_class($e), ']: ', $e->getMessage(), "\n";
+		} catch (Throwable $e) {
+			echo 'Caught exception [', get_class($e), ']: ', $e->getMessage(), "\n";
+		}
+	} while ($retry && (--$nretries > 0));
+
+	if ($do_delete) {
+		$iterator = $client->getIterator('ListObjects', array(
+    			'Bucket' => $bucket,
+				'Prefix' => $rdir
+			));
+
+		$ary = array("ASCII", "ISO-8859-1", "UTF-8");
+
+		$delete_list = array();
+		$delete_count = 0;
+		foreach ($iterator as $object) {
+			$file = $sdir.'/'.substr($object['Key'], $prefixlen+1);
+			if (!@stat($file)) {
+		    	echo "Deleted: ".$file, " => ", mb_detect_encoding($object['Key'], $ary), "\n";
+				$delete_list [] = array ( 'Key' => $object['Key'] );
+				$delete_count++;
+			}
+		}
+		if ($delete_count)
+			$client->deleteObjects(array ('Bucket' => $bucket, 'Objects' => $delete_list));
+	}
+}
+
+function sync_file($client, $bucket, $rfile, $sfile) {
+
+	global $verbose;
+
+	$st = stat($sfile);
+
+	try {
+		$result = $client->headObject(array(
+					'Bucket'	=> $bucket,
+					'Key'		=> $rfile
+				)
+			);
+	} catch (Exception $e) {
+		echo 'Caught exception [', get_class($e), ']: ', $e->getMessage(), "\n";
+		$result = false;
+	}
+
+	if ($result) {
+		$rmsize = $result['ContentLength'];
+		$rmtime = @$result['Metadata']['originalmodificationdate'];
+	} else {
+		$rmsize = 0;
+		$rmtime = 0;
+	}
+
+	// echo $st['size'],  ", ", $st['mtime'], ", ", $rmtime -  $st['mtime'], "\n";
+	// echo $rmsize, ", ", $rmtime, "\n";
+
+	if ($result && $rmsize == $st['size'] && $rmtime == $st['mtime'])
+		return;
+
+    $nretries = 3;
+    do {
+		$retry = false;
+		try {
+			$result = $client->putObject(array(
+					'Bucket'     => $bucket,
+					'Key'        => $rfile,
+					'SourceFile' => $sfile,
+					'Metadata'	 => array(
+						'originalmodificationdate' => $st['mtime']
+					)
+			    )
+			);
+			if ($verbose)
+	    		echo "sync_file: $bucket, $rfile, $sfile\n";
+		} catch (Exception $e) {
+            echo 'Caught exception [', get_class($e), ']: ', $e->getMessage(), "\n";
+		}
+ 	} while ($retry && (--$nretries > 0));
+};
+
+function sync_by_attrib_dir($client, $bucket, $instance, $rdir, $sdir) {
+	global $verbose;
+
+	if (!@stat($sdir)) {
+		if ($verbose)
+			 echo "sync_by_attrib_dir: no $sdir\n";
+		return;
+	}
+
+	$prefixlen = strlen($sdir);
+
+	exec("find $sdir -type f -perm /o=r,g=r | grep -v '\.tmp$'", $src);
+	foreach ($src as $file) {
+		if (!$client) {
+			echo "\t", $file, "\n";
+			continue;
+		}
+
+		$key = $rdir."/".substr($file, $prefixlen+1);
+
+		$count = 0;
+		$err = 0;
+		try {
+			// copy file to storage
+			$result = $client->putObject(array(
+				'Bucket'     => $bucket,
+				'Key'        => $key,
+				'SourceFile' => $file
+			    )
+			);
+
+			if ($verbose)
+				echo "sync_by_attrib_dir: $file -> s3://$bucket/$key\n";
+
+			// change original file permission
+			@chmod($file, 0600);
+			$count++;
+		} catch (Exception $e) {
+			++$err;
+			echo "\texcep ", ++$err, " [", $count, "]\n";
+		}
+	}
+}
+
+function purge_old_audio_files($id)
+{
+	global $verbose;
+
+	$datadir='/home/instances/'.$id.'/var/winco/dat/audio_files';
+
+	if (!@stat($datadir)) {
+		if ($verbose)
+			echo "purge_old_audio_files: no $datadir\n";
+		return;
+	}
+
+	if (@stat($datadir."/.nopurge")) {
+		if ($verbose)
+			echo "purge_old_audio_files: keeping $datadir\n";
+		return;
+	}
+
+	if ($verbose)
+		echo "purge_old_audio_files: $id\n";
+
+	exec("tmpwatch -am 720 $datadir");
+}
+
+function purge_old_message_backups($id)
+{
+	global $verbose;
+
+	if ($verbose)
+		echo "purge_old_message_backups:\n";
+
+	$datadir='/home/instances/'.$id.'/var/winco/dat';
+
+	$lastscm=`cd $datadir/backup/schema/; ls --sort=time -- *.schema.sql | head -1 | sed -e 's/\..*sql$//'`;
+	$lastscm=str_replace("\n", '', $lastscm);
+
+	$cmd = "find ".$datadir."/backup/schema -type f -printf \"%f\\n\" | grep -v '^".$lastscm.".schema\\.sql$' | sed -e 's/\.schema\.sql//'";
+	exec($cmd, $schemas);
+
+	foreach ($schemas as $schema) {
+		$cmd = "rm ".$datadir."/backup/schema/".$schema.".schema.sql";
+		if ($verbose)
+			echo "\t$cmd\n";
+		exec($cmd);
+	    $cmd = "rm ".$datadir."/backup/dumps/".$schema."/*";
+		if ($verbose)
+			echo "\t$cmd\n";
+		exec($cmd);
+		$cmd = "rmdir ".$datadir."/backup/dumps/".$schema;
+		if ($verbose)
+			echo "\t$cmd\n";
+		exec($cmd);
+	}
+
+	$do_delete=false;
+
+	exec("cd $datadir/backup/dumps/$lastscm; ls --sort=time", $backup_files);
+
+	foreach ($backup_files as $file) {
+    	if ($do_delete) {
+        	$cmd = "rm $datadir/backup/dumps/$lastscm/$file";
+			if ($verbose)
+				echo "\t$cmd\n";
+			exec($cmd);
+			continue;
+		}
+
+		if ($verbose)
+        	echo "\tkeeping $file\n";
+
+		if (strstr($file, "full"))
+       	    $do_delete=true;
+	}
+}
+
+function get_last_ids($id, &$lastmsg, &$lasttlk)
+{
+	$datadir="/home/instances/".$id."/var/winco/dat";
+
+	exec(
+		"(".
+			"echo 'begin;';".
+			"echo 'select max(id) from im_message;';".
+			"echo 'select max(id) from im_talk;';".
+			"echo 'rollback;';".
+		") | sqlite3 $datadir/imfilter.bin",
+		$output
+	);
+
+	$lastmsg=$output[0];
+	$lasttlk=$output[1];
+
+	if (empty($lastmsg))
+		$lastmsg = 0;
+
+	if (empty($lasttlk))
+		$lasttlk = 0;
+
+}
+
+function backup_wtm_messages($id, $btype="full") {
+
+	global $verbose;
+
+	$datadir="/home/instances/".$id."/var/winco/dat";
+
+	if (!@stat(${datadir}."/imfilter.bin")) {
+		echo "ERROR: instance data not found";
+		return 1;
+	}
+
+	get_last_ids($id, $lastmsg, $lasttlk);
+
+	if ($lastmsg == 0 && $lasttlk == 0) {
+		if ($verbose)
+			echo "backup_wtm_messages: new backup file: no data to backup\n";
+		return;
+	}
+
+	@mkdir(${datadir}."/backup/dumps", 0750, true);
+	@mkdir(${datadir}."/backup/schema", 0750, true);
+
+	exec("sqlite3 ${datadir}/imfilter.bin .schema > ${datadir}/backup/tmp.sql");
+
+	$lastscm=exec("cd ${datadir}/backup/schema/; ls --sort=time -- *.schema.sql | head -1 | sed -e 's/\..*sql$//'");
+
+	if ( $lastscm > 0) {
+		if ($verbose)
+			echo "backup_wtm_messages: new database schema $lastscm\n";
+
+		exec("diff ${datadir}/backup/tmp.sql ${datadir}/backup/schema/${lastscm}.schema.sql > /dev/null;", $output, $rc);
+
+		if ($rc) {
+			$lastscm++;
+			rename($datadir."/backup/tmp.sql", $datadir."/backup/schema/".$lastscm.".schema.sql");
+		} else
+			unlink($datadir."/backup/tmp.sql");
+	} else {
+		$lastscm=1;
+		rename($datadir."/backup/tmp.sql", $datadir."/backup/schema/".$lastscm.".schema.sql");
+	}
+
+	@mkdir(${datadir}."/backup/dumps/".$lastscm, 0750, true);
+
+	if ( $btype != "full" ) {
+
+		$startdmp=exec("cd $datadir/backup/dumps/$lastscm; ls --sort=time -- *.sql | head -1 | sed -e 's/\..*sql$//'");
+
+		$startmsg=preg_replace('/-.*$/', '', $startdmp);
+		$starttlk=preg_replace('/.*-/', '', $startdmp);
+
+		if ($starttlk == 0 && $startmsg == 0)
+			$btype='full';
+		else
+			$btype='incr';
+	}
+
+	$OUTPUT="$datadir/backup/dumps/$lastscm/$lastmsg-$lasttlk.$btype.sql";
+
+	if ($verbose)
+			echo "backup_wtm_messages: new backup file: $OUTPUT\n";
+
+	if ($btype == "full")
+		$cmd = "(".
+					"echo '.output $OUTPUT'; ".
+					"echo '.dump'".
+			   ")";
+	else {
+		$cmd = "( echo 'begin;'; ";
+
+		if ($lastmsg > $startmsg) {
+			$cmd .= "echo '.output $OUTPUT'; ".
+					"echo '.mode insert im_message'; ".
+					"echo 'select * from im_message where id > $startmsg and id <= $lastmsg;'; ";
+			$OUTPUT = false;
+		}
+
+		if ($lasttlk > $starttlk) {
+			if ($OUTPUT)
+				$cmd .= "echo '.output ${OUTPUT}'";
+
+			$cmd .= "echo '.mode insert im_talk'; ".
+					"echo 'select * from im_talk where id > $starttlk and id <= $lasttlk;'; ";
+		}
+
+		$cmd .= "echo 'rollback;' )";
+	}
+	exec($cmd . " | sqlite3 $datadir/imfilter.bin");
+
+}
+
+function tar_dir($dfile, $sdir)
+{
+	global $verbose;
+	if ($verbose)
+		echo "tar_dir: $sdir -> $dfile\n";
+
+	exec("tar czf $dfile -C $sdir . 2>&1", $output, $rc);
+	if ($verbose)
+		foreach($output as $line)
+			echo "\t", $line, "\n";
+
+	return $rc;
+}
+
+function timed_filename($now=0)
+{
+	if ($now == 0)
+		$now = time();
+
+	$week = date("w", $now);
+	if ($week < 5)
+		return date("Ym-",$now).$week;
+
+	$ord = intval(date("j",$now)/7)+1;
+	return date("Ym-w-",$now).$ord;
+}
+
+function archive_dir($client, $bucket, $rfile, $sdir)
+{
+	global $verbose;
+
+	$sfile = tempnam ("/tmp", "archive");
+
+	if (tar_dir($sfile, $sdir) != 0) {
+		echo "ERROR: creating $sfile\n";
+		return false;
+	}
+	
+    $nretries = 3;
+    do {
+		$retry = false;
+		try {
+			$result = $client->putObject(array(
+					'Bucket'     => $bucket,
+					'Key'        => $rfile,
+					'SourceFile' => $sfile,
+					'Metadata'	 => array(
+						'originalmodificationdate' => time()
+					)
+			    )
+			);
+			if ($verbose)
+	    		echo "archive_dir: $bucket, $rfile, $sfile ($sdir)\n";
+		} catch (Exception $e) {
+            echo 'Caught exception [', get_class($e), ']: ', $e->getMessage(), "\n";
+		}
+ 	} while ($retry && (--$nretries > 0));
+
+	unlink($sfile);
+}

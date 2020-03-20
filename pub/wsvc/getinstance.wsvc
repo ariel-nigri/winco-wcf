@@ -33,4 +33,53 @@ if (!empty($vd_number)) {
     echo "OK\r\n", implode("\r\n", $result), "\r\n";
     exit;
 }
-die("ERROR: Bad command");
+
+if (!empty($_GET['id'])) {
+    /**
+        recebe uma chave ativada e devolve o hostname do fronend, ip do worker e porta. 
+    */
+    
+    $instances = new $instance_classname;
+    $instances->inst_id = substr($_GET["id"], 0, 14);
+
+    if (!$instances->select(getDbConn()))
+        die("ERROR: instance not found\r\n");
+    $worker_name = $instances->worker_frontend;
+
+    switch ($product_code) {
+    case 'WTM':
+        echo "OK\r\n".
+            "hostname=".$worker_name."\r\n".
+            "endpoint=".$instances->worker_ip.":".$instances->inst_pol_port."\r\n".
+            "email=".$instances->inst_email."\r\n".
+            "name=".$instances->inst_name."\r\n".
+            "seq=".$instances->inst_seq."\r\n";
+        if ($extra_info) {
+            echo "instance=".$instances->inst_id."\r\n".
+                "nusers=".$instances->inst_nusers."\r\n".
+                "cnpj=".$instances->inst_cnpj."\r\n".
+                "created=".$instances->inst_created."\r\n".
+                "phone=".$instances->inst_phone."\r\n".
+                "type=".$instances->inst_type."\r\n";
+            if (!empty($_SESSION['end_trial_30']))
+                echo "endtrial=".$_SESSION['end_trial_30'];
+        }
+        break;
+    case 'NTP':
+        echo "OK\r\n".
+            "hostname=".$worker_name."\r\n".
+            "endpoint=".$instances->worker_ip.":".$instances->inst_sync_port."\r\n".
+    //              "endpoint=".$worker_name.":".$instances->inst_sync_port."\r\n".
+            "name=".$instances->inst_name."\r\n".
+            "seq=".$instances->inst_seq."\r\n";
+        if ($extra_info) {
+            echo "instance=".$instances->inst_id."\r\n".
+                "created=".$instances->inst_created."\r\n".
+                "type=".$instances->inst_type."\r\n";
+        }
+        break;
+    }
+    exit;
+}
+
+die("ERROR: Bad command\r\n");

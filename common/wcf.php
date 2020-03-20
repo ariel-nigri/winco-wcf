@@ -15,9 +15,9 @@ spl_autoload_register(function($class_name) {
             return;
         }
     }
-
-    if (file_exists("{$GLOBALS['bizobj_extra']}/{$class_name}.php"))
-        require_once("{$GLOBALS['bizobj_extra']}/{$class_name}.php");
+    if (!empty($GLOBALS['bizobj_extra']))
+        if (file_exists("{$GLOBALS['bizobj_extra']}/{$class_name}.php"))
+            require_once("{$GLOBALS['bizobj_extra']}/{$class_name}.php");
 });
 
 function getDbConn() {
