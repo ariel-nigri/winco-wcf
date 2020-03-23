@@ -260,9 +260,9 @@ function sync_dir($client, $bucket, $rdir, $sdir, $do_delete=false) {
 			$retry = true;
 			echo "retry...\n";
 		} catch (Exception $e) {
-			echo 'Caught exception [', get_class($e), ']: ', $e->getMessage(), "\n";
+			echo "Caught exception syncing {$sdir} => {$dir} [", get_class($e), ']: ', $e->getMessage(), "\n";
 		} catch (Throwable $e) {
-			echo 'Caught exception [', get_class($e), ']: ', $e->getMessage(), "\n";
+			echo "Caught exception syncing {$sdir} => {$dir} [", get_class($e), ']: ', $e->getMessage(), "\n";
 		}
 	} while ($retry && (--$nretries > 0));
 
