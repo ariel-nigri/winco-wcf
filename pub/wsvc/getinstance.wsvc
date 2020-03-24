@@ -48,9 +48,12 @@ if (!empty($_GET['id'])) {
 
     switch ($product_code) {
     case 'WTM':
+		$endpoint_name = $instances->worker_ip;
+		if (in_array($worker_name, [ 'wtmdev.winco.com.br', 'console6.talkmanager.net']))
+			$endpoint_name = $worker_name;
         echo "OK\r\n".
             "hostname=".$worker_name."\r\n".
-            "endpoint=".$instances->worker_ip.":".$instances->inst_pol_port."\r\n".
+            "endpoint=". $endpoint_name.":".$instances->inst_pol_port."\r\n".
             "email=".$instances->inst_email."\r\n".
             "name=".$instances->inst_name."\r\n".
             "seq=".$instances->inst_seq."\r\n";
