@@ -2,4 +2,8 @@
 
 header('Content-type: text/plain');
 
-echo `sudo TERM=dumb /home/instances/versions/v31/util/listMissingFiles -v {$_GET['vds_seq']}`;
+$version = file_get_contents("../../config/current_version_WTM.cfg");
+
+$version = chop($version);
+
+echo `sudo TERM=dumb /home/instances/versions/{$version}/util/listMissingFiles -v {$_GET['vds_seq']}`;
