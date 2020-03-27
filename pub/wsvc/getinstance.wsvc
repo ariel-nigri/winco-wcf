@@ -49,37 +49,21 @@ if (!empty($_GET['id'])) {
     switch ($product_code) {
     case 'WTM':
 		$endpoint_name = $instances->worker_ip;
-		if (in_array($worker_name, [ 'wtmdev.winco.com.br', 'console6.talkmanager.net']))
+		if (in_array($worker_name, [ 'ariel-dev.talkmanager.net', 'console6.talkmanager.net']))
 			$endpoint_name = $worker_name;
         echo "OK\r\n".
             "hostname=".$worker_name."\r\n".
             "endpoint=". $endpoint_name.":".$instances->inst_pol_port."\r\n".
-            "email=".$instances->inst_email."\r\n".
             "name=".$instances->inst_name."\r\n".
             "seq=".$instances->inst_seq."\r\n";
-        if ($extra_info) {
-            echo "instance=".$instances->inst_id."\r\n".
-                "nusers=".$instances->inst_nusers."\r\n".
-                "cnpj=".$instances->inst_cnpj."\r\n".
-                "created=".$instances->inst_created."\r\n".
-                "phone=".$instances->inst_phone."\r\n".
-                "type=".$instances->inst_type."\r\n";
-            if (!empty($_SESSION['end_trial_30']))
-                echo "endtrial=".$_SESSION['end_trial_30'];
-        }
         break;
     case 'NTP':
         echo "OK\r\n".
             "hostname=".$worker_name."\r\n".
             "endpoint=".$instances->worker_ip.":".$instances->inst_sync_port."\r\n".
-    //              "endpoint=".$worker_name.":".$instances->inst_sync_port."\r\n".
+    //      "endpoint=".$worker_name.":".$instances->inst_sync_port."\r\n".
             "name=".$instances->inst_name."\r\n".
             "seq=".$instances->inst_seq."\r\n";
-        if ($extra_info) {
-            echo "instance=".$instances->inst_id."\r\n".
-                "created=".$instances->inst_created."\r\n".
-                "type=".$instances->inst_type."\r\n";
-        }
         break;
     }
     exit;

@@ -78,6 +78,18 @@ class Users extends SqlToClass {
         return true;
     }
 
+    public function isBlocked($db) {
+        return true;
+    }
+
+    public function block($db) {
+        return false;
+    }
+
+    public function unblock($db) {
+        return false;
+    }
+
     protected function beforeSave($insert, $sql) {
         
         if ($insert)
@@ -108,7 +120,7 @@ class Users extends SqlToClass {
             
             $clone = $this->getShadow($sql);
             if ($clone->usu_passwd_digest == $this->usu_passwd_digest) {
-                $this->error = 'PASSWORD_HISTORY_ERROR:'.str_replace('{usu_num_of_passwd_to_store}', $this->usu_num_of_passwd_to_store, $this->errors['PASSWORD_HISTORY_ERROR']);
+                $this->error = 'PASSWORD_HISTORY_ERROR:'.str_replace('{usu_num_of_passwd_to_store}', $this->usu_num_of_passwd_to_store + 1, $this->errors['PASSWORD_HISTORY_ERROR']);
                 break;
             }
 
@@ -117,7 +129,7 @@ class Users extends SqlToClass {
                 //Checking if the new password is equal than last 5 passwords
                 foreach ($passwords as $pwd) {
                     if ($pwd == $this->usu_passwd_digest) {
-                        $this->error = 'PASSWORD_HISTORY_ERROR:'.str_replace('{usu_num_of_passwd_to_store}', $this->usu_num_of_passwd_to_store, $this->errors['PASSWORD_HISTORY_ERROR']);
+                        $this->error = 'PASSWORD_HISTORY_ERROR:'.str_replace('{usu_num_of_passwd_to_store}', $this->usu_num_of_passwd_to_store + 1 , $this->errors['PASSWORD_HISTORY_ERROR']);
                         $ret = false;
                         break 2;
                     }
