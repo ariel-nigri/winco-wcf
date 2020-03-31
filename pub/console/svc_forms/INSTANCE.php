@@ -214,9 +214,15 @@ class ServicePanel extends ServicePanelBase {
             $admins->addColumn("usu_seq", "ID", 20);
             $admins->addColumn("usu_name", "Nome", 80);
             $admins->addColumn("usu_email", "Email", 100);
-            $admins->addColumn("usuinst_privs", "Permissões", 100);
+			$admins->addColumn("usuinst_privs", "Permissões", 100);
+			if (!empty($GLOBALS['has_usu_master']))
+				$admins->addColumn("usuinst_master", "Master", 50);
             $admins->addStaticColumn("del", "Delete", '[remove]');
             $admins->addEvent('del', 'del_admin', 'usuinst_seq');
+			if (!empty($GLOBALS['has_usu_master'])) {
+            	$admins->addStaticColumn("master", "", '[change master]');
+				$admins->addEvent('master', 'change_master', 'usuinst_seq');
+			}
 
             $abaAdmins->addControl($admins);
 
@@ -255,6 +261,19 @@ class ServicePanel extends ServicePanelBase {
 		$usuinst->usuinst_seq = $this->form->data->admins;
 		if (!$usuinst->delete($db_conn))
 			die('Invalid users id');
+	}
+
+	function change_master() {
+		global $db_conn;
+
+		$usuinst = new UsersInstances;
+		$usuinst->usuinst_seq = $this->form->data->admins;
+		if (!$usuinst->select($db_conn))
+			die('Invalid users id');
+
+		$usuinst->usuinst_master =  (int) (!$usuinst->usuinst_master);
+		if (!$usuinst->update($db_conn))
+			die($usuinst->error);
 	}
 
 	function checkEmptyValues() {

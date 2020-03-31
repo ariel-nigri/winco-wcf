@@ -1,5 +1,4 @@
 <?php
-require_once "class/class-sqltoclass.php";
 
 class InstancesHistory extends SqlToClass {
     public function __construct() {
@@ -10,4 +9,3 @@ class InstancesHistory extends SqlToClass {
         $this->addColumn('instances_history.inst_last_change', 'inst_last_change', BZC_DATE | BZC_NOTNULL);
     }
 }
-?>

@@ -34,6 +34,8 @@ class AuthEvents extends SqlToClass {
 		$this->addColumn('auth_events.ae_event', 'ae_event', BZC_STRING | BZC_NOTNULL);
 		$this->addColumn('auth_events.ae_datetime', 'ae_datetime', BZC_DATE | BZC_NOTNULL);
 		$this->addColumn('auth_events.ae_reason', 'ae_reason', BZC_STRING);
+
+		$this->readParams();
 	}
 	
 	public function addBadLogin($sql) {
@@ -46,7 +48,7 @@ class AuthEvents extends SqlToClass {
 
 		if ($this->maxAttempt === 0)
 			return;
-		
+
 		if ($this->isBlocked($sql)) 
 			return self::BLOCK_LOGIN_EVENT;
 		
@@ -100,6 +102,21 @@ class AuthEvents extends SqlToClass {
 		return $clone->valid;
 
 	}	
+
+	// Função nova (Rafael)
+	public function blockedReason($sql) {
+		if (empty($this->usu_seq))
+			throw new Exception('O parametro usu_seq não pode ser vazio.');
+
+		$clone = new AuthEvents;
+		$clone->usu_seq = $this->usu_seq;
+		$clone->ae_event = self::BLOCK_LOGIN_EVENT;
+		$clone->select($sql);
+
+		if (!$clone->fetch()) return 'Not blocked';
+		if ($clone->ae_reason) return $clone->ae_reason;
+		return false;
+	}
 
 	public function isPasswordChange($sql) {
 
@@ -158,7 +175,14 @@ class AuthEvents extends SqlToClass {
 
 		return true;
 	}
+
+    private function readParams() {
+
+        $config = $GLOBALS['classes'][__CLASS__];
+        if (!isset($config) || !is_array($config))
+            return;
+
+        foreach ($config as $k => $v)
+            $this->{$k} = $v;
+    }
 }
-
-
-
