@@ -13,20 +13,16 @@ CREATE INDEX ae_event_usu ON auth_events (usu_seq, ae_event);
 */
 
 class AuthEvents extends SqlToClass {
-	
-	/** Bad Login. */
-	const BAD_LOGIN_EVENT = 'BD';
+	const GOOD_LOGIN_EVENT		= 'GL';					/** Good login. */
+	const BAD_LOGIN_EVENT		= 'BD';					/** Bad Login. */
 
-	/** Blocked. It's not possible to sign in. */
-	const BLOCK_LOGIN_EVENT = 'BL';
+	const BLOCK_LOGIN_EVENT 	= 'BL';					/** Blocked. It's not possible to sign in. */
+	const USER_UNBLOCKED_EVENT	= 'UL';					/** unblock login event. */
 
-	/** Should change password */
-	const CHANGE_PASSWD_NEXT_LOGIN = 'PC';
-	
-	private $maxAttempt = 0;
+	const CHANGE_PASSWD_NEXT_LOGIN = 'PC';				/** Should change password */
+	const NEW_PWD_EVENT 		= 'NP';					/** User changed the password */
 	
     public function __construct() {
-		
 		$this->addTable('auth_events');	
 
 		$this->addColumn('auth_events.ae_seq', 'ae_seq', BZC_INTEGER | BZC_TABLEKEY);
@@ -34,10 +30,49 @@ class AuthEvents extends SqlToClass {
 		$this->addColumn('auth_events.ae_event', 'ae_event', BZC_STRING | BZC_NOTNULL);
 		$this->addColumn('auth_events.ae_datetime', 'ae_datetime', BZC_DATE | BZC_NOTNULL);
 		$this->addColumn('auth_events.ae_reason', 'ae_reason', BZC_STRING);
-
-		$this->readParams();
 	}
 	
+	static function registerEvent($sql, $event, $usu_id, $reason = '') {
+		$this = new AuthEvents;
+		$this->ae_event = $event;
+		$this->insert($sql);
+		$this->usu_seq = $usu_id;
+		$this->ae_reason = $reason;
+		return $this->insert($sql);
+	}
+
+	public function countBadLogins(PDO $sql) {
+		$count = 0;
+
+		$sth = $sql->prepare("SELECT ae_event as total FROM auth_events WHERE usu_seq = :user ORDER BY ae_seq DESC LIMIT 40");
+		$sth->execute([':user' => $this->usu_seq]);
+		$array = $sth->fetchAll();
+		foreach ($array as $row) {
+			switch ($row[0]) {
+			case self::BAD_LOGIN_EVENT:
+				++$count;
+				break;
+			case self::USER_UNBLOCKED_EVENT:
+			case self::GOOD_LOGIN_EVENT:
+				return $count;
+			}
+		}
+
+		return $count;
+	}
+
+	protected function beforeSave($insert) {
+		if (!$insert) {
+			$this->error = 'Não é permitido alterar eventos de autenticação';
+			return false;
+		}
+		$this->ae_datetime = date('Y-m-d H:i:s');
+		return true;
+	}
+
+	/*
+	private maxAttempt = 0;
+
 	public function addBadLogin($sql) {
 				
 		if (empty($this->usu_seq)) {
@@ -68,28 +103,7 @@ class AuthEvents extends SqlToClass {
 		return $this->ae_event;
 	}
 
-	public function addEvent($sql, $evt, $reason = NULL) {
-		
-		if ($evt == self::BAD_LOGIN_EVENT)
-			return $this->addBadLogin($sql);
 
-		if ($evt == self::BLOCK_LOGIN_EVENT || $evt == self::CHANGE_PASSWD_NEXT_LOGIN) {
-			//theses events should occour alone
-			$ae = new AuthEvents;
-			$ae->usu_seq = $this->usu_seq;
-			$ae->clearEvents($sql);
-		}
-
-		$clone = new AuthEvents;
-		$clone->usu_seq = $this->usu_seq;
-		$clone->ae_event = $evt;
-		$clone->ae_datetime = $this->ae_datetime;
-		if (!is_null($reason))
-			$clone->ae_reason = $reason;
-		return $clone->insert($sql);
-
-	}
-	
 	public function isBlocked($sql) {
 
 		if (empty($this->usu_seq))
@@ -127,10 +141,9 @@ class AuthEvents extends SqlToClass {
 		$clone->usu_seq = $this->usu_seq;
 		$clone->ae_event = self::CHANGE_PASSWD_NEXT_LOGIN;
 		$clone->select($sql);
-		return $clone->valid;
-		
+		return $clone->valid;	
 	}
-
+	*/
 	/**
 	 * Clear events for an user on auth_events table.
 	 *
@@ -138,6 +151,7 @@ class AuthEvents extends SqlToClass {
 	 * @param string $evt
 	 * @return void
 	 */
+	/*
 	public function clearEvents($sql, $evt = null) {
 
 		if (empty($this->usu_seq))
@@ -157,32 +171,26 @@ class AuthEvents extends SqlToClass {
 		return true;
 
 	}
-	
-	private function checkBadLoginAttempts($sql) {
+
+	public function addEvent($sql, $evt, $reason = NULL) {
 		
-		$sth = $sql->prepare("SELECT count(*) as total FROM auth_events WHERE usu_seq = :user AND ae_event = :event");
-		$ret = $sth->execute(array(':user' => $this->usu_seq, ':event' => self::BAD_LOGIN_EVENT));
-		if ($row = $sth->fetch())
-			return $row['total'];
+		if ($evt == self::BAD_LOGIN_EVENT)
+			return $this->addBadLogin($sql);
 
-		return 0;
+		if ($evt == self::BLOCK_LOGIN_EVENT || $evt == self::CHANGE_PASSWD_NEXT_LOGIN) {
+			//theses events should occour alone
+			$ae = new AuthEvents;
+			$ae->usu_seq = $this->usu_seq;
+			$ae->clearEvents($sql);
+		}
 
+		$clone = new AuthEvents;
+		$clone->usu_seq = $this->usu_seq;
+		$clone->ae_event = $evt;
+		$clone->ae_datetime = $this->ae_datetime;
+		if (!is_null($reason))
+			$clone->ae_reason = $reason;
+		return $clone->insert($sql);
 	}
-
-	protected function beforeSave() {
-		if (empty($this->ae_datetime))
-			$this->ae_datetime = date('Y-m-d H:i:s');
-
-		return true;
-	}
-
-    private function readParams() {
-
-        $config = $GLOBALS['classes'][__CLASS__];
-        if (!isset($config) || !is_array($config))
-            return;
-
-        foreach ($config as $k => $v)
-            $this->{$k} = $v;
-    }
+	*/
 }
