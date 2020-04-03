@@ -17,8 +17,8 @@ class UsersInstances extends SqlToClass {
         $this->addColumn('users_instances.usuinst_privs', 'usuinst_privs', BZC_STRING | BZC_NOTNULL);
         $this->addColumn('users_instances.usuinst_privs_groups', 'usuinst_privs_groups', BZC_STRING);
         
-	if ($GLOBALS['product_code'] == 'WTM')
-		$this->addColumn('users_instances.usuinst_master', 'usuinst_master', BZC_INTEGER);
+    	if ($GLOBALS['product_code'] == 'WTM')
+	    	$this->addColumn('users_instances.usuinst_master', 'usuinst_master', BZC_INTEGER);
 
         $this->addColumn('users.usu_seq', 'usu_seq', BZC_INTEGER | BZC_READONLY);
         $this->addColumn('users.usu_email', 'usu_email', BZC_STRING | BZC_READONLY);
@@ -31,12 +31,7 @@ class UsersInstances extends SqlToClass {
         $this->addColumn('users.usu_max_pwd_age', 'usu_max_pwd_age', BZC_INTEGER | BZC_READONLY);
         $this->addColumn('users.usu_num_of_passwd_to_store', 'usu_num_of_passwd_to_store', BZC_INTEGER | BZC_READONLY);
         $this->addColumn('users.usu_pwd_history', 'usu_pwd_history', BZC_STRING | BZC_READONLY);
-    }
-
-    public function isBlocked($sql) {
-        $ae = new AuthEvents;
-        $ae->usu_seq = $this->usu_seq;
-        return $ae->isBlocked($sql);
+        $this->addColumn('users.usu_status', 'usu_status', BZC_STRING);                                     /** acct blocked, pwd expired, or both*/
     }
 
     public static function getUsersByInstance($sql) {
@@ -47,5 +42,10 @@ class UsersInstances extends SqlToClass {
                 $resp_array[$qr->value('usu_seq')][] = $qr->value('inst_seq');
         }
         return $resp_array;
+    }
+
+    public function isBlocked() {
+        $c = strchr($this->usu_status, 'B');
+        return !empty($c);
     }
 }

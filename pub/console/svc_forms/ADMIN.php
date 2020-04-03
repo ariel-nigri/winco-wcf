@@ -4,8 +4,6 @@
 require "gauth/sasdf.php";
 require "bizobj/Users.php";
 
-define("CHECK_PASS", "XXX_check_123");
-
 class ServicePanel extends ServicePanelBase {	
 	
 	var $adminparams = array('usu_seq', 'usu_name', 'usu_email', 'usu_passwd_digest', 'usu_twofact_type', 'usu_language', 'inst_seq', 'usu_caps');	
@@ -78,7 +76,6 @@ class ServicePanel extends ServicePanelBase {
 				$this->params['reason'] = $ae->ae_reason;
 			}
 			*/
-			$this->form->data->password = $this->form->data->password_again = CHECK_PASS;
 			return true;
 		} else
 		$this->form->setError("Erro lendo informações do administrador.");
@@ -103,15 +100,17 @@ class ServicePanel extends ServicePanelBase {
 
 		$user->usu_caps = $this->params['usu_caps'];
 
-		if ($this->form->data->password != CHECK_PASS) {
-			if (!$user->setPassword($this->form->data->password)) {
-				$error = "A senha escolhida é muito fraca.";
+		if (!empty($this->params['usu_seq']))
+			$user->usu_seq = $this->params['usu_seq'];
+
+		if (!empty($this->form->data->password)) {
+			if (!$user->setPassword($db_conn, $this->form->data->password)) {
+				$error = $user->error;
 				return false;
 			}
 		}
 		
 		if (!empty($this->params['usu_seq'])) {
-			$user->usu_seq = $this->params['usu_seq'];
 			if (!$user->update($db_conn)) {
 				$error = "Erro 1 atualizando administrador.";
 				return false;
@@ -188,8 +187,8 @@ class ServicePanel extends ServicePanelBase {
 
 		$config->addControl(new EditControl('usu_name', 'Nome:', "size=\"40\""));
 		$config->addControl(new EditControl('usu_email', 'E-mail:', "size=\"40\""));
-		$config->addControl(new PasswordControl('password', 'Senha:', "size=\"40\""));
-		$config->addControl(new PasswordControl('password_again', 'Confirmação de senha:', "size=\"40\""));
+		$config->addControl(new PasswordControl('password', 'Senha:', 'size="40" placeholder="Nova senha"'));
+		$config->addControl(new PasswordControl('password_again', 'Confirmação de senha:', 'size="40"  placeholder="Repetir senha"'));
 		$config->addControl(new SelectControl("usu_language", 'Idioma:', $this->lang));
 		$config->addControl(new SelectControl("usu_twofact_type", 'Autenticação com 2 fatores:', $this->twofact), CTLPOS_NOBREAK);
 		$config->addControl(new ButtonControl("gauth_generate_code", 'Gerar código', 'style="display:none;"'));
@@ -263,7 +262,7 @@ class ServicePanel extends ServicePanelBase {
 	function onSave() {
 		global $db_conn;
 
-		if (empty($this->form->data->usu_email) || empty($this->form->data->password)
+		if (empty($this->form->data->usu_email) || (empty($this->form->data->password) && empty($this->params['usu_seq']))
 				|| empty($this->form->data->usu_email) || empty($this->form->data->usu_language)) {
 			$this->form->setError("Preencha todos os campos.");
 			return false;

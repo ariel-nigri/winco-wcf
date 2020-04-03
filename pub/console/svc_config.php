@@ -88,7 +88,7 @@ class ServiceForm extends MvcForm {
 			$this->close();
 	}
 	
-	function setError($err, $title = "Por favor reveja as configurações", $width = '', $height = '', $left = '') {
+	function setError($err, $title = "Por favor reveja as configuraÃ§Ãµes", $width = '', $height = '', $left = '') {
 		$GLOBALS['modal_error'] = $err;
 		$GLOBALS['modal_error_title'] = $title;
 		$GLOBALS['modal_width'] = $width;

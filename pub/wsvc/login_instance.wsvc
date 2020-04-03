@@ -22,7 +22,8 @@ if (($url_parts[0] != 'http:' && $url_parts[0] != 'https:')
 if (!in_array($url_parts[2], $cloud_connect_allowed_sites))
     die('ACCESS DENIED');
 $usu_privs = '';
-$ae = new AuthEvents;
+
+
 if (empty($_REQUEST['login_type']) || empty($_REQUEST['username']) || empty($_REQUEST['password']) || ($_REQUEST['login_type'] == "support_id" && empty($_REQUEST['inst_id']))) {
     $login_result = "INVALID_PARAMS";
 } else {
@@ -43,19 +44,6 @@ if (empty($_REQUEST['login_type']) || empty($_REQUEST['username']) || empty($_RE
 			$usu_inst = new UsersInstances;
 			$usu_inst->usu_email = $_REQUEST['username'];
 			if ($usu_inst->select($db_conn)) {
-				$ae->usu_seq = $usu_inst->usu_seq;
-				if ($ae->isBlocked($db_conn)) {
-					// Rafael
-						if ($ae->blockedReason($db_conn) == 'EXPIRED')
-							$login_result = 'LOGIN_EXPIRED';
-						else
-							$login_result = 'LOGIN_BLOCKED';
-					// End Rafael
-					// Antes da alteração
-						// $login_result = 'LOGIN_BLOCKED';
-					break;
-				}
-				$password_change = $ae->isPasswordChange($db_conn);
 				$usu_privs = $usu_inst->usuinst_privs;
 				$lang = $usu_inst->usu_language;
 				$usu_privs_groups = $usu_inst->usuinst_privs_groups;
@@ -122,12 +110,7 @@ if (empty($_REQUEST['login_type']) || empty($_REQUEST['username']) || empty($_RE
 		}
 	} while (false);
 }
-$ae->clear();
 if ($login_result == "OK") {
-	if ($_REQUEST['login_type'] != "support_id") {
-		$ae->usu_seq = $usu_inst->usu_seq;
-		$ae->clearEvents($db_conn, AuthEvents::BAD_LOGIN_EVENT);
-	}
     if ($usu_privs == 'A')
         foreach ($product_all_privs as $p)
             $_SESSION[$p] = true;
@@ -135,17 +118,6 @@ if ($login_result == "OK") {
         for ($i = 0; $i < strlen($usu_privs); $i++)
             $_SESSION[$product_all_privs[$usu_privs{$i}]] = true;
 	}
-	if ($password_change) {
-		$ae->clear();
-		$ae->usu_seq = $usu_inst->usu_seq;
-		$ae->clearEvents($db_conn, AuthEvents::CHANGE_PASSWD_NEXT_LOGIN);
-		$ae->addEvent($db_conn, AuthEvents::BLOCK_LOGIN_EVENT);
-		$_SESSION['AUTH']['PASSWORD_CHANGE'] = true;
-	}
-} else if ($login_result == 'ACCESS_DENIED' || $login_result == 'LOGIN_INVALID') {
-	// print_r($ae);exit;
-	$ae->usu_seq = $usu_inst->usu_seq;
-	$ae->addBadLogin($db_conn);
 }
 
 if ($_REQUEST['login_type'] == "support" || $_REQUEST['login_type'] == "support_id")
@@ -180,21 +152,7 @@ if (isset($usu_inst->usu_updated_passwd_at) && $login_result == "OK" && $usu_ins
 		$days_remaining = $diff->days * -1;
 	else
 		$days_remaining = $diff->days;
-	if ($days_remaining <= 0) {
-		//If 0 the use can connect and should change his password immediataly
-		//If less than 0, user can't connect. (BLOCK_LOGIN_EVENT)
-		$ae->clear();
-		$ae->usu_seq = $usu_inst->usu_seq;
-		$ae->ae_datetime = $dt->format('Y-m-d H:i:s');
-		$ae->addEvent($db_conn, AuthEvents::BLOCK_LOGIN_EVENT, 'EXPIRED');
-		if ($days_remaining < 0) {
-			$login_result = 'ACCESS_DENIED';
-			$name = $frontend = $token = '';
-		}
-	}
-	$_SESSION['AUTH']['CHANGE_PASSWD_DAYS'] = $days_remaining;
 }
-
 
 $result = new stdclass;
 $result->login_result = $login_result;
