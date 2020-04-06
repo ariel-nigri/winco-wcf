@@ -8,6 +8,8 @@
  * @property string $usu_pwd_history Last X used password will be saved here. 
  */
 class UsersInstances extends SqlToClass {
+    var $usuinst_privs;
+
     public function __construct() {
         $this->addTable('users_instances');
         $this->addTable('users', 'usu_seq');

@@ -21,6 +21,7 @@ class Users extends SqlToClass {
     var $usu_updated_passwd_at;
     var $usu_num_of_passwd_to_store;
     var $usu_caps;
+    var $usu_status;
 
     private     $pwd_changed;
     protected   $usu_pwd_history;
@@ -129,6 +130,7 @@ class Users extends SqlToClass {
     }
 
     public function isBlocked($db = null) {
+//
         return strchr($this->usu_status, 'B');
     }
 
@@ -172,7 +174,7 @@ class Users extends SqlToClass {
     }
 
     protected function afterSave($insert, $sql) {
-        if ($this->pwd_changed)
+        if ($this->pwd_changed && !$insert)
             AuthEvents::registerEvent($sql, AuthEvents::NEW_PWD_EVENT, $this->usu_seq);
         $this->pwd_changed = false;
         return true;
