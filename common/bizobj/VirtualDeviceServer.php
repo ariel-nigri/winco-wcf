@@ -9,13 +9,14 @@ class VirtualDeviceServer extends SqlToClass {
     var     $vds_tunnel;
     var     $vds_key;
 
-    var     $vds_remoteuser = 'android';
-    var     $vds_remotehost;
-    var     $vds_remoteport =  22;
-
     // LOCAL VARS
     var     $avd_dir;
     var     $sdk_dir;
+
+    var     $vds_host;
+    var     $vds_port       = 22;
+    var     $vds_user       = 'vds-001';
+    var     $vds_keyfile;
 
     function __construct() {
         $this->addTable('virt_device_server');
@@ -29,16 +30,43 @@ class VirtualDeviceServer extends SqlToClass {
     }
 
     function send_file($local, $remote) {
-        if (empty($this->vds_remotehost))
-            $this->vds_remotehost = $this->vds_name;
-
-        exec("sudo -u{$this->vds_remoteuser} scp -P {$this->vds_remoteport} {$local} {$this->vds_remotehost}:{$remote}", $this->error);
+        $error = [];
+        exec("sudo -u {$this->vds_user} scp -P {$this->vds_port} {$local} {$this->vds_user}@{$this->vds_host}:{$remote}", $error);
+        if (!$error)
+            return true;
+        $this->error = implode(', ', $error);
+        return false;
     }
 
     function remote_exec($cmd) {
-        if (empty($this->vds_remotehost))
-            $this->vds_remotehost = $this->vds_name;
+        exec("sudo -u {$this->vds_user} ssh -p {$this->vds_port} {$this->vds_user}@{$this->vds_host} '/opt/winco/vds/bin/$cmd'");
+    }
 
-        exec("sudo -u{$this->vds_remoteuser} ssh -p {$this->vds_remoteport} {$this->vds_remotehost} '/opt/winco/vds/bin/$cmd'");
+    function afterFetch(/* $sql */) {
+        if (!empty($this->vds_tunnel))
+            list($this->vds_host, $this->vds_port) = explode(":", $this->vds_tunnel);
+
+        else
+            $this->vds_host = $this->vds_name;
+
+        if (strpos($this->vds_host, "@") !== FALSE)
+            list($this->vds_user, $this->vds_host) = explode("@", $this->vds_host);
+    }
+
+    function retrieveSshKeyFile() {
+        $home = getenv("HOME");
+        if (empty($home)) {
+            $info = posix_getpwuid(posix_getuid());
+            $home = $info['dir'];
+        }
+
+        $this->vds_keyfile = $home."/.ssh/".$this->vds_name."-id_rsa";
+        if (file_put_contents($this->vds_keyfile, $this->vds_key) === FALSE) {
+            fprintf(STDERR, "Cannot write to file {$this->vds_keyfile}\n");
+            return false;
+        }
+    
+        chmod($this->vds_keyfile, 0600);
+        return true;
     }
 }
