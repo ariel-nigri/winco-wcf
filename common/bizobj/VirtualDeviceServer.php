@@ -26,7 +26,7 @@ class VirtualDeviceServer extends SqlToClass {
         $this->addColumn('vds_active',  'vds_active', BZC_BOOLEAN);
         $this->addColumn('vds_maxdevs', 'vds_maxdevs', BZC_INTEGER);
         $this->addColumn('vds_tunnel',  'vds_tunnel', BZC_STRING);
-        $this->addColumn('vds_key',     'vds_key', BZC_STRING);
+        // $this->addColumn('vds_key',     'vds_key', BZC_STRING);
     }
 
     function send_file($local, $remote) {

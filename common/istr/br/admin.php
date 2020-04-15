@@ -182,13 +182,6 @@ $STR_SystemRecovered		= 'RECUPERADO';
 $STR_SystemFailed			= 'EM ALARME';
 $STR_SystemAcquiring		= 'EM ALERTA';
 $STR_SystemContented		= 'CONTIDO';
-$STR_AlertType['MAIL:QUEUE|SIZE'] = 'Tamanho da fila de e-mails';
-$STR_AlertType['MAIL:QUEUE|TIME'] = 'E-mail retido na fila por muito tempo';
-$STR_AlertType['NETWORK:BLOCK'] = 'Bloqueio de IP por ataque externo';
-$STR_AlertType['NETWORK:INTERFACE'] = 'Estado da interface de rede';
-$STR_AlertType['NETWORK:BANDWIDTH:IN'] = 'Banda de entrada de rede';
-$STR_AlertType['NETWORK:BANDWIDTH:OUT'] = 'Banda de saída de rede';
-$STR_AlertType['SERVICE:STATUS'] = 'Estado do serviço';
 $STR_local_user				= 'Local';
 $STR_domain_user			= 'Domínio';
 $STR_admin_group			= 'Administradores';
@@ -204,8 +197,6 @@ $STR_sessions_user			= 'Usuário';
 $STR_sessions_use_lic		= 'Usa licença';
 $STR_sessions_exp			= 'Expiração';
 $STR_skype_login                ='Login Skype';
-
-/* ADMIN 7 */
 
 // service_defs.php
 $STR7_group_header_status 				= 'Status';
@@ -237,10 +228,6 @@ $STR7_dhcplist							= "Endere&ccedil;os DHCP";
 
 // status_feed.php
 $STR7_connections						= "Conexões";
-$STR7_alarmes							= "Alarmes";
-$STR7_mailfilter						= "Filtro de E-mail";
-$STR7_ddns								= "DDNS";
-$STR7_web_filter						= "Filtro Web";
 $STR7_im_filter							= "Filtro de MSN e Skype";
 $STR7_kill_session						= "Encerrar sess&atilde;o";
 $STR7_use_license_y						= "Sim";
@@ -340,17 +327,6 @@ $STR_WTM_recovery_diff_passw = "Entre com a nova senha igual nos 2 campos";
 $STR_WTM_recovery_invalid_code = "O código de autenticação está incorreto.";
 $STR_WTM_recovery_page_title = "Recuperação de Senha";
 $STR_WTM_recovery_page_title2 = "Recuperação de senha - Winco Talk Manager";
-$STR_WTM_recovery_mail1 = "Prezado cliente,
-
-Para trocar a senha da sua conta no sistema Winco Talk Manager, copie o codigo abaixo e cole-o
-na p=E1gina web do site.
-
-";
-$STR_WTM_recovery_mail2 = "
-
-Atenciosamente,
-
-Suporte Winco Talk Manager\r\n";
 $STR_WTM_recovery_mail_support = "Suporte Winco Talk Manager";
 $STR_WTM_recovery_captcha = "Digite o código de verificação apresentado abaixo ";
 
@@ -393,156 +369,9 @@ $STR_WTM_listaccounts_added_ok = " cadastrado com sucesso. As credenciais foram 
 $STR_WTM_listaccounts_del_ok = " excluído com sucesso.";
 $STR_WTM_listaccounts_edit_ok = " editado com sucesso.";
 
-// list_accounts.php
-$STR_WTM_listaccounts_masteradmin = "(Administrador principal)";
-
 //accounts.php
 $STR_WTM_accounts_msg_user_registered = "Login já cadastrado.";
 $STR_WTM_accounts_msg_user_notfound = "Usuário não encontrado.";
-$STR_WTM_accounts_msg_wrong_email= "O campo <strong>Login</strong> deve ser preenchido com um endereço de e-mail válido.";
-$STR_WTM_accounts_msg_name_null = "O campo de <strong>Nome</strong> não pode ser vazio.";
-$STR_WTM_accounts_msg_del = "Não foi possível excluir este administrador. Tente novamente ou entre em contato com o suporte.";
 $STR_WTM_accounts_msg_insert = "Não foi possível inserir novo usuário. Tente novamente ou entre em contato com o suporte.";
 $STR_WTM_accounts_msg_update = "Não foi possível atualizar os dados.";
 $STR_WTM_accounts_msg_user_count = "Sua conta só permite 1 administrador secundário";
-
-// accounts.phtml
-$STR_WTM_accounts_title = "Cadastro de Administradores";
-$STR_WTM_accounts_title2 = "WTM - Cadastro";
-$STR_WTM_accounts_name = "Nome";
-$STR_WTM_accounts_login = "Login (e-mail)";
-$STR_WTM_accounts_2fact = "Autenticação de Duplo Fator";
-$STR_WTM_accounts_perm = "Permissão";
-$STR_WTM_accounts_lang = "Idioma";
-$STR_WTM_accounts_privs_a = "Acesso total";
-$STR_WTM_accounts_privs_c = "Configuração";
-$STR_WTM_accounts_privs_v = "Visualização";
-$STR_WTM_accounts_lang_br = "Português";
-$STR_WTM_accounts_lang_us = "Inglês";
-$STR_WTM_accounts_send = "Salvar";
-$STR_WTM_accounts_cancel = "Cancelar";
-$STR_WTM_accounts_mail_title = '=?ISO-8859-1?Q?Confirma=E7=E3o_de_cadastro_no_Winco_Talk_Manager?=';
-$STR_WTM_accounts_txt_ga1 = "- Código do Google Authenticator";
-$STR_WTM_mail_signature = "Atenciosamente,
-
-Suporte Winco Talk Manager
-(11) 4063-8400 | (21) 4063-5369 | (31) 4063-8512 | (48) 4052-9174
-talkmanager.winco.com.br
-
-";
-$STR_WTM_accounts_txt_ga2 = "- Para maiores informações sobre como configurar o seu Google Authenticator, acesse o link:
-talkmanager.winco.com.br/tutorial/winco-talk-manager/configuracao-google-authenticator/";
-$STR_WTM_accounts_send_mail = "Prezado(a) #NOME#,
-
-Seu e-mail foi cadastrado por #ADMIN# para acessar o Winco Talk Manager. 
-Caso você não seja '#NOME#' ou não saiba do que se trata, fale com seu administrador ou entre em contato conosco.
-
-Para acessar o portal de gerência do Winco Talk Manager, através do endereço 'talkmanager.net', você precisará das credenciais abaixo.
-
-Credenciais
------------
-- E-mail: #USER#
-- Senha: #PASSW# 
-#USAGAUTH1#
-
-Observações
------------
-- Por motivo de segurança, recomendamos trocar sua senha assim que possível, através da opção 'Trocar senha' no menu 'Ferramentas' disponível no portal de gerência.
-#USAGAUTH2#
-
-$STR_WTM_mail_signature";
-$STR_WTM_accounts_send_mail2 = "Prezado(a) #NOME#,
-
-A sua configuração de autenticação para acessar o Winco Talk Manager foi alterada por #ADMIN#. 
-
-A alteração efetuada foi:
--------------------------
-#REASON#
-
-Caso você não seja '#NOME#' ou não saiba do que se trata, fale com seu administrador ou entre em contato conosco.
-
-$STR_WTM_mail_signature";
-$STR_WTM_mail_reason1 = "Sua autenticação por duplo fator foi desativada.";
-$STR_WTM_mail_reason2 = "Sua autenticação por duplo fator foi ativada.";
-$STR_WTM_mail_reason3 = "A chave utilizada em sua autenticação por duplo fato foi alterada.";
-$STR_WTM_accounts_mail_title2 = '=?ISO-8859-1?Q?Altera=E7=E3o_de_cadastro_no_Winco_Talk_Manager?=';
-$STR_WTM_accounts_use_ga_title = "Autenticação de duplo fator:";
-$STR_WTM_accounts_use_ga = "sim";
-$STR_WTM_accounts_not_use_ga = "não";
-$STR_WTM_accounts_logaudity_use_ga = "com autenticação de duplo fator";
-$STR_WTM_accounts_logaudity_nuse_ga = "sem autenticação de duplo fator";
-$STR_WTM_accounts_2fact_none = "nenhuma";
-$STR_WTM_accounts_err_selecting_master = "Erro selecionando administrador principal";
-$STR_WTM_accounts_do_gen_new_key = "Ao gerar uma nova chave, a chave anterior será deletada. Deseja continuar?";
-$STR_WTM_accounts_gen_new_ga_key = "Gerar nova chave";
-$STR_WTM_accounts_ga_alert = "<strong>Prepare-se para ativar a autenticação de duplo fator pelo Google Authenticator</strong><br /><br />
-Tenha em mãos o celular do administrador que está sendo cadastrado, com o Google Authenticator já instalado.<br /><br />
-Após clicar no botão 'Salvar', será exibida a chave necessária para a configuração do Google Authenticator.<br /><br />
-Obs.:  Se você não estiver preparado para fazer isso agora, mude a opção 'Autenticação de duplo fator' para 'nenhuma'.  Esta opção poderá ser alterada posteriormente.";
-$STR_WTM_accounts_ga_click_to_know = "Clique aqui para saber como configurar o Google Authenticator";
-$STR_WTM_accounts_ga_get_qrcode = "Cadastre a chave abaixo manualmente no celular do administrador:";
-$STR_WTM_accounts_alert_donot_copy = "Atenção: Por motivo de segurança, evite imprimir ou enviar<br />por e-mail esta chave. A chave será exibida uma única vez.";
-$STR_WTM_ga_url = "http://talkmanager.winco.com.br/tutorial/winco-talk-manager/configuracao-google-authenticator/";
-$STR_WTM_or_use_qrcode = "Ou capture o QR Code abaixo:";
-
-/*
-* NetProtection
-*/
-$STR_NP_passw_rec_text1 = "Informe o e-mail cadastrado e o código de validação abaixo:";
-$STR_NP_passw_rec_email = "E-mail:";
-$STR_NP_passw_rec_copntinue = "Continuar";
-$STR_NP_passw_rec_title = "Recuperação de senha";
-$STR_NP_passw_rec_tip_fields = "Por favor preencha o e-mail e o código de validação.";
-$STR_NP_passw_rec_invalid_code1 = "Código de validação incorreto.";
-$STR_NP_passw_rec_user_not_found = "Não foi possível encontrar o seu cadastro.<br />Por favor verifique o e-mail informado.";
-$STR_NP_passw_rec_user_support = "Suporte NetProtection";
-$STR_NP_passw_rec_text2 = "Foi enviado para seu e-mail um código de confirmação.<br />Informe-o no campo abaixo para alterar sua senha.<br /><br />";
-$STR_NP_passw_rec_confirm_code = 'Código de Confirmação:';
-$STR_NP_passw_rec_digit_new_passw = "Nova senha:";
-$STR_NP_passw_rec_repeat_passw = "Repita a senha:";
-$STR_NP_passw_rec_alter_passw = "Alterar senha";
-$STR_NP_passw_rec_resend_code = "Reenviar código";
-$STR_NP_passw_rec_text3 = "Sua senha foi alterada com sucesso!";
-$STR_NP_passw_rec_close = "Fechar janela";
-$STR_NP_passw_rec_diff_passw = "As senhas digitadas são diferentes.";
-$STR_NP_passw_rec_invalid_code = "Código de confirmação incorreto.";
-$STR_NP_passw_rec_err_updating_passw = "Erro alterando senha.";
-$STR_NP_passw_rec_tip_fields2 = "Por favor preencha o código de confirmação e a nova senha.";
-$STR_NP_passw_rec_mail1 = "Prezado cliente,
-
-Para trocar sua senha de acesso ao administrador do NetProtection, copie o c=F3digo abaixo e cole-o
-na p=E1gina web de recupera=E7=E3o de senha.
-
-";
-$STR_NP_passw_rec_mail2 = "
-
-Atenciosamente,
-
-Suporte NetProtection\r\n";
-
-// change_password.php NTP
-$STR_NTP_change_page_title = "Alteração de Senha";
-$STR_NTP_change_page_title2 = "Alteração de senha - Winco Talk Manager";
-$STR_NTP_change_current_pass = 'Senha atual';
-$STR_NTP_change_digit_new_passw = "Senha nova";
-$STR_NTP_change_repeat_passw = "Repita a senha";
-$STR_NTP_change_alter_passw = "Alterar senha";
-$STR_NTP_change_text3 = "Sua senha foi alterada com sucesso.";
-$STR_NTP_change_captcha = "Digite o código de verificação: ";
-$STR_NTP_change_invalid_code = "O código de verificação está incorreto.";
-$STR_NTP_change_tip_fields = "Por favor preencha o sua senha atual, senha nova e repita a senha nova";
-$STR_NTP_change_close = "Fechar a janela";
-$STR_NTP_change_diff_passw = "Senhas não conferem";
-$STR_NTP_change_diff_current_pass = "Senha atual fornecida diferente da cadastrada";
-$STR_NTP_change_len_passw = "A senha deve conter no mínimo 6 caracteres";
-$STR_NTP_change_err_changing_adm_master_passw = "Erro atualizando senha do administrador principal";
-$STR_NTP_change_err_selecting_user = "Erro selecionando usuário";
-$STR_NTP_change_err_selecting_inst = "Erro selecionando instância";
-$STR_NTP_change_err_other_inst = "Usuário não pertence a esta instância";
-$STR_NTP_change_err_changing_user_passw = "Erro atualizando senha do usuário";
-
-// login_second_factor
-$STR_WTM_twofact_wrong = "Código inválido";
-$STR_WTM_twofact_box_title = "Autenticação de duplo fator";
-
-?>
