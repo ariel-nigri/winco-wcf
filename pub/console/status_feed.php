@@ -3,12 +3,23 @@
 require "config.php";
 
 // actions
+
+if (empty($_SESSION['view_disabled_instances'])) {
+	$show_disabled 		= 'SHOW_DISABLED';
+	$show_disabled_str	= 'Mostrar inativas';
+}
+else {
+	$show_disabled 		= 'HIDE_DISABLED';
+	$show_disabled_str	= 'Esconder inativas';
+}
+
 $instance_actions = "[
 	{ cmd: 'START', 			label: 'Iniciar', 					item: true},
 	{ cmd: 'STOP', 				label: 'Parar', 					item: true},
 	{ cmd: 'RESTART', 			label: 'Reiniciar',					item: true},
 	{ cmd: 'STATUS', 			label: 'Ver status',				item: true},
-	{ cmd: 'SUPPORT_INST',		label: 'Login de suporte', 			item: true}
+	{ cmd: 'SUPPORT_INST',		label: 'Login de suporte', 			item: true},
+	{ cmd: '{$show_disabled}',	label: '{$show_disabled_str}',		item: false}
 ]";
 
 $instance_register = "[
@@ -83,7 +94,7 @@ switch ($_REQUEST['service']) {
 		
 		// list instances
 		$instances = new Instances;
-		unset($instances->inst_active);
+		$instances->inst_active = empty($_SESSION['view_disabled_instances']) ? true: null;
 		if ($instances->select(getDbConn())) {
 			while ($instances->fetch()) {
 				$lang = $instances->inst_lang == "us" ? "Ingl&ecirc;s" : "Portugu&ecirc;s";

@@ -20,12 +20,17 @@ spl_autoload_register(function($class_name) {
             require_once("{$GLOBALS['bizobj_extra']}/{$class_name}.php");
 });
 
+/**
+ * Returns the current connection to the Wcf database. It opens it if necessary.
+ * 
+ * @return Sql
+ */
 function getDbConn() {
     require_once 'mvc3/db/db-pdo.php';
 
     global $db_dsn, $db_user, $db_passwd, $wcf_db_conn_pdo, $wcf_db_conn;
 
-    if (empty($db_conn)) {
+    if (empty($wcf_db_conn)) {
         try {
             $wcf_db_conn_pdo = new PDO($db_dsn, $db_user, $db_passwd);
         }

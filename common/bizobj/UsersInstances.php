@@ -10,6 +10,8 @@
 class UsersInstances extends SqlToClass {
     var $usuinst_privs;
 
+    protected $usu_passwd_digest;
+
     public function __construct() {
         $this->addTable('users_instances');
         $this->addTable('users', 'usu_seq');
@@ -25,15 +27,14 @@ class UsersInstances extends SqlToClass {
         $this->addColumn('users.usu_seq', 'usu_seq', BZC_INTEGER | BZC_READONLY);
         $this->addColumn('users.usu_email', 'usu_email', BZC_STRING | BZC_READONLY);
         $this->addColumn('users.usu_name', 'usu_name', BZC_STRING | BZC_READONLY);
-        $this->addColumn('users.usu_passwd_digest', 'usu_passwd_digest', BZC_STRING | BZC_READONLY);
         $this->addColumn('users.usu_language', 'usu_language', BZC_STRING | BZC_READONLY);
 		$this->addColumn('users.usu_twofact_type', 'usu_twofact_type', BZC_STRING | BZC_READONLY);
+		$this->addColumn('users.usu_passwd_digest', 'usu_passwd_digest', BZC_STRING | BZC_READONLY);
         $this->addColumn('users.usu_twofact_token', 'usu_twofact_token', BZC_STRING | BZC_READONLY);
         $this->addColumn('users.usu_updated_passwd_at', 'usu_updated_passwd_at', BZC_TIMESTAMP | BZC_READONLY);
         $this->addColumn('users.usu_max_pwd_age', 'usu_max_pwd_age', BZC_INTEGER | BZC_READONLY);
         $this->addColumn('users.usu_num_of_passwd_to_store', 'usu_num_of_passwd_to_store', BZC_INTEGER | BZC_READONLY);
-        $this->addColumn('users.usu_pwd_history', 'usu_pwd_history', BZC_STRING | BZC_READONLY);
-        $this->addColumn('users.usu_status', 'usu_status', BZC_STRING);                                     /** acct blocked, pwd expired, or both*/
+        $this->addColumn('users.usu_status', 'usu_status', BZC_STRING);                                                     /** acct blocked, pwd expired, or both*/
     }
 
     public static function getUsersByInstance($sql) {
@@ -44,6 +45,10 @@ class UsersInstances extends SqlToClass {
                 $resp_array[$qr->value('usu_seq')][] = $qr->value('inst_seq');
         }
         return $resp_array;
+    }
+
+    public function validatePassword($pass) {
+        return Users::comparePassword($pass, $this->usu_passwd_digest);
     }
 
     public function isBlocked() {

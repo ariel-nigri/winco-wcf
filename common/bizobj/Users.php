@@ -47,7 +47,7 @@ class Users extends SqlToClass {
         $this->addColumn('users.usu_num_of_passwd_to_store', 'usu_num_of_passwd_to_store', BZC_INTEGER);    /** Remember X last used passwords to remember */
         $this->addColumn('users.usu_pwd_history', 'usu_pwd_history', BZC_STRING);                           /** Last X used password will be saved here.   */
         $this->addColumn('users.usu_caps', 'usu_caps', BZC_STRING);
-        $this->addColumn('users.usu_status', 'usu_status', BZC_STRING);                                     /** acct blocked, pwd expired, or both*/
+        $this->addColumn('users.usu_status', 'usu_status', BZC_STRING);                                     /** acct blocked, change password, etc..*/
 	}
         
 	static function generatePassword() {

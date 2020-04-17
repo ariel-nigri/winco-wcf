@@ -40,11 +40,11 @@ class AuthEvents extends SqlToClass {
 		return $ae->insert($sql);
 	}
 
-	public function countBadLogins(PDO $sql) {
+	static function countBadLogins(Sql $sql, $usu_seq) {
 		$count = 0;
 
-		$sth = $sql->prepare("SELECT ae_event as total FROM auth_events WHERE usu_seq = :user ORDER BY ae_seq DESC LIMIT 40");
-		$sth->execute([':user' => $this->usu_seq]);
+		$sth = $sql->con->prepare("SELECT ae_event as total FROM auth_events WHERE usu_seq = :user ORDER BY ae_seq DESC LIMIT 40");
+		$sth->execute([':user' => $usu_seq]);
 		$array = $sth->fetchAll();
 		foreach ($array as $row) {
 			switch ($row[0]) {

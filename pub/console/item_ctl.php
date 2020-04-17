@@ -46,12 +46,14 @@ else if ($svc == "ADMIN") {
 }
 else if ($svc == "INSTANCE") {
 	$dbconn = getDbConn();
-	$inst = $instance_classname::find($dbconn, array('inst_seq' => $id, 'inst_active' => null));
-	if (!$inst || !$inst->valid)
-		die("Instancia {$id} inexistente");
-	if ($my_worker_hostname != $inst->worker_hostname)
-		die("$my_worker_hostname != $inst->worker_hostname");
-
+	if ($id != 'NONE') {
+		$inst = $instance_classname::find($dbconn, array('inst_seq' => $id, 'inst_active' => null));
+		if (!$inst || !$inst->valid)
+			die("Instancia {$id} inexistente");
+		if ($my_worker_hostname != $inst->worker_hostname)
+			die("$my_worker_hostname != $inst->worker_hostname");
+	}
+	
 	switch ($cmd) {
 	case 'START':
 		$inst->start();
@@ -71,6 +73,16 @@ else if ($svc == "INSTANCE") {
 		break;
 	case 'STATUS':
 		$result->error = "Comando não implementado";
+		break;
+	case 'SHOW_DISABLED':
+		$_SESSION['view_disabled_instances'] = true;
+		$result->error = 'Mostrando desativados';
+		$result->status = true;
+		break;
+	case 'HIDE_DISABLED':
+		$_SESSION['view_disabled_instances'] = false;
+		$result->error = 'Escondendo desativados';
+		$result->status = true;
 		break;
 	case 'DEL':
 		if (strpos($inst->inst_type, 'TRIAL=Y') === false) {

@@ -112,6 +112,8 @@ function on_list_action(el, cmd) {
 		on_list_new();
 	else if (cmd == 'DEL')
 		on_list_del();
+	else if (cmd == 'SHOW_DISABLED' || cmd == 'HIDE_DISABLED')
+		on_list_chview(cmd);
 	else if (cmd == 'NEW_ACCOUNT')
 		on_list_new_account();
 	else if (cmd == 'LIST_ACCOUNTS')
@@ -134,7 +136,7 @@ function on_list_action(el, cmd) {
 		on_list_instance(670, 'inst_id');
 	else if (cmd == 'NTP_INSTANCE_INFO')
 		on_list_instance(450, 'inst_id');
-	else if (cmd == 'START' || cmd == 'STOP' || cmd == 'RESTART' || cmd == 'STATUS') {	
+	else if (cmd == 'START' || cmd == 'STOP' || cmd == 'RESTART' || cmd == 'STATUS' || cmd == 'SHOW_DISABLED' || cmd == 'HIDE_DISABLED') {	
 		document.getElementById('button_close').style.display = 'none';
 		document.getElementById('alert').style.display = '';
 		document.getElementById('alert_msg').innerHTML = cmd_str[cmd];
@@ -213,4 +215,15 @@ function on_list_logview(page) {
 
 function on_list_lost_medida_report(vds_seq) {
 	window.open('lost_media_report.phtml?vds_seq='+vds_seq, '_blank');
+}
+
+function on_list_chview(cmd) {
+	var myxhr = new XHRUpdater('item_ctl.php?service=INSTANCE&instance=INSTANCE&id=NONE&cmd='+cmd);
+	myxhr.onUpdate = function(request) {
+		var response = JSON.parse(request.responseText);
+		if (!response.status)
+			alert(response.error);
+		window.location.reload();
+	}
+	myxhr.start();
 }

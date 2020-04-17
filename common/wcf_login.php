@@ -2,6 +2,8 @@
 
 require_once __DIR__.'/wcf.php';
 
+define('MAX_PWD_ATTEMPTS', 5);
+
 /*
 	array(
 		'result'   =>
@@ -14,95 +16,133 @@ require_once __DIR__.'/wcf.php';
 	);
 	
  */
- 
-function wcf_login($username, $password) {
+
+// To be used by regular users.
+function wcf_login($username, $password)
+{
+	// Create the return array, with the current error
 	$ret = array('result' => 'BAD_PARAMS');
 
 	if (empty($username) || empty($password))
 		return $ret;
 	
-	global $adm_passwd_salt, $instance_classname;
-	
-	// so we have to check in the users table...
-	do {
+	// so we have to check in the users_intances table...
+	$usu_inst = new UsersInstances;
+	$usu_inst->usu_email = $username;
+	if (!$usu_inst->select(getDbConn()))
+		// user doesnt exist. we should use IPS for brute force protection, but still not.
 		$ret['result'] = 'LOGIN_INVALID';
-		$usu_inst = new UsersInstances;
-		$usu_inst->usu_email = $username;
-		if (!$usu_inst->select(getDbConn())
-				|| !Users::comparePassword($password, $usu_inst->usu_passwd_digest))
-			break;
+	else {
+		// User exists. Lets check password and retrieve all the login INFO
+		$ret['type']	= 'user';
+		$ret['privs']	= $usu_inst->usuinst_privs;
 
-		/*
-		$ae->usu_seq = $usu_inst->usu_seq;
-		if ($ae->isBlocked($db_conn)) {
-			$ret['result'] = 'LOGIN_BLOCKED';
-			break;
-		}
-		*/
-
-		$instance = new $instance_classname;
-		$instance->inst_seq = $usu_inst->inst_seq;			
-		if (!$instance->select(getDbConn())) {
-			$ret['result'] = 'LOGIN_ERROR';
-			break;
-		}
-
-		$ret['result'] 		= 'OK';
-		$ret['inst_user']	= $instance->inst_id;
-		$ret['inst_pass'] 	= substr(md5($adm_passwd_salt.$instance->inst_id), 0, 32);
-		$ret['type']		= 'user';
-		$ret['privs']		= $usu_inst->usuinst_privs;
-		$ret['lang'] 		= $usu_inst->usu_language;
-		$ret['user']		= $usu_inst;
-		$ret['instance']	= $instance;
-	} while(false);
+		aux_checkCredentials($usu_inst, $password, $usu_inst->inst_seq, $ret);
+	}
 	return $ret;
 }
 
-function wcf_login_support($username, $password, $inst_seq, $privs = 'A') {
+// To be used by SYSTEM administrators.
+function wcf_login_support($username, $password, $inst_seq, $privs = 'A')
+{
+	// Create the return array, with the current error
 	$ret = array('result' => 'BAD_PARAMS');
 
-	if (empty($username) || empty($password))
+	if (empty($username) || empty($password) || empty($inst_seq))
 		return $ret;
-	
-	global $adm_passwd_salt, $instance_classname;
-	
-	// so we have to check in the users table...
-	do {
+
+	// Retrieve the user's object and make sure he has ADMIN privileges.
+	$usr = new Users;
+	$usr->usu_email = $username;
+	if (!$usr->select(getDbConn()) || !strstr($usr->usu_caps, 'ADMIN'))
 		$ret['result'] = 'LOGIN_INVALID';
+	else {
+		// User is ADMIN. Lets check password and retrieve all the login INFO
+		// return the fact that this is a support login with differnt access permissions.
+		$ret['type']	= 'support';
+		$ret['privs']	= $privs;
 
-        // connect to DB
-        $db_conn = getDbConn();
-
-        // Check the user's password
-        $usr = new Users;
-        $usr->usu_email = $username;
-		if (!$usr->select($db_conn) || !$usr->validatePassword($password) || !strstr($usr->usu_caps, 'ADMIN'))
-			break;
-
-		/*
-		$ae->usu_seq = $usu_inst->usu_seq;
-		if ($ae->isBlocked($db_conn)) {
-			$ret['result'] = 'LOGIN_BLOCKED';
-			break;
-		}
-		*/
-
-		$instance = new $instance_classname;
-		$instance->inst_seq = $inst_seq;			
-		if (!$instance->select($db_conn)) {
-			$ret['result'] = 'LOGIN_ERROR';
-			break;
-		}
-
-		$ret['result'] 		= 'OK';
-		$ret['inst_user']	= $instance->inst_id;
-		$ret['inst_pass'] 	= substr(md5($adm_passwd_salt.$instance->inst_id), 0, 32);
-		$ret['type']		= 'support';
-		$ret['privs']		= $privs;
-		$ret['lang'] 		= $usr->usu_language;
-		$ret['user']		= $usr;
-		$ret['instance'] 	= $instance;
-	} while(false);
+		aux_checkCredentials($usr, $password, $inst_seq, $ret);
+	}
 	return $ret;
+}
+
+/*
+ * This is the main function to check access credentials.
+ */
+function aux_checkCredentials($usu_inst, $password, $inst_seq, &$ret)
+{
+	global $adm_passwd_salt, $instance_classname;
+
+	$ret['result'] = 'LOGIN_INVALID';
+	$ret['pwd_status'] = 'OK';
+
+	do {
+		// we need this for the log
+		@$url = dirname($_SERVER['HTTP_HOST'].@$_SERVER['REQUEST_URI']);
+
+		// check if the users is blocked.
+		if ($usu_inst->isBlocked(getDbConn())) {
+			$ret['pwd_status'] = 'USER_BLOCKED';
+			AuthEvents::registerEvent(getDbConn(), AuthEvents::BAD_LOGIN_EVENT, $usu_inst->usu_seq, "URL={$url}, USER IS BLOCKED");
+			break;
+		}
+
+
+		// check for password expiration status: can be, OK, CHANGE_SOON, CHANGE_NOW or EXPIRED.
+		$delta = 8; // number of days until the password expired. 8 means, 'do not report anything.
+		if ($usu_inst->usu_max_pwd_age) {
+			$pwd_timet = strtotime($usu_inst->usu_updated_passwd_at);
+
+			// delta is the number of days until password expiration.
+			$delta = ($pwd_timet + ($usu_inst->usu_max_pwd_age * 86400) - time()) / 86400;
+			if ($delta <= -3)
+				$ret['pwd_status'] = 'EXPIRED';
+		}
+
+		// check that the password is correct
+		if ($ret['pwd_status'] == 'EXPIRED' || !$usu_inst->validatePassword($password)) {
+			// bad password. Lets log it and count the number of mistakes.
+			AuthEvents::registerEvent(getDbConn(), AuthEvents::BAD_LOGIN_EVENT, $usu_inst->usu_seq, "URL={$url}, ".
+						($ret['pwd_status'] == 'EXPIRED' ? 'PASSWORD IS EXPIRED' : 'BAD PASSWORD'));
+
+			$nerr = AuthEvents::countBadLogins(getDbConn(), $usu_inst->usu_seq);
+			if ($nerr >= MAX_PWD_ATTEMPTS) {
+				// That's it, we must block the user.
+				$usu = new Users;
+				$usu->usu_seq = $usu_inst->usu_seq;
+				$usu->block(getDbConn(), "{$nerr} INVALID LOGIN ATTEMPTS");
+			}
+			break;
+		}
+
+		// Last step: does the user have to change the password imediately, or be notified of 
+		// a coming expiration?
+		if ($delta <= 7) {
+			$ret['pwd_status']	= "EXPIRATION: {$delta}";
+
+			if ($delta <= 0)
+				$ret['result']	= 'CHANGE_PASSWORD';
+		}
+
+		// Login succeeded.
+		$ret['result'] 		= ($ret['pwd_status'] == 'CHANGE_NOW' ? 'CHANGE_PASSWORD' : 'OK');
+		$ret['lang'] 		= $usu_inst->usu_language;
+		$ret['user']		= $usu_inst;
+
+		AuthEvents::registerEvent(getDbConn(), AuthEvents::GOOD_LOGIN_EVENT, $usu_inst->usu_seq, "URL={$url}, LOGGED into instance {$inst_seq}");
+		// Retrieve instance info if necessary
+		if ($inst_seq != 'CONSOLE') {
+			$instance = new $instance_classname;
+			$instance->inst_seq = $inst_seq;
+
+			if (!$instance->select(getDbConn()))
+				$ret['result'] = 'LOGIN_ERROR';
+			else {
+				$ret['inst_user']	= $instance->inst_id;
+				$ret['inst_pass'] 	= substr(md5($adm_passwd_salt.$instance->inst_id), 0, 32);
+				$ret['instance'] 	= $instance;
+			}
+		}
+	} while (false);
 }
