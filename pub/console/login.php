@@ -17,7 +17,7 @@ if (!empty($_POST)) {
 			break;
 		}
 
-		$ret = wcf_login_support($username, $pass, 'CONSOLE');
+		$ret = wcf_login_support($username, $pass, null);
 		if ($ret['result'] == 'OK') {
 			// load perms and all env info into _SESSION
 			$_SESSION['LOGGED_USER'] = array(

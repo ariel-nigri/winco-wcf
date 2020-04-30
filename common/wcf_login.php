@@ -18,10 +18,12 @@ define('MAX_PWD_ATTEMPTS', 5);
  */
 
 // To be used by regular users.
-function wcf_login($username, $password)
+function wcf_login($username, $password, $filter = [])
 {
+	global $instance_classname;
+
 	// Create the return array, with the current error
-	$ret = array('result' => 'BAD_PARAMS');
+	$ret = array('result' => 'BAD_PARAMS', 'pwd_status' => 'OK');
 
 	if (empty($username) || empty($password))
 		return $ret;
@@ -37,7 +39,16 @@ function wcf_login($username, $password)
 		$ret['type']	= 'user';
 		$ret['privs']	= $usu_inst->usuinst_privs;
 
-		aux_checkCredentials($usu_inst, $password, $usu_inst->inst_seq, $ret);
+		// Retrieve instance info if necessary
+		$ret['instance'] = $instance_classname::find(getDbConn(), [ 'inst_seq' => $usu_inst->inst_seq ]);
+		if (!$ret['instance']->valid)
+			$ret['result'] = 'LOGIN_ERROR';
+		else {
+			if (!empty($filter['inst_ver']) && $filter['inst_ver'] != $ret['instance']->inst_ver)
+				$ret['result'] = 'INSTANCE_MISMATCH';
+			else
+				aux_checkCredentials($usu_inst, $password, $ret);
+		}
 	}
 	return $ret;
 }
@@ -45,10 +56,12 @@ function wcf_login($username, $password)
 // To be used by SYSTEM administrators.
 function wcf_login_support($username, $password, $inst_seq, $privs = 'A')
 {
-	// Create the return array, with the current error
-	$ret = array('result' => 'BAD_PARAMS');
+	global $instance_classname;
 
-	if (empty($username) || empty($password) || empty($inst_seq))
+	// Create the return array, with the current error
+	$ret = array('result' => 'BAD_PARAMS', 'pwd_status' => 'OK');
+
+	if (empty($username) || empty($password))
 		return $ret;
 
 	// Retrieve the user's object and make sure he has ADMIN privileges.
@@ -62,7 +75,12 @@ function wcf_login_support($username, $password, $inst_seq, $privs = 'A')
 		$ret['type']	= 'support';
 		$ret['privs']	= $privs;
 
-		aux_checkCredentials($usr, $password, $inst_seq, $ret);
+		// Retrieve instance info if necessary
+		$ret['instance'] = ( $inst_seq ? $instance_classname::find(getDbConn(), [ 'inst_seq' => $inst_seq ]) : null );
+		if ($ret['instance'] && !$ret['instance']->valid)
+			$ret['result'] = 'LOGIN_ERROR';
+		else
+			aux_checkCredentials($usr, $password, $ret);
 	}
 	return $ret;
 }
@@ -70,9 +88,9 @@ function wcf_login_support($username, $password, $inst_seq, $privs = 'A')
 /*
  * This is the main function to check access credentials.
  */
-function aux_checkCredentials($usu_inst, $password, $inst_seq, &$ret)
+function aux_checkCredentials($usu_inst, $password, &$ret)
 {
-	global $adm_passwd_salt, $instance_classname;
+	global $adm_passwd_salt;
 
 	$ret['result'] = 'LOGIN_INVALID';
 	$ret['pwd_status'] = 'OK';
@@ -130,19 +148,12 @@ function aux_checkCredentials($usu_inst, $password, $inst_seq, &$ret)
 		$ret['lang'] 		= $usu_inst->usu_language;
 		$ret['user']		= $usu_inst;
 
-		AuthEvents::registerEvent(getDbConn(), AuthEvents::GOOD_LOGIN_EVENT, $usu_inst->usu_seq, "URL={$url}, LOGGED into instance {$inst_seq}");
-		// Retrieve instance info if necessary
-		if ($inst_seq != 'CONSOLE') {
-			$instance = new $instance_classname;
-			$instance->inst_seq = $inst_seq;
+		AuthEvents::registerEvent(getDbConn(), AuthEvents::GOOD_LOGIN_EVENT, $usu_inst->usu_seq, "URL={$url}, LOGGED into instance ".($ret['instance'] ? $ret['instance']->inst_seq : 'CONSOLE'));
 
-			if (!$instance->select(getDbConn()))
-				$ret['result'] = 'LOGIN_ERROR';
-			else {
-				$ret['inst_user']	= $instance->inst_id;
-				$ret['inst_pass'] 	= substr(md5($adm_passwd_salt.$instance->inst_id), 0, 32);
-				$ret['instance'] 	= $instance;
-			}
+		// Retrieve instance info if necessary
+		if ($ret['instance']) {
+			$ret['inst_user']	= $ret['instance']->inst_id;
+			$ret['inst_pass'] 	= substr(md5($adm_passwd_salt.$ret['instance']->inst_id), 0, 32);
 		}
 	} while (false);
 }
