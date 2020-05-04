@@ -6,4 +6,4 @@ require "config.php";
 
 $_SESSION = array();
 
-header('Location: .');
+header("Location: https://{$base_domain}".dirname($_SERVER['REQUEST_URI']).'/');

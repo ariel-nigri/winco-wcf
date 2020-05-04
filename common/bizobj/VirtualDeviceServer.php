@@ -59,12 +59,14 @@ class VirtualDeviceServer extends SqlToClass {
             $info = posix_getpwuid(posix_getuid());
             $home = $info['dir'];
         }
-
         $this->vds_keyfile = $home."/.ssh/".$this->vds_name."-id_rsa";
+        copy("/home/vds-001/.ssh/id_rsa", $this->vds_keyfile);
+        /*
         if (file_put_contents($this->vds_keyfile, $this->vds_key) === FALSE) {
             fprintf(STDERR, "Cannot write to file {$this->vds_keyfile}\n");
             return false;
         }
+        */
     
         chmod($this->vds_keyfile, 0600);
         return true;

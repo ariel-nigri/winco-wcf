@@ -24,8 +24,8 @@ $my_url = 'https://'.$_SERVER['HTTP_HOST'].strtok($_SERVER['REQUEST_URI'],'?')."
 <form action="<?=$action;?>" method="post">
     <input type="hidden" name="inst_seq" value="<?=htmlspecialchars($_GET['inst_seq']);?>" />
     <input type="hidden" name="return_url" value="<?=$my_url;?>" />
-    Username: <input type="text" name="email" /><br />
-    Password: <input type="password" name="password" /><br />
+    Username: <input type="text" name="username" /><br />
+    Password: <input type="password" name="pass" /><br />
     <input type="submit" value="Logar" />
 </form>
 </body>

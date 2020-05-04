@@ -1,6 +1,6 @@
 <?php
 
-
+// Create or update a WCF instance.
 function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $user_email, $user_name, $inst_expiration, &$error, $pwd = null)
 {
     global $instance_classname, $product_code, $default_license, $my_worker_hostname;
@@ -81,7 +81,7 @@ function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $us
         // get the instance of
         $instance = $instance_classname::find(getDbConn(), ['inst_id' => $inst_id]);
         if (!$instance->valid) {
-            $error = "Cannot find instance {$inst_seq} to apply license";
+            $error = "Cannot find instance {$inst_id} to apply license";
             return false;
         }
         if ($instance->inst_type != $inst_caps) {
@@ -150,6 +150,7 @@ function wcf_change_caps($inst_id, $inst_caps, &$inst_expiration, &$error)
     return true;
 }
 
+// Retrieve informationa bout the instance of a user.
 function wcf_list_info($usu_email, &$info, &$error)
 {
     global $instance_classname;
@@ -199,6 +200,7 @@ function wcf_list_info($usu_email, &$info, &$error)
     }
     return true;
 }
+
 function wcf_set_password($usu_email, $password, &$error)
 {
 	$db = getDbConn();
@@ -207,7 +209,7 @@ function wcf_set_password($usu_email, $password, &$error)
 		$error = "User not foud.";
 		return false;
 	}
-	if (!$user->setPassword($password)) {
+	if (!$user->setPassword($db, $password)) {
 		$error = 'Error setting password';
 		break;
 	}

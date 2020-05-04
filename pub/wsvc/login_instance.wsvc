@@ -27,7 +27,6 @@ if (empty($_REQUEST['login_type']) || empty($_REQUEST['username']) || empty($_RE
 
 $login_result = "LOGIN_INVALID";
 
-$usu_inst = null;
 $usu_privs = 'A';
 $pass_ok = false;	  	
 
@@ -36,8 +35,7 @@ $ret = wcf_login($_REQUEST['username'], $_REQUEST['password']);
 switch ($ret['result']) {
 	case 'OK':
 		// LOGIN OK, WE MUST CREATE THE LOGIN SESSION NOW.
-		$login_result = cloud_login($instances, $usu_inst);
-		load_user_info($ret);
+		$login_result = cloud_login($ret['instance'], $ret['user']);
 		switch ($ret['pwd_status']) {
 		case 'OK':
 			break;
