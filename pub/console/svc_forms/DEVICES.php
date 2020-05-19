@@ -29,6 +29,17 @@ class ServicePanel extends ServicePanelBase {
 		}
 	}
 
+	function changeKey() {
+		$device = new VirtualDevice;
+		$device->vd_seq = $this->params['vd_seq'];
+		$device->vd_key = strtoupper(bin2hex(openssl_random_pseudo_bytes(8)));
+
+		if ($device->update(getDbConn()))
+			$this->form->data->vd_key = $device->vd_key;
+		else
+			$this->form->setError('Erro criando nova chave');
+	}
+
 	function onSave() {
 		if (empty($this->form->data->vd_number) || empty($this->form->data->vd_owner)) {
 			$this->form->setError("Preencha todos os campos.");
@@ -80,7 +91,8 @@ class ServicePanel extends ServicePanelBase {
 		$config->addControl(new EditControl('vd_number', 'Número:', "size=\"40\""));
 		$config->addControl(new SelectControl('vd_wtype', 'Vers. Whatsapp:', [ 'wpp' => 'wpp', 'w4b' => 'w4b' ]));
 		$config->addControl(new SelectControl('vd_status', 'Status:', VirtualDevice::$status_array));
-		$config->addControl(new LabelControl('vd_key', 'Chave:', "size=\"40\""));
+		$config->addControl(new LabelControl('vd_key', 'Chave:', "size=\"40\""), CTLPOS_NOBREAK);
+		$config->addControl(new ButtonControl('changeKey', 'Mudar a chave de acesso'));
 		$abaConfig->addControl($config);
 		
 		$this->form->addControl($abas);	

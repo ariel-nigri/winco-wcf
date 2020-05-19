@@ -113,9 +113,10 @@ function aux_checkCredentials($usu_inst, $password, &$ret)
 			$pwd_timet = strtotime($usu_inst->usu_updated_passwd_at);
 
 			// delta is the number of days until password expiration.
-			$delta = ($pwd_timet + ($usu_inst->usu_max_pwd_age * 86400) - time()) / 86400;
-			if ($delta <= -3)
+			$delta = intval(($pwd_timet + ($usu_inst->usu_max_pwd_age * 86400) - time()) / 86400);
+			if ($delta <= -3) {
 				$ret['pwd_status'] = 'EXPIRED';
+			}
 		}
 
 		// check that the password is correct
@@ -140,7 +141,7 @@ function aux_checkCredentials($usu_inst, $password, &$ret)
 			$ret['pwd_status']	= "EXPIRATION: {$delta}";
 
 			if ($delta <= 0)
-				$ret['result']	= 'CHANGE_PASSWORD';
+				$ret['pwd_status']	= 'CHANGE_NOW';
 		}
 
 		// Login succeeded.

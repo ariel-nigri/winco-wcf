@@ -50,7 +50,7 @@ else if ($svc == "INSTANCE") {
 		$inst = $instance_classname::find($dbconn, array('inst_seq' => $id, 'inst_active' => null));
 		if (!$inst || !$inst->valid)
 			die("Instancia {$id} inexistente");
-		if ($my_worker_hostname != $inst->worker_hostname)
+		if ($my_worker_hostname != $inst->worker_frontend)
 			die("$my_worker_hostname != $inst->worker_hostname");
 	}
 	
