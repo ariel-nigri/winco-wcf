@@ -3,6 +3,7 @@
 
 require dirname(__DIR__).'/common/wcf.php';
 require "{$awd_sdk_dir}/aws-autoloader.php";
+require dirname(__DIR__).'/config/s3_config.php';
 
 use Aws\S3\S3Client;
 use Aws\S3\Sync\UploadSync;
@@ -11,7 +12,7 @@ use Aws\S3\Sync\UploadSyncBuilder;
 define('MULTIPART_SIZE', 5242880);
 
 $workers = new Workers;
-$workers->worker_hostname = $my_worker_hostname;
+$workers->worker_frontend = $my_worker_hostname;
 if (!$workers->select(getDbConn()))
 		die("ERROR: unknown worker ".$workers->worker_hostname."\n");
 
@@ -27,10 +28,10 @@ $audio  = false;
 $data   = false;
 $logs	= false;
 $regdb  = false;
-$rcfile = false;
 $full	= false;
 $verbose = false;
 $webdata = false;
+$attach = false;
 
 for ($i=1; $i<$argc; $i++) {
 	if ($argv[$i] ==  "webdata")
@@ -50,6 +51,12 @@ for ($i=1; $i<$argc; $i++) {
 
 	if ($argv[$i] ==  "logs")
 		$logs = true;
+	
+	if ($argv[$i] ==  "attach")
+		$attach = true;
+
+	if ($argv[$i] ==  "audio")
+		$audio = true;	
 
 }
 
@@ -63,7 +70,7 @@ $client = S3Client::factory(array(
 
 $client->registerStreamWrapper();
 
-if (!$data && !$audio && !$logs && !$regdb && !$webdata)
+if (!$data && !$audio && !$logs && !$regdb && !$webdata && !$attach)
 	exit (1);
 
 while($instances->fetch()) {
@@ -71,6 +78,8 @@ while($instances->fetch()) {
 		echo $instances->inst_seq, "\n";
 
 	if ($audio) {
+		if ($verbose)
+			echo "Synching audio\n";
 		sync_by_attrib_dir($client,
 			$aws_bucket,
 			$instances->inst_seq,
@@ -96,20 +105,14 @@ while($instances->fetch()) {
 	}
 
 	if ($data) {
-		sync_file($client,
-			$aws_bucket,
-			$instances->inst_seq.'/dat/imfilter.bin',
-			'/home/instances/'.$instances->inst_seq.'/var/winco/dat/imfilter.bin');
-
 		backup_wtm_messages($instances->inst_seq, $full ? "full" : "incr");
+		if (sync_dir($client,
+				$aws_bucket,
+				$instances->inst_seq.'/dat/backup_splitted',
+				'/home/instances/'.$instances->inst_seq.'/var/winco/dat/backup_splitted',
+				false))
 
-		sync_dir($client,
-			$aws_bucket,
-			$instances->inst_seq.'/dat/backup',
-			'/home/instances/'.$instances->inst_seq.'/var/winco/backup',
-			false);
-
-		purge_old_message_backups($instances->inst_seq);
+		purge_old_msg_backup_splitted($instances->inst_seq);
 	}
 
 	if ($webdata) {
@@ -124,6 +127,18 @@ while($instances->fetch()) {
 			//if ($verbose)
 			//	echo "File " . '/home/instances/'.$instances->inst_seq.'/var/winco/dat/hotspot.db' . "doesn�t exist\n";
 		}
+	}
+	
+	if ($attach) {
+		//Only if attach directory exists
+		if (file_exists("/home/instances/".$instances->inst_seq."/var/winco/dat/attach")) {
+			sync_dir_if_new($client,
+								$aws_bucket,
+								$instances->inst_seq."/dat/attach",
+								"/home/instances/".$instances->inst_seq."/var/winco/dat/attach");
+
+		//TODO: apager attachs antigos
+		} 
 	}
 }
 //--------------------------------------------------------------------------
@@ -289,6 +304,27 @@ function sync_dir($client, $bucket, $rdir, $sdir, $do_delete=false) {
 	}
 }
 
+function sync_file_simple($client, $bucket, $rfile, $sfile) {
+
+	global $verbose;
+
+    $nretries = 3;
+    do {
+		$retry = false;
+		try {
+			$result = $client->putObject(array(
+					'Bucket'     => $bucket,
+					'Key'        => $rfile,
+					'SourceFile' => $sfile,
+			    )
+			);
+			if ($verbose)
+	    		echo "sync_file: $bucket, $rfile, $sfile\n";
+		} catch (Exception $e) {
+            echo 'Caught exception [', get_class($e), ']: ', $e->getMessage(), "\n";
+		}
+ 	} while ($retry && (--$nretries > 0));
+};
 function sync_file($client, $bucket, $rfile, $sfile) {
 
 	global $verbose;
@@ -302,7 +338,8 @@ function sync_file($client, $bucket, $rfile, $sfile) {
 				)
 			);
 	} catch (Exception $e) {
-		echo 'Caught exception [', get_class($e), ']: ', $e->getMessage(), "\n";
+		if ($verbose)
+			echo 'Caught exception [', get_class($e), ']: ', $e->getMessage(), "\n";
 		$result = false;
 	}
 
@@ -381,6 +418,7 @@ function sync_by_attrib_dir($client, $bucket, $instance, $rdir, $sdir) {
 		} catch (Exception $e) {
 			++$err;
 			echo "\texcep ", ++$err, " [", $count, "]\n";
+			echo 'Caught exception [', get_class($e), ']: ', $e->getMessage(), "\n";
 		}
 	}
 }
@@ -460,22 +498,32 @@ function purge_old_message_backups($id)
 	}
 }
 
-function get_last_ids($id, &$lastmsg, &$lasttlk)
+function get_last_ids($id, &$lastmsg, &$lasttlk, $database)
 {
 	$datadir="/home/instances/".$id."/var/winco/dat";
-
-	exec(
-		"(".
-			"echo 'begin;';".
-			"echo 'select max(id) from im_message;';".
-			"echo 'select max(id) from im_talk;';".
-			"echo 'rollback;';".
-		") | sqlite3 $datadir/imfilter.bin",
-		$output
-	);
-
+	if (!file_exists($database)) {
+		echo "file $database not found in get_last_id function";
+		$lastmsg = $lasttlk = 0;
+		return;
+	}
+	
+	$sqlret = sqlretry(
+				"(".
+					"echo 'begin;';".
+					"echo 'select max(id) from im_message;';".
+					"echo 'select max(id) from im_talk;';".
+					"echo 'rollback;';".
+				") | sqlite3 $database 2> /dev/null",
+				$output
+			);
+	if (!$sqlret)	{		//Error after 3 retries. The main reason for error is database is locked
+		$lastmsg = 0;
+		$lasttlk = 0;
+		slog(LOG_WARNING, "get_last_ids:  id = $id: Error Accessing database");
+		return;
+	}
 	$lastmsg=$output[0];
-	$lasttlk=$output[1];
+	$lasttlk=(isset($output[1]) ? $output[1] : "");
 
 	if (empty($lastmsg))
 		$lastmsg = 0;
@@ -486,73 +534,123 @@ function get_last_ids($id, &$lastmsg, &$lasttlk)
 }
 
 function backup_wtm_messages($id, $btype="full") {
-
 	global $verbose;
-
+	global $aws_bucket;
+	global $client;
+	
+	$year = date('Y');
+	$month = date('m');
+	$day = date('d');
 	$datadir="/home/instances/".$id."/var/winco/dat";
-
-	if (!@stat(${datadir}."/imfilter.bin")) {
-		echo "ERROR: instance data not found";
-		return 1;
-	}
-
-	get_last_ids($id, $lastmsg, $lasttlk);
-
-	if ($lastmsg == 0 && $lasttlk == 0) {
-		if ($verbose)
-			echo "backup_wtm_messages: new backup file: no data to backup\n";
-		return;
-	}
-
-	@mkdir(${datadir}."/backup/dumps", 0750, true);
-	@mkdir(${datadir}."/backup/schema", 0750, true);
-
-	exec("sqlite3 ${datadir}/imfilter.bin .schema > ${datadir}/backup/tmp.sql");
-
-	$lastscm=exec("cd ${datadir}/backup/schema/; ls --sort=time -- *.schema.sql | head -1 | sed -e 's/\..*sql$//'");
-
-	if ( $lastscm > 0) {
-		if ($verbose)
-			echo "backup_wtm_messages: new database schema $lastscm\n";
-
-		exec("diff ${datadir}/backup/tmp.sql ${datadir}/backup/schema/${lastscm}.schema.sql > /dev/null;", $output, $rc);
-
-		if ($rc) {
-			$lastscm++;
-			rename($datadir."/backup/tmp.sql", $datadir."/backup/schema/".$lastscm.".schema.sql");
-		} else
-			unlink($datadir."/backup/tmp.sql");
-	} else {
-		$lastscm=1;
-		rename($datadir."/backup/tmp.sql", $datadir."/backup/schema/".$lastscm.".schema.sql");
-	}
-
-	@mkdir(${datadir}."/backup/dumps/".$lastscm, 0750, true);
-
-	if ( $btype != "full" ) {
-
-		$startdmp=exec("cd $datadir/backup/dumps/$lastscm; ls --sort=time -- *.sql | head -1 | sed -e 's/\..*sql$//'");
-
-		$startmsg=preg_replace('/-.*$/', '', $startdmp);
-		$starttlk=preg_replace('/.*-/', '', $startdmp);
-
-		if ($starttlk == 0 && $startmsg == 0)
-			$btype='full';
-		else
-			$btype='incr';
-	}
-
-	$OUTPUT="$datadir/backup/dumps/$lastscm/$lastmsg-$lasttlk.$btype.sql";
-
-	if ($verbose)
-			echo "backup_wtm_messages: new backup file: $OUTPUT\n";
-
-	if ($btype == "full")
-		$cmd = "(".
+	@mkdir(${datadir}."/backup_splitted/dumps", 0750, true);			//Make sure the output directories exist
+	if ($btype == 'full') {							// Full backup
+		array_map('unlink', glob("$datadir/dumps/*.sql"));			//Delete old files before doing a full backup
+		//Verifiying all splitted files to see if hash has changed. If so, back it up.
+		$dblist = glob("${datadir}/imfilter*.db");
+		foreach ($dblist as $dbfile) {
+			$do_backup = false;
+			$filename = basename($dbfile, '.db');
+			$year_month = preg_replace('/imfilter_/', '', $filename);
+			$file_year = preg_replace('/_.*$/', '', $year_month);
+			$file_month = preg_replace('/.*_/', '', $year_month);
+			if ($file_year == $year && $file_month == $month)
+				$do_backup = true;		//Always do backup of current month
+			else {							//If db of previous months have changed, do a new backup
+				// test hash to see if file has changed
+				$hash = md5_file($dbfile);
+				$remote_hash_file = "$id/dat/backup_splitted/md5/${file_year}-${file_month}.md5";
+				$gothash = true;
+				$result = 0;
+				try {
+					$result = $client->getObject(array(
+						'Bucket'     => $aws_bucket,
+						'Key'        => $remote_hash_file
+					)
+				);
+				} catch (Exception $e) {
+					if ($verbose)
+						echo "backup_wtm_messages_splitted : While getting hash value  $remote_hash_file: Caught exception [" . get_class($e). ']: ' . $e->getMessage();
+					$do_backup = true;
+					$gothash = false;
+				}
+				if ( !$gothash || !$result)					//Couldn´t get hash file, so do backup
+					$do_backup = true;
+				else {
+					$saved_hash = (string) $result['Body'];	//Hashes are different; so do backup
+					if ($hash != $saved_hash) {
+						$do_backup = true;
+						
+					}
+				}
+			}
+			if (!$do_backup)
+				continue;
+			
+			//generate backup
+			get_last_ids($id, $lastmsg, $lasttlk, $dbfile);
+			if ($file_year == $year && $file_month == $month) {
+				
+				$OUTPUT = "$datadir/backup_splitted/dumps/imfilter_${year}_${month}_${day}.$btype.sql";		//Name of current month backup also has the day of month
+				//Save the last records for the incremental backups
+				file_put_contents("$datadir/backup_splitted/dumps/lastregisters", "$lastmsg $lasttlk");
+				
+				
+			} else {
+				$OUTPUT = "$datadir/backup_splitted/dumps/${filename}.${btype}.sql";	
+			}
+				
+			$cmd = "(".
 					"echo '.output $OUTPUT'; ".
 					"echo '.dump'".
 			   ")";
-	else {
+				sqlretry($cmd . " | sqlite3 $dbfile 2> /dev/null", $void);
+				
+			// test integrity
+			$ret = sqlretry ("echo 'pragma quick_check;' | sqlite3 $dbfile", $output);
+			if (!$ret || $output[0] != 'ok') {
+				echo "Error testing integrity check on $dbfile";
+				continue;				//If error we logit and do backup on file with problem
+			 }
+			
+			//compress
+			exec("gzip $OUTPUT", $output, $ret);
+			if ($ret) {
+				echo "Error compressing file $OUTPUT";
+				continue;
+			}
+			//Save hash value if not current month
+			if ($file_year != $year || $file_month != $month) {
+				$rfile = "$id/dat/backup_splitted/md5/${file_year}-${file_month}.md5";
+				try {
+					 $result = $client->putObject(array(	//Use this to upload data
+						'Bucket'     => $aws_bucket,
+						'Key'        => $rfile,
+						'Body'		=>  $hash	
+					 )
+				);
+				} catch (Exception $e) {
+					$message = 'backup_wtm_messages_splitted: Caught exception [' . get_class($e). ']: ' . $e->getMessage();
+					echo $message;
+				}
+			}
+		}
+		
+	} else {
+		// Do incremental backup
+		$dbfile = "$datadir/imfilter_${year}_${month}.db";
+		if (!file_exists($dbfile))			// If the file doesn´t exist, no backup needed
+			return;
+		get_last_ids($id, $lastmsg, $lasttlk, $dbfile);
+		$startrecords = @file_get_contents("$datadir/backup_splitted/dumps/lastregisters");
+		if (! $startrecords) {
+			echo  "Instance $id: Error reading last registers for incremental backup. Doing from the beginning";
+			$startrecords = "0 0";
+		}
+		$pieces = explode(" ", $startrecords);
+		$startmsg  = is_numeric($pieces[0]) ? $pieces[0] : 0 ;
+		$starttlk = is_numeric($pieces[1]) ? $pieces[1] : 0 ;
+		$OUTPUT = "$datadir/backup_splitted/dumps/imfilter.${lastmsg}-${lasttlk}.incr.sql";
+		$backupfile = $OUTPUT;
 		$cmd = "( echo 'begin;'; ";
 
 		if ($lastmsg > $startmsg) {
@@ -571,9 +669,23 @@ function backup_wtm_messages($id, $btype="full") {
 		}
 
 		$cmd .= "echo 'rollback;' )";
+		if (($lastmsg > $startmsg) || ($lasttlk > $starttlk)) { 
+			$ret = sqlretry($cmd . " | sqlite3 $dbfile 2> /dev/null", $resp);
+			if ($ret) {
+				exec("gzip  $backupfile", $output, $ret);
+				if ($ret) {
+					echo "Error compressing file $backupfile";
+					return;
+				}
+			} else {
+				$retline = end($resp);
+				echo "Error doing incremental backup instance $id: $retline";
+				return;
+			}
+		}
 	}
-	exec($cmd . " | sqlite3 $datadir/imfilter.bin");
-
+	//Save last records numbers
+	file_put_contents("$datadir/backup_splitted/dumps/lastregisters", "$lastmsg $lasttlk");
 }
 
 function tar_dir($dfile, $sdir)
@@ -635,4 +747,54 @@ function archive_dir($client, $bucket, $rfile, $sdir)
  	} while ($retry && (--$nretries > 0));
 
 	unlink($sfile);
+}
+
+function sync_dir_if_new($client, $bucket, $rdir, $sdir) {
+	global $verbose;
+	// First we need to read the last day backed up.
+	//We only test files newer than last backup less one day
+	$lastbackupfilename = "$sdir/LASTBACKUP";
+	if (file_exists($lastbackupfilename))
+		$lastbackup = file_get_contents($lastbackupfilename);
+	else
+		$lastbackup = strtotime('2019-01-01');
+	
+	$oldesttime = $lastbackup - (24  * 60 * 60); // We only check for files newer than oldest
+	
+	foreach (glob("$sdir/*/*") as $file) {
+		$filetime = filemtime($file);
+		if ($filetime < $oldesttime) {		//File too old
+			if ($verbose)
+				echo "$file not backuped\n";
+			continue;
+		}
+		if ($verbose)
+			echo "$file is beeing backuped\n";
+		$basename = basename($file);
+		$rdirposfix = basename(dirname($file));
+		$rfile = "${rdir}/${rdirposfix}/${basename}";
+
+		//If already exists, don´t transfer
+		if (exists_in_s3($client, $bucket, $rfile)) {
+			if ($verbose)
+				echo "$rfile already exists\n";
+			continue;
+		}
+		//Send it to S3
+		if ($verbose)
+			echo "sync: $rfile -- $file\n";
+		sync_file_simple($client, $bucket, $rfile, $file);
+	}
+	file_put_contents($lastbackupfilename, time());  //Save the time of backup
+}
+
+function purge_old_msg_backup_splitted($id)
+{
+	global $verbose;
+	
+	if ($verbose)
+		slog(LOG_INFO,  "purge_old_message_backup_splitted:");
+	
+	$datadir='/home/instances/'.$id.'/var/winco/dat';
+	array_map('unlink', glob("$datadir/backup_splitted/dumps/*.gz"));		//Remove gz files. Keep file lastregisters	
 }

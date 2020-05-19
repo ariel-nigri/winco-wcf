@@ -1,7 +1,7 @@
 <?php
 
 require_once dirname(__DIR__)."/config/install_params.php";
-
+$awd_sdk_dir = '/opt/amazon/aws-sdk-php';
 $wcf_db_conn = $wcf_db_conn_pdo = null;
 
 $wcf_search_dirs = ['bizobj', 'mvc3/db'];
