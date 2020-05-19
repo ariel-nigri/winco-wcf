@@ -38,6 +38,17 @@ switch ($ret['result']) {
 		$login_result = cloud_login($ret['instance'], $ret['user']);
 		switch ($ret['pwd_status']) {
 		case 'OK':
+			if ($ret['type'] == 'user')
+				$_SESSION['LOGGED_IN_USER'] = $_REQUEST['username'];
+			else
+				$_SESSION['LOGGED_IN_USER'] = "SYSOP: {$_REQUEST['username']}";
+
+			$_SESSION['MASTER_USER'] 	= !empty($ret['user']->usuinst_master);
+			$_SESSION['LANGUAGE']		= $ret['user']->usu_language;
+
+			$_SESSION['ADMIN_PRIV_GROUPS'] = [];
+			if (!empty($ret['user']->usuinst_privs_groups))
+				$_SESSION['ADMIN_PRIV_GROUPS'] = explode(",", $ret['user']->usuinst_privs_groups);
 			break;
 		case 'CHANGE_SOON':
 			$login_result = 'CHANGE_SOON';
