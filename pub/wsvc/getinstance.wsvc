@@ -49,7 +49,7 @@ if (!empty($_GET['id'])) {
     switch ($product_code) {
     case 'WTM':
 		$endpoint_name = $instances->worker_ip;
-		if (in_array($worker_name, [ 'ariel-dev.talkmanager.net', 'console6.talkmanager.net']))
+		if (in_array($worker_name, [ 'ariel-dev.talkmanager.net', 'console6.talkmanager.net', 'wtmdev.winco.com.br']))
 			$endpoint_name = $worker_name;
         echo "OK\r\n".
             "hostname=".$worker_name."\r\n".
