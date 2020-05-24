@@ -1,7 +1,6 @@
 <?php
 
-@require "../../config/install_params.php";
-require "gauth/sasdf.php";
+require "gauth/functions.php";
 require "bizobj/Users.php";
 
 class ServicePanel extends ServicePanelBase {	

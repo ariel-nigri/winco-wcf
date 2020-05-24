@@ -51,8 +51,15 @@ class UsersInstances extends SqlToClass {
         return Users::comparePassword($pass, $this->usu_passwd_digest);
     }
 
-    public function isBlocked() {
-        $c = strchr($this->usu_status, 'B');
-        return !empty($c);
+    public function isBlocked($db = null) {
+        $user = new Users;
+        $user->usu_seq                  = $this->usu_seq;
+        $user->usu_status               = $this->usu_status;
+        $user->usu_max_pwd_age          = $this->usu_max_pwd_age;
+        $user->usu_updated_passwd_at    = $this->usu_updated_passwd_at;
+        return $user->isBlocked($db);
+    }
+    public function isExpired($db) {
+        return strchr($this->usu_status, 'X');        
     }
 }

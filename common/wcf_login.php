@@ -44,8 +44,8 @@ function wcf_login($username, $password, $filter = [])
 		if (!$ret['instance']->valid)
 			$ret['result'] = 'LOGIN_ERROR';
 		else {
-			if (!empty($filter['inst_ver']) && $filter['inst_ver'] != $ret['instance']->inst_ver)
-				$ret['result'] = 'INSTANCE_MISMATCH';
+			if (!empty($filter['inst_version']) && $filter['inst_version'] != $ret['instance']->inst_version)
+				$ret['result'] = 'FILTER_FAILED';
 			else
 				aux_checkCredentials($usu_inst, $password, $ret);
 		}
@@ -106,42 +106,51 @@ function aux_checkCredentials($usu_inst, $password, &$ret)
 			break;
 		}
 
-
-		// check for password expiration status: can be, OK, CHANGE_SOON, CHANGE_NOW or EXPIRED.
-		$delta = 8; // number of days until the password expired. 8 means, 'do not report anything.
-		if ($usu_inst->usu_max_pwd_age) {
-			$pwd_timet = strtotime($usu_inst->usu_updated_passwd_at);
-
-			// delta is the number of days until password expiration.
-			$delta = intval(($pwd_timet + ($usu_inst->usu_max_pwd_age * 86400) - time()) / 86400);
-			if ($delta <= -3) {
-				$ret['pwd_status'] = 'EXPIRED';
-			}
-		}
-
 		// check that the password is correct
-		if ($ret['pwd_status'] == 'EXPIRED' || !$usu_inst->validatePassword($password)) {
+		if (!$usu_inst->validatePassword($password)) {
 			// bad password. Lets log it and count the number of mistakes.
-			AuthEvents::registerEvent(getDbConn(), AuthEvents::BAD_LOGIN_EVENT, $usu_inst->usu_seq, "URL={$url}, ".
-						($ret['pwd_status'] == 'EXPIRED' ? 'PASSWORD IS EXPIRED' : 'BAD PASSWORD'));
+			AuthEvents::registerEvent(getDbConn(), AuthEvents::BAD_LOGIN_EVENT, $usu_inst->usu_seq, "URL={$url}, BAD PASSWORD");
 
 			$nerr = AuthEvents::countBadLogins(getDbConn(), $usu_inst->usu_seq);
 			if ($nerr >= MAX_PWD_ATTEMPTS) {
 				// That's it, we must block the user.
-				$usu = new Users;
-				$usu->usu_seq = $usu_inst->usu_seq;
-				$usu->block(getDbConn(), "{$nerr} INVALID LOGIN ATTEMPTS");
+				Users::find(getDbConn(), [ 'usu_inst' => $usu_inst->usu_seq ])
+					->block(getDbConn(), "{$nerr} INVALID LOGIN ATTEMPTS");
 			}
 			break;
 		}
 
-		// Last step: does the user have to change the password imediately, or be notified of 
-		// a coming expiration?
-		if ($delta <= 7) {
-			$ret['pwd_status']	= "EXPIRATION: {$delta}";
+		$pwd_timet = strtotime($usu_inst->usu_updated_passwd_at);
 
-			if ($delta <= 0)
-				$ret['pwd_status']	= 'CHANGE_NOW';
+		// check if the user needs to change the password right now.
+		if ($usu_inst->isExpired(getDbConn())) {
+			// passowrd expired is only valid for 48 hours, but this is checked by the isBlocked call.
+			$ret['pwd_status'] = 'CHANGE_NOW';
+		}
+		else {
+			// check for password expiration status: can be, OK, CHANGE_SOON, CHANGE_NOW or EXPIRED.
+			$delta = 8; // number of days until the password expired. 8 means, 'do not report anything.
+			if ($usu_inst->usu_max_pwd_age) {
+				// delta is the number of days until password expiration.
+				$delta = intval(($pwd_timet + ($usu_inst->usu_max_pwd_age * 86400) - time()) / 86400);
+				if ($delta <= -3) {
+					$ret['pwd_status'] = 'EXPIRED';
+
+					AuthEvents::registerEvent(getDbConn(), AuthEvents::BAD_LOGIN_EVENT, $usu_inst->usu_seq, "URL={$url}, PASSWORD IS EXPIRED");
+					// That's it, we must block the user.
+					$usu = new Users;
+					$usu->usu_seq = $usu_inst->usu_seq;
+					$usu->block(getDbConn(), "PASSWORD IS EXPIRED");
+					break;
+				}
+			}
+			// Last step: does the user have to change the password imediately, or be notified of a coming expiration?
+			if ($delta <= 7) {
+				$ret['pwd_status']	= "EXPIRATION: {$delta}";
+
+				if ($delta <= 0)
+					$ret['pwd_status']	= 'CHANGE_NOW';
+			}
 		}
 
 		// Login succeeded.

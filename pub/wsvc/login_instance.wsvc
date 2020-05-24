@@ -49,6 +49,18 @@ switch ($ret['result']) {
 			$_SESSION['ADMIN_PRIV_GROUPS'] = [];
 			if (!empty($ret['user']->usuinst_privs_groups))
 				$_SESSION['ADMIN_PRIV_GROUPS'] = explode(",", $ret['user']->usuinst_privs_groups);
+
+			if ($ret['user']->usu_twofact_type == 'GOGLE') {
+				wnc_session_start();
+				$s = $_SESSION;
+				$_SESSION = [
+					'auth_session' 		=> $s,
+					'auth_phase' 		=> '2FACT',
+					'two_factor_token'	=> $ret['user']->usu_twofact_token,
+					'auth_type'			=> $ret['type'],
+					'pwd_status'		=> $ret['pwd_status']
+				];
+			}
 			break;
 		case 'CHANGE_SOON':
 			$login_result = 'CHANGE_SOON';

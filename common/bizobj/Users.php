@@ -90,7 +90,7 @@ class Users extends SqlToClass {
         $digest_pass = md5($usr_passwd_salt.$pass);
         // Check password policy
         if (!empty($users_pwd_complexity_regex) && !preg_match($users_pwd_complexity_regex, $pass)) {
-            $this->error = 'A senha inválida. A senha deve ter pelo menos 6 caracteres, sendo pelo menos uma letra maiúscula, uma letra minúscula e um número';
+            $this->error = 'Senha inválida. A senha deve ter pelo menos 6 caracteres, sendo pelo menos uma letra maiúscula, uma letra minúscula e um número';
             return false;
         }
 
@@ -113,7 +113,7 @@ class Users extends SqlToClass {
             }
 
             // make sure we're not repeating the password
-            if (strpos($shadow->usu_pwd_history, $digest_pass) !== false) {
+            if (strpos($this->usu_pwd_history, $digest_pass) !== false) {
                 $this->error = 'A senha deve ser diferente das últimas '. $shadow->usu_num_of_passwd_to_store .' senhas';
                 return false;
             }
@@ -125,52 +125,56 @@ class Users extends SqlToClass {
         // All is fine. update the local variables to be changed.
         $this->usu_passwd_digest = $digest_pass;
         $this->usu_updated_passwd_at = date("Y-m-d H:i:s");
+        $this->usu_status = '';
         $this->pwd_changed = true;
         return true;
     }
 
     public function isBlocked($db = null) {
-//
-        return strchr($this->usu_status, 'B');
+        if (empty($this->usu_status))
+            return false;
+        if (strchr($this->usu_status, 'B'))
+            // explicitily blocked
+            return true;
+
+        if (strchr($this->usu_status, 'X') && 
+                (time() - strtotime($this->usu_updated_passwd_at)) > (2 * 86400)) {
+            // change password for over 48 hours.
+            /*
+            if ($db)
+                $this->block($db, "UNLOCKED USER DID NOT CHANGE PASSWORD IN TIME");
+            */
+            return true;
+        }
+        return false;
     }
 
     public function block($db, $reason = '') {
         $shadow = $this->getShadow($db);
-        if ($shadow->isBlocked($db))
+        if (strchr($shadow->usu_status, 'B'))
             return true;
 
         return $this->updateStatus($db, $shadow->usu_status . 'B', AuthEvents::BLOCK_LOGIN_EVENT, $reason);
     }
 
     public function unblock($db, $reason = '') {
-        $shadow = $this->getShadow($db);
-        if (!$shadow->isBlocked($db))
+        if (empty($this->usu_status))
             return true;
-
-        return $this->updateStatus($db, str_replace($shadow->usu_status, 'B', ''), AuthEvents::USER_UNBLOCKED_EVENT, $reason);
-
-        /*
-        if (@$_POST['action'] == 'unblock') {
-            $users = new Users;
-            $users->usu_seq = $_POST['seq'];
-            $users->select($db_conn);
-            $users->setPassword($pass);
-            if ($users->update($db_conn)) {
-                $GLOBALS['wc_conn']->addToLog("IMFILTER", "ADMIN_UNBLOCK " . $users->usu_email, logAudit);
-                $_SESSION['MSG_ALERT'] = "A conta <strong>".$_POST['email']."</strong> foi desbloqueada.";
-                header("Location: list_accounts.phtml");
-                exit;
-            }
-        }
-        */
+        $fields = strchr($this->usu_status, 'X') ? [ 'usu_updated_passwd_at' => date("Y-m-d H:i:s") ] : [];
+        return $this->updateStatus($db, str_replace('B', '', $this->usu_status), AuthEvents::USER_UNBLOCKED_EVENT, $reason, $fields);
     }
 
     public function expirePassword($db, $reason = '') {
         $shadow = $this->getShadow($db);
-        if (strchr($shadow->usu_status, 'X'))
-            return true;
+        if (!strchr($shadow->usu_status, 'X'))
+            $this->usu_status .= 'X';
 
-        return $this->updateStatus($db, $shadow->status . 'X', AuthEvents::CHANGE_PASSWD_NEXT_LOGIN, $reason);
+        $fields = [ 'usu_updated_passwd_at' => date("Y-m-d H:i:s") ];
+        return $this->updateStatus($db, $this->usu_status, AuthEvents::CHANGE_PASSWD_NEXT_LOGIN, $reason, $fields);
+    }
+
+    public function isExpired($db) {
+        return strchr($this->usu_status, 'X');        
     }
 
     protected function afterSave($insert, $sql) {
@@ -180,10 +184,13 @@ class Users extends SqlToClass {
         return true;
     }
 
-    private function updateStatus($db, $newstatus, $auth_event, $reason) {
+    private function updateStatus($db, $newstatus, $auth_event, $reason, $fields = []) {
         $usu2 = new Users;
         $usu2->usu_seq = $this->usu_seq;
         $usu2->usu_status = $newstatus;
+        foreach($fields as $k => $v)
+            $usu2->{$k} = $v;
+
         if ($usu2->update($db)) {
             AuthEvents::registerEvent($db, $auth_event, $usu2->usu_seq, $reason);
             return true;
@@ -191,37 +198,3 @@ class Users extends SqlToClass {
         return false;
     }
 }
-
-/*
-	private maxAttempt = 0;
-
-	public function addBadLogin($sql) {
-				
-		if (empty($this->usu_seq)) {
-			throw new Exception('O parametro usu_seq não pode ser vazio.');
-			// $this->error = 'O parametro usu_seq não pode ser vazio.';
-			// return false;
-		}
-
-		if ($this->maxAttempt === 0)
-			return;
-
-		if ($this->isBlocked($sql)) 
-			return self::BLOCK_LOGIN_EVENT;
-		
-		$total_attemps = $this->checkBadLoginAttempts($sql->con);
-		$this->ae_event = self::BAD_LOGIN_EVENT;
-
-		if ($total_attemps >= $this->maxAttempt) {
-			$this->ae_event = self::BLOCK_LOGIN_EVENT;
-			$this->ae_reason = 'BAD_LOGIN';
-			
-			$clone = new AuthEvents;
-			$clone->usu_seq = $this->usu_seq;
-			$clone->clearEvents($sql, self::BAD_LOGIN_EVENT);
-		}
-
-		$this->insert($sql);
-		return $this->ae_event;
-	}
-*/
