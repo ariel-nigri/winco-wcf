@@ -114,7 +114,7 @@ function aux_checkCredentials($usu_inst, $password, &$ret)
 			$nerr = AuthEvents::countBadLogins(getDbConn(), $usu_inst->usu_seq);
 			if ($nerr >= MAX_PWD_ATTEMPTS) {
 				// That's it, we must block the user.
-				Users::find(getDbConn(), [ 'usu_inst' => $usu_inst->usu_seq ])
+				Users::find(getDbConn(), [ 'usu_seq' => $usu_inst->usu_seq ])
 					->block(getDbConn(), "{$nerr} INVALID LOGIN ATTEMPTS");
 			}
 			break;
@@ -138,9 +138,8 @@ function aux_checkCredentials($usu_inst, $password, &$ret)
 
 					AuthEvents::registerEvent(getDbConn(), AuthEvents::BAD_LOGIN_EVENT, $usu_inst->usu_seq, "URL={$url}, PASSWORD IS EXPIRED");
 					// That's it, we must block the user.
-					$usu = new Users;
-					$usu->usu_seq = $usu_inst->usu_seq;
-					$usu->block(getDbConn(), "PASSWORD IS EXPIRED");
+					Users::find(getDbConn(), [ 'usu_seq' => $usu_inst->usu_seq ])
+						->block(getDbConn(), "PASSWORD IS EXPIRED");
 					break;
 				}
 			}

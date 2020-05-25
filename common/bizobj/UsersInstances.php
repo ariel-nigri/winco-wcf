@@ -34,7 +34,7 @@ class UsersInstances extends SqlToClass {
         $this->addColumn('users.usu_updated_passwd_at', 'usu_updated_passwd_at', BZC_TIMESTAMP | BZC_READONLY);
         $this->addColumn('users.usu_max_pwd_age', 'usu_max_pwd_age', BZC_INTEGER | BZC_READONLY);
         $this->addColumn('users.usu_num_of_passwd_to_store', 'usu_num_of_passwd_to_store', BZC_INTEGER | BZC_READONLY);
-        $this->addColumn('users.usu_status', 'usu_status', BZC_STRING);                                                     /** acct blocked, pwd expired, or both*/
+        $this->addColumn('users.usu_status', 'usu_status', BZC_STRING | BZC_READONLY);                                                     /** acct blocked, pwd expired, or both*/
     }
 
     public static function getUsersByInstance($sql) {
