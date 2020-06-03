@@ -336,9 +336,9 @@ $not = array('INSTANCE', "WORKER", "ADMIN", "LICENSE", 'DEVICES', 'DEVICE_SERVER
 				set_columns_CBs("columnsCheckBoxes",response.format,response.defcols);
 				set_titleH1('titleH1',response.title,response.label);
 				set_list_filter('ddmView',response.label);
-				<? if (!in_array($_REQUEST['service'], $not)) : ?>	
+				<?php if (!in_array($_REQUEST['service'], $not)) : ?>	
 					play_stop('play_stop','play');
-				<? endif; ?>
+				<?php endif; ?>
 				if (parent) {				
 					if (response.actions) {
 						set_list_actions("ddmActions", response.actions, 'actionsList');
@@ -348,10 +348,10 @@ $not = array('INSTANCE', "WORKER", "ADMIN", "LICENSE", 'DEVICES', 'DEVICE_SERVER
 						set_list_actions("ddmRegister", response.register, 'registerList');
 						set_list_filter('ddmView', response.label);
 					}
-					<? if ($_REQUEST['service'] ==  $product_code . '_INSTANCE') : ?>
+					<?php if ($_REQUEST['service'] ==  $product_code . '_INSTANCE') : ?>
 						if (response.filters && refresh == 0)                                                              
 							getFiltersChoices('name', 'Workers', 'workerCheckBoxes', response.filters); 
-					<? endif; ?>
+					<?php endif; ?>
 				}
 			}
 			//console.log(response);
@@ -407,9 +407,9 @@ $not = array('INSTANCE', "WORKER", "ADMIN", "LICENSE", 'DEVICES', 'DEVICE_SERVER
 		<div id="top">
 			<h1 id="titleH1"></h1>
 			<div id="topRight">		
-				<? if (!in_array($_REQUEST['service'], $not)) : ?>	
+				<?php if (!in_array($_REQUEST['service'], $not)) : ?>	
 					<div id="play_stop"></div>
-				<? endif; ?>
+				<?php endif; ?>
 				<div id="statusMenu">
 					<div class="ddMenu" id="ddmView" onclick="showDropDown(event,this);" style="display: none"><div class="ddButon"><?= $STR7_sts_show ?></div>
 						<div class="DropDownBox">
@@ -431,7 +431,7 @@ $not = array('INSTANCE', "WORKER", "ADMIN", "LICENSE", 'DEVICES', 'DEVICE_SERVER
 							</div>
 						</div>
 					</div >
-					<? if ($_REQUEST['service'] == $product_code . '_INSTANCE') : ?>
+					<?php if ($_REQUEST['service'] == $product_code . '_INSTANCE') : ?>
 						<div class="ddMenu" id="ddmDetailGroup" onclick="showDropDown(event,this);"><div class="ddButon">Workers</div>
 							<div class="DropDownBox">
 								<div class="ddbContent">
@@ -442,7 +442,7 @@ $not = array('INSTANCE', "WORKER", "ADMIN", "LICENSE", 'DEVICES', 'DEVICE_SERVER
 								</div>
 							</div>
 						</div >                     
-					<? endif; ?>       
+					<?php endif; ?>       
 					<div class="ddMenu" id="ddmDetail" onclick="showDropDown(event,this);"><div class="ddButon"><?= $STR7_sts_columns ?></div>
 						<div class="DropDownBox">
 							<div class="ddbContent">

@@ -1,4 +1,4 @@
-<? require "accounts.php"; ?>
+<?php require "accounts.php"; ?>
 <html>
 <head>
 	<title>Administradores</title>
@@ -49,7 +49,7 @@
 						<th>Permissões</th>
 						<th>Idioma</th>													
 					</tr>
-					<? foreach ($result as $admin): ?>
+					<?php foreach ($result as $admin): ?>
 						<tr>
 							<td>
 								<?= $admin[0]  ?>
@@ -61,7 +61,7 @@
 							<td><?= $admin[2] ?></td>
 							<td><?= $admin[3]  ?></td>													
 						</tr>
-					<? endforeach; ?>
+					<?php endforeach; ?>
 				</tbody>
 			</table>
 		</center>			

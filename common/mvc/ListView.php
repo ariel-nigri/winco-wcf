@@ -1,7 +1,7 @@
-<?
-//FIXME quando a ListView È carregada, um elemento aparece selecionado, mas o dado sÛ È preenchido quando algum elemento È clicado efetivamente
+<?php
+//FIXME quando a ListView √© carregada, um elemento aparece selecionado, mas o dado s√≥ √© preenchido quando algum elemento √© clicado efetivamente
 /**
- * Cria uma tabela din‚mica. … possÌvel redimensionar colunas e adicionar controles, alÈm de colunas normais de dados
+ * Cria uma tabela din√¢mica. √â poss√≠vel redimensionar colunas e adicionar controles, al√©m de colunas normais de dados
  */
 class ListView extends MvcControl {
 	private $dataset;
@@ -12,7 +12,7 @@ class ListView extends MvcControl {
 	private $nohead;
 
 	/**
-	 * Cria uma tabela din‚mica. … possÌvel redimensionar colunas e adicionar controles, alÈm de colunas normais de dados
+	 * Cria uma tabela din√¢mica. √â poss√≠vel redimensionar colunas e adicionar controles, al√©m de colunas normais de dados
 	 * @param string $_name Identificador do controle
 	 * @param string $_label Texto que vira antes do controle
 	 * @param array $_dataset Array com os dados
@@ -26,7 +26,7 @@ class ListView extends MvcControl {
 	/**
 	 * Adiciona uma coluna baseando-se num campo do Dataset
 	 * @param string $col Nome do campo no DataSet, e identificador da coluna
-	 * @param string $name TÌtulo da coluna
+	 * @param string $name T√≠tulo da coluna
 	 * @param integer $width Largura da coluna
 	 */
 	public function addColumn($col, $name, $width) {
@@ -47,18 +47,18 @@ class ListView extends MvcControl {
 	}
 
 	/**
-	 * Usado para incluir opÁıes diversas ao controle, como classes CSS, comportamentos, etc<br />
-	 * Recebe uma lista dupla de valores, onde o primeiro È a opÁ„o e o segundo, o valor.
+	 * Usado para incluir op√ß√µes diversas ao controle, como classes CSS, comportamentos, etc<br />
+	 * Recebe uma lista dupla de valores, onde o primeiro √© a op√ß√£o e o segundo, o valor.
 	 *
 	 * @param string $class Classe CSS da lista
-	 * @param string $class_head Classe CSS do cabeÁalho
+	 * @param string $class_head Classe CSS do cabe√ßalho
 	 * @param string $class_body Classe CSS do corpo
 	 * @param integer $height Altura total da lista
 	 * @param integer $width Largura total da lista
-	 * @param string $ondblclick Bot„o a ativar quando houver duplo-clique
-	 * @param string $upButton que bot„o ativar· a aÁ„o de subir um item na lista
-	 * @param string $downButton que bot„o ativar· a aÁ„o de descer um item na lista
-	 * @param string $delButton que bot„o ativar· a aÁ„o de apagar um item da lista
+	 * @param string $ondblclick Bot√£o a ativar quando houver duplo-clique
+	 * @param string $upButton que bot√£o ativar√° a a√ß√£o de subir um item na lista
+	 * @param string $downButton que bot√£o ativar√° a a√ß√£o de descer um item na lista
+	 * @param string $delButton que bot√£o ativar√° a a√ß√£o de apagar um item da lista
 	 *
 	 * @example <code>$list->setOption(<br />
 	 *		"class", "list",<br />
@@ -153,5 +153,3 @@ class ListView extends MvcControl {
 		$this->form->addJsOnReady("WcListView.init('$this->name', { selInput: '$this->name[selected]', colResize: true $opts } );");
 	}
 }
-
-?>

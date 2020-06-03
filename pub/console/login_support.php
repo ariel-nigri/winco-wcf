@@ -20,7 +20,7 @@ $my_url = 'https://'.$_SERVER['HTTP_HOST'].strtok($_SERVER['REQUEST_URI'],'?')."
 <h1>Login as administrator</h1>
 <?php if (!empty($_GET['error'])): ?>
     <h2>Error <?=htmlspecialchars($_GET['error']);?></h2>
-<?endif;?>
+<?php endif;?>
 <form action="<?=$action;?>" method="post">
     <input type="hidden" name="inst_seq" value="<?=htmlspecialchars($_GET['inst_seq']);?>" />
     <input type="hidden" name="return_url" value="<?=$my_url;?>" />

@@ -1,4 +1,4 @@
-<?
+<?php
 
 require "../../common/config_master.php";
 
@@ -49,4 +49,3 @@ if (array_key_exists($instance->inst_type, $lic_type))
 else
 	$inst_type = "Personalizado";
 	
-?>

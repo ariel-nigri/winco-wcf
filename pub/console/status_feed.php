@@ -100,7 +100,7 @@ switch ($_REQUEST['service']) {
 				$lang = $instances->inst_lang == "us" ? "Ingl&ecirc;s" : "Portugu&ecirc;s";
 				$act =  $instances->inst_active ? "Sim" : "N&atilde;o";
 				$response[] = array($instances->inst_seq, $instances->inst_id, $instances->inst_created,
-									$instances->inst_name,
+									utf8_encode($instances->inst_name),
 									$instances->inst_license, $instances->inst_type, $instances->inst_version,
 									strtok($workername[$instances->worker_seq], '.'), $instances->inst_adm_port, $lang, $act,
 									!empty($inst_status[$instances->inst_seq]['status']) ? $inst_status[$instances->inst_seq]['status'] : 
@@ -156,7 +156,7 @@ switch ($_REQUEST['service']) {
 				$inst = '';
 				if (!empty($inst_users[$admins->usu_seq]))
 					$inst = implode(', ', $inst_users[$admins->usu_seq]);
-				$response[] = array($admins->usu_seq, $usu_name, $admins->usu_email, empty($admins->usu_caps) ? '-' : $admins->usu_caps, $lang, $inst);
+				$response[] = array($admins->usu_seq, utf8_encode($usu_name), $admins->usu_email, empty($admins->usu_caps) ? '-' : $admins->usu_caps, $lang, $inst);
 			}
 		}
 
