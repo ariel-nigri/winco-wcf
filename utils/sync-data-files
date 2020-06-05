@@ -2,24 +2,19 @@
 <?php
 
 require dirname(__DIR__).'/common/wcf.php';
-require "{$awd_sdk_dir}/aws-autoloader.php";
-require dirname(__DIR__).'/config/s3_config.php';
 
-use Aws\S3\S3Client;
-use Aws\S3\Sync\UploadSync;
-use Aws\S3\Sync\UploadSyncBuilder;
+// use Aws\S3\S3Client;
 
 define('MULTIPART_SIZE', 5242880);
 
 $workers = new Workers;
 $workers->worker_frontend = $my_worker_hostname;
 if (!$workers->select(getDbConn()))
-		die("ERROR: unknown worker ".$workers->worker_hostname."\n");
+	die("ERROR: unknown worker ".$workers->worker_hostname."\n");
 
 $instances = new Instances;
 $instances->worker_seq = $workers->worker_seq;
 $instances->inst_active = 1;
-//$instances->inst_seq = 1306;
 
 if (!$instances->select(getDbConn()))
 	die("ERROR: no instances found.\n");
@@ -60,14 +55,8 @@ for ($i=1; $i<$argc; $i++) {
 
 }
 
-$client = NULL;
-
-$client = S3Client::factory(array(
-	'key'    => $aws_key,
-	'secret' => $aws_secret,
-	'region' => 'sa-east-1',
-));
-
+// create the amazon client object.
+$client = getAwsS3Client();
 $client->registerStreamWrapper();
 
 if (!$data && !$audio && !$logs && !$regdb && !$webdata && !$attach)
@@ -275,9 +264,9 @@ function sync_dir($client, $bucket, $rdir, $sdir, $do_delete=false) {
 			$retry = true;
 			echo "retry...\n";
 		} catch (Exception $e) {
-			echo "Caught exception syncing {$sdir} => {$dir} [", get_class($e), ']: ', $e->getMessage(), "\n";
+			echo "Caught exception syncing {$sdir} => {$rdir} [", get_class($e), ']: ', $e->getMessage(), "\n";
 		} catch (Throwable $e) {
-			echo "Caught exception syncing {$sdir} => {$dir} [", get_class($e), ']: ', $e->getMessage(), "\n";
+			echo "Caught exception syncing {$sdir} => {$rdir} [", get_class($e), ']: ', $e->getMessage(), "\n";
 		}
 	} while ($retry && (--$nretries > 0));
 
@@ -536,13 +525,14 @@ function get_last_ids($id, &$lastmsg, &$lasttlk, $database)
 function backup_wtm_messages($id, $btype="full") {
 	global $verbose;
 	global $aws_bucket;
-	global $client;
+	
+	$client = $GLOBALS['client'];
 	
 	$year = date('Y');
 	$month = date('m');
 	$day = date('d');
 	$datadir="/home/instances/".$id."/var/winco/dat";
-	@mkdir(${datadir}."/backup_splitted/dumps", 0750, true);			//Make sure the output directories exist
+	@mkdir($datadir."/backup_splitted/dumps", 0750, true);			//Make sure the output directories exist
 	if ($btype == 'full') {							// Full backup
 		array_map('unlink', glob("$datadir/dumps/*.sql"));			//Delete old files before doing a full backup
 		//Verifiying all splitted files to see if hash has changed. If so, back it up.
