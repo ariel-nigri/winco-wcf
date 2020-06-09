@@ -1,23 +1,16 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 
 require dirname(__DIR__).'/common/wcf.php';
 
-// use Aws\S3\S3Client;
-
 define('MULTIPART_SIZE', 5242880);
 
-$workers = new Workers;
-$workers->worker_frontend = $my_worker_hostname;
-if (!$workers->select(getDbConn()))
-	die("ERROR: unknown worker ".$workers->worker_hostname."\n");
-
 $instances = new Instances;
-$instances->worker_seq = $workers->worker_seq;
-$instances->inst_active = 1;
+$instances->worker_frontend = $my_worker_hostname;
+$instances->inst_active = true;
 
 if (!$instances->select(getDbConn()))
-	die("ERROR: no instances found.\n");
+	die("ERROR: No active instances found in this worker.\n");
 
 $audio  = false;
 $data   = false;
@@ -28,31 +21,44 @@ $verbose = false;
 $webdata = false;
 $attach = false;
 
-for ($i=1; $i<$argc; $i++) {
-	if ($argv[$i] ==  "webdata")
+if (count($argv) == 1)
+	die("usage: ".basename($argv[0])." [verbose] webdata full dat|data regdb logs attach audio\n");
+
+for ($i = 1; $i < $argc; $i++) {
+	switch ($argv[$i]) {
+	case 'webadata':
 		$webdata = true;
+		break;
 
-	if ($argv[$i] ==  "verbose")
+	case 'verbose':
 		$verbose = true;
+		break;
 
-	if ($argv[$i] ==  "full")
+	case 'full':
 		$full = true;
+		break;
 
-	if ($argv[$i] == "dat" || $argv[$i] == "data")
+	case 'dat':
+	case 'data':
 		$data = true;
+		break;
 
-	if ($argv[$i] ==  "regdb")
+	case 'regdb':
 		$regdb = true;
+		break;
 
-	if ($argv[$i] ==  "logs")
+	case 'logs':
 		$logs = true;
-	
-	if ($argv[$i] ==  "attach")
+		break;
+
+	case 'attach':
 		$attach = true;
+		break;
 
-	if ($argv[$i] ==  "audio")
-		$audio = true;	
-
+	case 'audio':
+		$audio = true;
+		break;
+	}
 }
 
 // create the amazon client object.
@@ -176,8 +182,8 @@ function backup_log_files($client, $bucket, $rdir, $sdir) {
 	foreach (glob("$sdir/*.LOG") as $filename) {
 		$basename = basename($filename);
 		if (preg_match($pattern, $basename)) {
-		//Rotated file
-		//If already exists, do nothing
+			//Rotated file
+			//If already exists, do nothing
 			if (exists_in_s3($client, $bucket, $rdir."/${basename}.gz"))
 				continue;
 		}
@@ -188,17 +194,14 @@ function backup_log_files($client, $bucket, $rdir, $sdir) {
 			echo "Error compressing file $filename";
 			continue;
 		}
-		
+
 		//Send it to S3
 		$rfile = "${rdir}/" . "${basename}.gz";
 		sync_file($client, $bucket, $rfile, $compressedfile);
 		unlink("${compressedfile}");
-		
-			
 	}
-	
-	
 }
+
 function backup_db_file($client, $bucket, $rdir, $db_file, $do_delete=false) {
 	global $verbose;
 	if ($verbose)
