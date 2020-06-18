@@ -537,7 +537,7 @@ function backup_wtm_messages($id, $btype="full") {
 	$datadir="/home/instances/".$id."/var/winco/dat";
 	@mkdir($datadir."/backup_splitted/dumps", 0750, true);			//Make sure the output directories exist
 	if ($btype == 'full') {							// Full backup
-		array_map('unlink', glob("$datadir/dumps/*.sql"));			//Delete old files before doing a full backup
+		array_map('unlink', glob("$datadir/backup_splitted/dumps/*.sql"));			//Delete old files before doing a full backup
 		//Verifiying all splitted files to see if hash has changed. If so, back it up.
 		$dblist = glob("${datadir}/imfilter*.db");
 		foreach ($dblist as $dbfile) {
