@@ -511,7 +511,7 @@ function get_last_ids($id, &$lastmsg, &$lasttlk, $database)
 	if (!$sqlret)	{		//Error after 3 retries. The main reason for error is database is locked
 		$lastmsg = 0;
 		$lasttlk = 0;
-		slog(LOG_WARNING, "get_last_ids:  id = $id: Error Accessing database");
+		echo  "get_last_ids:  id = $id: Error Accessing database";
 		return;
 	}
 	$lastmsg=$output[0];
@@ -784,10 +784,6 @@ function sync_dir_if_new($client, $bucket, $rdir, $sdir) {
 function purge_old_msg_backup_splitted($id)
 {
 	global $verbose;
-	
-	if ($verbose)
-		slog(LOG_INFO,  "purge_old_message_backup_splitted:");
-	
 	$datadir='/home/instances/'.$id.'/var/winco/dat';
 	array_map('unlink', glob("$datadir/backup_splitted/dumps/*.gz"));		//Remove gz files. Keep file lastregisters	
 }
