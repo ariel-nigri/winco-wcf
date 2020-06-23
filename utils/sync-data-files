@@ -758,21 +758,22 @@ function sync_dir_if_new($client, $bucket, $rdir, $sdir) {
 		$filetime = filemtime($file);
 		if ($filetime < $oldesttime) {		//File too old
 			if ($verbose)
-				echo "$file not backuped\n";
+				echo "$file not backed up\n";
 			continue;
 		}
 		if ($verbose)
-			echo "$file is beeing backuped\n";
+			echo "$file is beeing backed up\n";
 		$basename = basename($file);
 		$rdirposfix = basename(dirname($file));
 		$rfile = "${rdir}/${rdirposfix}/${basename}";
 
-		//If already exists, don´t transfer
+		// If already exists, don´t transfer
 		if (exists_in_s3($client, $bucket, $rfile)) {
 			if ($verbose)
 				echo "$rfile already exists\n";
 			continue;
 		}
+		
 		//Send it to S3
 		if ($verbose)
 			echo "sync: $rfile -- $file\n";
