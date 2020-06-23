@@ -101,11 +101,11 @@ while($instances->fetch()) {
 
 	if ($data) {
 		backup_wtm_messages($instances->inst_seq, $full ? "full" : "incr");
-		if (sync_dir($client,
+		sync_dir($client,
 				$aws_bucket,
 				$instances->inst_seq.'/dat/backup_splitted',
 				'/home/instances/'.$instances->inst_seq.'/var/winco/dat/backup_splitted',
-				false))
+				false);
 
 		purge_old_msg_backup_splitted($instances->inst_seq);
 	}
