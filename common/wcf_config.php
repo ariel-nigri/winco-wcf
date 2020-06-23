@@ -211,7 +211,7 @@ function wcf_set_password($usu_email, $password, &$error)
 	}
 	if (!$user->setPassword($db, $password)) {
 		$error = 'Error setting password';
-		break;
+		return false;
 	}
 	if (!$user->update($db)) {
 		$error = 'Cannot update password: '.$user->error;
