@@ -1,8 +1,7 @@
 <?php
 
-class ServicePanel extends ServicePanelBase {	
-	
-	var $inst_params = array('worker_seq', 'inst_active', 'inst_version', 'inst_type', 'inst_license', 'inst_lang', 'inst_name',  'inst_cnpj');
+class ServicePanel extends ServicePanelBase {
+	var $inst_params = array('worker_seq', 'inst_active', 'inst_version', 'inst_type', 'inst_license', 'inst_lang', 'inst_name',  'inst_cnpj', 'inst_nusers');
 	var $inst_stat	 = array('inst_id', 'inst_created', 'inst_adm_port');
 
 	var $lang = array('br' => 'Português', 'us' => 'Inglês');
@@ -11,10 +10,13 @@ class ServicePanel extends ServicePanelBase {
 	var $instance_class;
 	var $do_stop;
 	var $do_start;
+	var $show_nusers;
+	var $ch_license = false;
 
 	function __construct() {
 		global $product_code;
 		$this->instance_class = $product_code. '_Instances';
+		$this->show_nusers = !empty($GLOBALS['console_caps']['N_USERS']);
 	}
 
 	function init() {
@@ -43,6 +45,7 @@ class ServicePanel extends ServicePanelBase {
 			$this->params['inst_license'] 	= '';
 			$this->params['inst_type'] 		= '';
 			$this->params['inst_cnpj']		= '';
+			$this->params['inst_nusers']	= 5;
 			$this->params['inst_version'] 	= file_get_contents("{__DIR__}/../../../config/current_version_{$product_code}.cfg");
 		}
 		$this->copyParamsFrom($this->inst_params);
@@ -58,6 +61,8 @@ class ServicePanel extends ServicePanelBase {
 		if (!$instance->select($db_conn))
 			die('invalid parameters');
 
+		if ($this->show_nusers)
+			$this->params['inst_nusers'] = $instance->inst_nusers;
 		$this->params['inst_seq'] = $instance->inst_seq;
 		$this->params['inst_id'] = $instance->inst_id;
 		$this->params['worker_seq'] = $instance->worker_seq;
@@ -84,6 +89,8 @@ class ServicePanel extends ServicePanelBase {
 		$instance->inst_active = $this->params['inst_active'];
 		$instance->inst_version = $this->params['inst_version'];
 		$instance->inst_cnpj = $this->params['inst_cnpj'];
+		if ($this->show_nusers)
+			$instance->inst_nusers = $this->params['inst_nusers'];
 
 		if (!empty($this->params['inst_seq'])) {
 			$instance->inst_seq = $this->params['inst_seq'];
@@ -114,6 +121,9 @@ class ServicePanel extends ServicePanelBase {
 			$instance->stop();
 			$msg = "Instancia foi parada";
 		}
+
+		if ($this->ch_license)
+			$instance->set_license($instance->inst_license);
 
 		if ($should_start) {
 			$msg = "Instancia foi Iniciada";
@@ -178,6 +188,8 @@ class ServicePanel extends ServicePanelBase {
 		$config->addControl(new SelectControl('inst_version', 'Versão do backend:', $versions /*, "size=\"40\"" */));
 		$config->addControl(new EditControl('inst_type', 'Tipo ou Capabilites:', "size=\"40\""));
 		$config->addControl(new EditControl('inst_license', 'Licença:', "size=\"40\""));
+		if ($this->show_nusers)
+			$config->addControl(new EditControl('inst_nusers', 'Número de usuários:', "size=\"10\""));
 		$config->addControl(new RawControl('xx1', '<br />'));
 		$abaConfig->addControl($config);
 
@@ -217,8 +229,10 @@ class ServicePanel extends ServicePanelBase {
 			$admins->addColumn("usuinst_privs", "Permissões", 100);
 			if (!empty($GLOBALS['has_usu_master']))
 				$admins->addColumn("usuinst_master", "Master", 50);
-            $admins->addStaticColumn("del", "Delete", '[remove]');
-            $admins->addEvent('del', 'del_admin', 'usuinst_seq');
+
+			$admins->addStaticColumn("del", "Delete", '[remove]');
+			$admins->addEvent('del', 'del_admin', 'usuinst_seq');
+
 			if (!empty($GLOBALS['has_usu_master'])) {
             	$admins->addStaticColumn("master", "", '[change master]');
 				$admins->addEvent('master', 'change_master', 'usuinst_seq');
@@ -286,14 +300,22 @@ class ServicePanel extends ServicePanelBase {
 			return false;
 		}
 
+		if (trim($this->params['inst_license']) != trim($this->form->data->inst_license))
+			$this->ch_license = $this->do_stop = $this->do_start = true;
+
 		if (trim($this->params['inst_version']) != trim($this->form->data->inst_version))
-			$this->do_stop = $this->do_start = true;
+			true;
+
+		if ($this->show_nusers) {
+			if (trim($this->params['inst_nusers']) != trim($this->form->data->inst_nusers))
+				$this->do_stop = $this->do_start = true;
+		}
 
 		$this->copyParamsTo($this->inst_params);
         if (empty($this->params['inst_license']))
             $this->params['inst_license'] = $GLOBALS['default_license'];
 
-		if (!$this->saveParamsToServer()) {		
+		if (!$this->saveParamsToServer()) {
 			$this->form->setError($this->last_error);
 			return false;
 		}

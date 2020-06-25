@@ -4,7 +4,7 @@ oper=$1
 inst=$2
 
 if [ -z "$oper" -o -z "$inst" ]; then
-    echo "usage: $(basename $0) [start|stop|status] inst_seq"
+    echo "usage: $(basename $0) [start|stop|status|restart|license] inst_seq"
     exit 1
 fi
 
@@ -36,6 +36,17 @@ if [ ! -f ${ctl} ]; then
         ctl=${ctl_link}
     fi
     echo "calling old startup ${ctl}..."
+fi
+
+if [ "${oper}" = "license" ]; then
+    lic_ctl="/home/instances/versions/${ver}/bin/lic_ctl -w /home/instances/${inst}/var/winco/regdb/"
+
+    lic=$(${lic_ctl}  -f list_licenses | awk '/License:/ { print $2}')
+
+    sudo -u \#${inst} ${lic_ctl} del_license ${lic}
+    [ "$3" != "" ] && lic=$3
+    sudo -u \#${inst} ${lic_ctl} add_license ${lic}    
+    exit
 fi
 
 ${ctl} ${oper} ${inst}

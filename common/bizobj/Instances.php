@@ -41,8 +41,7 @@ class Instances extends SqlToClass {
             $inst->inst_seq = $this->inst_seq;
             $inst->inst_adm_port = 10000 + (4 * $this->inst_seq);
 
-            if (method_exists($this, 'onCreateInstance'))
-                $this->onCreateInstance($inst, $sql);
+            $this->onCreateInstance($inst, $sql);
 
             $inst->update($sql);
         }
@@ -69,14 +68,25 @@ class Instances extends SqlToClass {
     }
 
     public function control($cmd) {
-        global $framework_dir, $product_code;
+        global $product_code;
 
         if (!isset($this->inst_seq))
             die("Before calling '{$cmd}', please set the inst_seq parameter");
+
+        $utils = dirname(dirname(__DIR__)).'/utils';
         $output = [];
-        $tmp = '/tmp/wcf-control-$$.log';
-        exec("nohup sudo product_code={$product_code} ${framework_dir}/utils/inst-ctl {$cmd} {$this->inst_seq} > {$tmp} 2>&1 < /dev/null;".
-            " cat {$tmp}; rm -f {$tmp}", $output);
+        system("sudo product_code={$product_code} ${utils}/inst-ctl {$cmd} {$this->inst_seq} > /dev/null 2>&1 < /dev/null");
+        return $output;
+    }
+
+    public function set_license($license) {
+        global  $product_code;
+
+        $utils = dirname(dirname(__DIR__)).'/utils';
+        if (!isset($this->inst_seq))
+            die("Before calling 'set_license()', please set the inst_seq parameter");
+        $output = [];
+        exec("sudo product_code={$product_code} ${utils}/inst-ctl license {$this->inst_seq} {$license} 2>&1 < /dev/null", $output);
         return $output;
     }
 
@@ -113,4 +123,6 @@ class Instances extends SqlToClass {
         // FIXME: parse output for errors.
         return true;
     }
+
+    private function onCreateInstance($dummy, $dummy2) {}
 }
