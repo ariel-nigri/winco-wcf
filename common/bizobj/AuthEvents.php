@@ -55,6 +55,7 @@ class AuthEvents extends SqlToClass {
 				break;
 			case self::USER_UNBLOCKED_EVENT:
 			case self::GOOD_LOGIN_EVENT:
+			case self::NEW_PWD_EVENT:
 				return $count;
 			}
 		}

@@ -73,9 +73,10 @@ class Instances extends SqlToClass {
         if (!isset($this->inst_seq))
             die("Before calling '{$cmd}', please set the inst_seq parameter");
 
+        $redir = ($cmd == 'start' ? '> /dev/null' : '' );
         $utils = dirname(dirname(__DIR__)).'/utils';
         $output = [];
-        system("sudo product_code={$product_code} ${utils}/inst-ctl {$cmd} {$this->inst_seq} > /dev/null 2>&1 < /dev/null");
+        exec("sudo product_code={$product_code} ${utils}/inst-ctl {$cmd} {$this->inst_seq} {$redir} 2>&1 < /dev/null", $output);
         return $output;
     }
 
