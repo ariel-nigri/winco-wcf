@@ -43,7 +43,8 @@ class Instances extends SqlToClass {
 
             $this->onCreateInstance($inst, $sql);
 
-            $inst->update($sql);
+            if (!$inst->update($sql))
+                die($inst->error);
         }
         return true;
     }
@@ -125,5 +126,5 @@ class Instances extends SqlToClass {
         return true;
     }
 
-    private function onCreateInstance($dummy, $dummy2) {}
+    protected function onCreateInstance($dummy, $dummy2) { die('cannot call base function'); }
 }

@@ -21,6 +21,9 @@ class WTM_Instances extends Instances {
     // This function is called after a new instance is created in the database. At this time we can
     // fill info that is pertinent to the database.
     function onCreateInstance($instance, $sql) {
+        if (empty($this->inst_nusers))
+            // if there was no nusers set, set it now.
+            $instance->inst_nusers = 10;
         $instance->inst_pol_port = $instance->inst_adm_port - 1;
         return true; // this means that we have changed something. otherwise we should return false.
     }
