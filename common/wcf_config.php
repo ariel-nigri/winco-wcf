@@ -106,21 +106,22 @@ function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $us
 function wcf_extend_license($inst_id, $lic_expiration, &$error)
 //lic_period has the license new  ending day in the format:   yyyy-mm-dd
 {
-	 $db = getDbConn();
+    $db = getDbConn();
 
     $instance = VPND_Instances::find($db, ['inst_id' => $inst_id]);
     if (!$instance->valid) {
         $error = 'Invalid instance';
         return false;
     }
-	 $instance->inst_expiration = $lic_expiration;
-	 if (!$instance->update($db)) {
-            $error = 'Cannot update Instance: '.$instance->error;
-            return false;
-	  }
-	  $instance->stop();
-	  $instance->start();
-     return true;
+    $instance->inst_expiration = $lic_expiration;
+    if (!$instance->update($db)) {
+        $error = 'Cannot update Instance: '.$instance->error;
+        return false;
+    }
+    // No need to restart instance on 'renew'
+    //$instance->stop();
+	//$instance->start();
+    return true;
 }
 
 // change caps, dont change expiration
