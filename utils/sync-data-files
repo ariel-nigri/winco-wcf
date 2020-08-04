@@ -1,28 +1,16 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 
 require dirname(__DIR__).'/common/wcf.php';
-require "{$awd_sdk_dir}/aws-autoloader.php";
-require dirname(__DIR__).'/config/s3_config.php';
-
-use Aws\S3\S3Client;
-use Aws\S3\Sync\UploadSync;
-use Aws\S3\Sync\UploadSyncBuilder;
 
 define('MULTIPART_SIZE', 5242880);
 
-$workers = new Workers;
-$workers->worker_frontend = $my_worker_hostname;
-if (!$workers->select(getDbConn()))
-		die("ERROR: unknown worker ".$workers->worker_hostname."\n");
-
 $instances = new Instances;
-$instances->worker_seq = $workers->worker_seq;
-$instances->inst_active = 1;
-//$instances->inst_seq = 1306;
+$instances->worker_frontend = $my_worker_hostname;
+$instances->inst_active = true;
 
 if (!$instances->select(getDbConn()))
-	die("ERROR: no instances found.\n");
+	die("ERROR: No active instances found in this worker.\n");
 
 $audio  = false;
 $data   = false;
@@ -33,41 +21,48 @@ $verbose = false;
 $webdata = false;
 $attach = false;
 
-for ($i=1; $i<$argc; $i++) {
-	if ($argv[$i] ==  "webdata")
+if (count($argv) == 1)
+	die("usage: ".basename($argv[0])." [verbose] webdata full dat|data regdb logs attach audio\n");
+
+for ($i = 1; $i < $argc; $i++) {
+	switch ($argv[$i]) {
+	case 'webadata':
 		$webdata = true;
+		break;
 
-	if ($argv[$i] ==  "verbose")
+	case 'verbose':
 		$verbose = true;
+		break;
 
-	if ($argv[$i] ==  "full")
+	case 'full':
 		$full = true;
+		break;
 
-	if ($argv[$i] == "dat" || $argv[$i] == "data")
+	case 'dat':
+	case 'data':
 		$data = true;
+		break;
 
-	if ($argv[$i] ==  "regdb")
+	case 'regdb':
 		$regdb = true;
+		break;
 
-	if ($argv[$i] ==  "logs")
+	case 'logs':
 		$logs = true;
-	
-	if ($argv[$i] ==  "attach")
+		break;
+
+	case 'attach':
 		$attach = true;
+		break;
 
-	if ($argv[$i] ==  "audio")
-		$audio = true;	
-
+	case 'audio':
+		$audio = true;
+		break;
+	}
 }
 
-$client = NULL;
-
-$client = S3Client::factory(array(
-	'key'    => $aws_key,
-	'secret' => $aws_secret,
-	'region' => 'sa-east-1',
-));
-
+// create the amazon client object.
+$client = getAwsS3Client();
 $client->registerStreamWrapper();
 
 if (!$data && !$audio && !$logs && !$regdb && !$webdata && !$attach)
@@ -106,11 +101,11 @@ while($instances->fetch()) {
 
 	if ($data) {
 		backup_wtm_messages($instances->inst_seq, $full ? "full" : "incr");
-		if (sync_dir($client,
+		sync_dir($client,
 				$aws_bucket,
 				$instances->inst_seq.'/dat/backup_splitted',
 				'/home/instances/'.$instances->inst_seq.'/var/winco/dat/backup_splitted',
-				false))
+				false);
 
 		purge_old_msg_backup_splitted($instances->inst_seq);
 	}
@@ -187,8 +182,8 @@ function backup_log_files($client, $bucket, $rdir, $sdir) {
 	foreach (glob("$sdir/*.LOG") as $filename) {
 		$basename = basename($filename);
 		if (preg_match($pattern, $basename)) {
-		//Rotated file
-		//If already exists, do nothing
+			//Rotated file
+			//If already exists, do nothing
 			if (exists_in_s3($client, $bucket, $rdir."/${basename}.gz"))
 				continue;
 		}
@@ -199,17 +194,14 @@ function backup_log_files($client, $bucket, $rdir, $sdir) {
 			echo "Error compressing file $filename";
 			continue;
 		}
-		
+
 		//Send it to S3
 		$rfile = "${rdir}/" . "${basename}.gz";
 		sync_file($client, $bucket, $rfile, $compressedfile);
 		unlink("${compressedfile}");
-		
-			
 	}
-	
-	
 }
+
 function backup_db_file($client, $bucket, $rdir, $db_file, $do_delete=false) {
 	global $verbose;
 	if ($verbose)
@@ -275,9 +267,9 @@ function sync_dir($client, $bucket, $rdir, $sdir, $do_delete=false) {
 			$retry = true;
 			echo "retry...\n";
 		} catch (Exception $e) {
-			echo "Caught exception syncing {$sdir} => {$dir} [", get_class($e), ']: ', $e->getMessage(), "\n";
+			echo "Caught exception syncing {$sdir} => {$rdir} [", get_class($e), ']: ', $e->getMessage(), "\n";
 		} catch (Throwable $e) {
-			echo "Caught exception syncing {$sdir} => {$dir} [", get_class($e), ']: ', $e->getMessage(), "\n";
+			echo "Caught exception syncing {$sdir} => {$rdir} [", get_class($e), ']: ', $e->getMessage(), "\n";
 		}
 	} while ($retry && (--$nretries > 0));
 
@@ -519,7 +511,7 @@ function get_last_ids($id, &$lastmsg, &$lasttlk, $database)
 	if (!$sqlret)	{		//Error after 3 retries. The main reason for error is database is locked
 		$lastmsg = 0;
 		$lasttlk = 0;
-		slog(LOG_WARNING, "get_last_ids:  id = $id: Error Accessing database");
+		echo  "get_last_ids:  id = $id: Error Accessing database";
 		return;
 	}
 	$lastmsg=$output[0];
@@ -536,15 +528,16 @@ function get_last_ids($id, &$lastmsg, &$lasttlk, $database)
 function backup_wtm_messages($id, $btype="full") {
 	global $verbose;
 	global $aws_bucket;
-	global $client;
+	
+	$client = $GLOBALS['client'];
 	
 	$year = date('Y');
 	$month = date('m');
 	$day = date('d');
 	$datadir="/home/instances/".$id."/var/winco/dat";
-	@mkdir(${datadir}."/backup_splitted/dumps", 0750, true);			//Make sure the output directories exist
+	@mkdir($datadir."/backup_splitted/dumps", 0750, true);			//Make sure the output directories exist
 	if ($btype == 'full') {							// Full backup
-		array_map('unlink', glob("$datadir/dumps/*.sql"));			//Delete old files before doing a full backup
+		array_map('unlink', glob("$datadir/backup_splitted/dumps/*.sql"));			//Delete old files before doing a full backup
 		//Verifiying all splitted files to see if hash has changed. If so, back it up.
 		$dblist = glob("${datadir}/imfilter*.db");
 		foreach ($dblist as $dbfile) {
@@ -765,21 +758,22 @@ function sync_dir_if_new($client, $bucket, $rdir, $sdir) {
 		$filetime = filemtime($file);
 		if ($filetime < $oldesttime) {		//File too old
 			if ($verbose)
-				echo "$file not backuped\n";
+				echo "$file not backed up\n";
 			continue;
 		}
 		if ($verbose)
-			echo "$file is beeing backuped\n";
+			echo "$file is beeing backed up\n";
 		$basename = basename($file);
 		$rdirposfix = basename(dirname($file));
 		$rfile = "${rdir}/${rdirposfix}/${basename}";
 
-		//If already exists, don´t transfer
+		// If already exists, don´t transfer
 		if (exists_in_s3($client, $bucket, $rfile)) {
 			if ($verbose)
 				echo "$rfile already exists\n";
 			continue;
 		}
+		
 		//Send it to S3
 		if ($verbose)
 			echo "sync: $rfile -- $file\n";
@@ -791,10 +785,6 @@ function sync_dir_if_new($client, $bucket, $rdir, $sdir) {
 function purge_old_msg_backup_splitted($id)
 {
 	global $verbose;
-	
-	if ($verbose)
-		slog(LOG_INFO,  "purge_old_message_backup_splitted:");
-	
 	$datadir='/home/instances/'.$id.'/var/winco/dat';
 	array_map('unlink', glob("$datadir/backup_splitted/dumps/*.gz"));		//Remove gz files. Keep file lastregisters	
 }
