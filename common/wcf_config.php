@@ -169,7 +169,7 @@ function wcf_list_info($usu_email, &$info, &$error)
         'usu_name'      			=> $user->usu_name,
         'usu_language'  			=> $user->usu_language,
 		'usu_updated_passwd_at'	    => $user->usu_updated_passwd_at,
-		'usu_passwd_digest'         => $user->usu_passwd_digest,
+		'usu_passwd_digest'         => md5($user->usu_seq.$user->usu_updated_passwd_at),
         'usu_caps'      			=> $user->usu_caps
     ];
 
