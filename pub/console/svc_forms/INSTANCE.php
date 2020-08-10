@@ -1,7 +1,8 @@
 <?php
 
 class ServicePanel extends ServicePanelBase {
-	var $inst_params = array('worker_seq', 'inst_active', 'inst_version', 'inst_type', 'inst_license', 'inst_lang', 'inst_name',  'inst_cnpj', 'inst_nusers');
+	var $inst_params = array('worker_seq', 'inst_active', 'inst_version', 'inst_type', 'inst_license', 'inst_lang', 'inst_name',
+		'inst_cnpj', 'inst_nusers', 'inst_num_of_passwd_to_store', 'inst_max_pwd_age');
 	var $inst_stat	 = array('inst_id', 'inst_created', 'inst_adm_port');
 
 	var $lang = array('br' => 'Português', 'us' => 'Inglês');
@@ -46,6 +47,8 @@ class ServicePanel extends ServicePanelBase {
 			$this->params['inst_type'] 		= '';
 			$this->params['inst_cnpj']		= '';
 			$this->params['inst_nusers']	= 5;
+			$this->params['inst_num_of_passwd_to_store']	= 0;
+			$this->params['inst_max_pwd_age']	= 0;
 			$this->params['inst_version'] 	= file_get_contents("{__DIR__}/../../../config/current_version_{$product_code}.cfg");
 		}
 		$this->copyParamsFrom($this->inst_params);
@@ -73,6 +76,8 @@ class ServicePanel extends ServicePanelBase {
 		$this->params['inst_type'] = $instance->inst_type;
 		$this->params['inst_license'] = $instance->inst_license;
 		$this->params['inst_lang'] = $instance->inst_lang;
+		$this->params['inst_num_of_passwd_to_store']	= $instance->inst_num_of_passwd_to_store;
+		$this->params['inst_max_pwd_age']	= $instance->inst_max_pwd_age;
 		$this->params['inst_name'] = $instance->inst_name;
 		@$this->params['inst_cnpj'] = $instance->inst_cnpj;
 	}
@@ -89,6 +94,9 @@ class ServicePanel extends ServicePanelBase {
 		$instance->inst_active = $this->params['inst_active'];
 		$instance->inst_version = $this->params['inst_version'];
 		$instance->inst_cnpj = $this->params['inst_cnpj'];
+		$instance->inst_num_of_passwd_to_store = $this->params['inst_num_of_passwd_to_store']; 
+		$instance->inst_max_pwd_age = $this->params['inst_max_pwd_age'];
+
 		if ($this->show_nusers)
 			$instance->inst_nusers = $this->params['inst_nusers'];
 
@@ -193,6 +201,21 @@ class ServicePanel extends ServicePanelBase {
 		$config->addControl(new RawControl('xx1', '<br />'));
 		$abaConfig->addControl($config);
 
+		// Criamos o box de tornar ativa a instancia.
+		$box_active = new MvcBoxedContainer($this->form, 'box_active', 'Inicialização da instância');
+		$box_active->addControl(new CheckControl("inst_active", "Ativa"), CTLPOS_LABELRIGHT | CTLPOS_NOBREAK);
+		$box_active->addControl(new LabelControl('advise', '<span style="color:red;">ATENÇÃO: instância inativa NÃO é monitorada e nem reiniciada em caso de falhas</span>'));
+		$box_active->addControl(new CheckControl('startstop', "teste"), CTLPOS_LABELRIGHT);
+
+		$abaConfig->addControl($box_active);
+
+		$abaData 	= $abas->addPage(new MvcContainer($this->form, 'pageData', 'Parâmetros', 'div'));
+
+		$box = new MvcBoxedContainer($this->form, 'pwd_policy', 'Política de senha para administradores desta instância');
+		$box->addControl(new EditControl('inst_num_of_passwd_to_store', 'Número de senhas para guardar:', "size=\"10\""));
+		$box->addControl(new EditControl('inst_max_pwd_age', 'Número de dias de validade da senha:', "size=\"10\""));
+		$abaData->addControl($box); 
+
 		if (!empty($this->params['inst_seq'])) {
 			$this->title = "Alterar instância (#" . $this->params['inst_seq'].')';
 
@@ -203,18 +226,10 @@ class ServicePanel extends ServicePanelBase {
 			$stat->addControl(new LabelControl('inst_adm_port', 'Porta de administração:'));
 			$config->addControl(new RawControl('xx2', '<br />'));
 
-			$abaConfig->addControl($stat);
+			$abaData->addControl($stat);
 		}
         else
 			$this->title = "Registrar nova instância";
-
-		// Criamos o box de tornar ativa a instancia.
-		$box_active = new MvcBoxedContainer($this->form, 'box_active', 'Inicialização da instância');
-		$box_active->addControl(new CheckControl("inst_active", "Ativa"), CTLPOS_LABELRIGHT | CTLPOS_NOBREAK);
-		$box_active->addControl(new LabelControl('advise', '<span style="color:red;">ATENÇÃO: instância inativa NÃO é monitorada e nem reiniciada em caso de falhas</span>'));
-		$box_active->addControl(new CheckControl('startstop', "teste"), CTLPOS_LABELRIGHT);
-
-		$abaConfig->addControl($box_active);
 
 		if (!empty($this->params['inst_seq'])) {
             $abaAdmins = $abas->addPage(new MvcContainer($this->form, 'pageAdmins', 'Administradores', 'div'));

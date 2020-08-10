@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Classe utilizada para a criaÁ„o de tabelas no MvcForm
+ * Classe utilizada para a cria√ß√£o de tabelas no MvcForm
  * @param string $_name Identificador do controle
- * @param string $_label Texto que aparecer· antes da tabela
- * @param DataSource $_datasrc&nbsp;=&nbsp;null de onde a sua tabela puxar· os dados para ser preenchida
+ * @param string $_label Texto que aparecer√° antes da tabela
+ * @param DataSource $_datasrc&nbsp;=&nbsp;null de onde a sua tabela puxar√° os dados para ser preenchida
  * @example $tbl = new TableControl("table2", "Tabela de dados", new TestDbSource);
 */
 if (!defined('BZC_INTEGER')) {
@@ -21,7 +21,7 @@ class TableControl extends MvcControl {
 	private $columns;
 	private $datasrc;
 	
-	function TableControl($_name, $_label, $_datasrc = null) {
+	function __construct($_name, $_label, $_datasrc = null) {
 		parent::__construct($_name, $_label);
 		$this->datasrc = $_datasrc;
 	}
@@ -29,9 +29,9 @@ class TableControl extends MvcControl {
 	/**
 	 * Adiciona uma coluna baseando-se num campo do DataSource
 	 * @param string $obj_col Nome do campo no DataSource, e identificador da coluna
-	 * @param string $table_col&nbsp;=&nbsp;false TÌtulo da coluna
-	 * @param const $options&nbsp;=&nbsp;BZC_STRING Tipo do campo para que haja formataÁ„o ou n„o
-	 * @param null $customsrc&nbsp;=&nbsp;null N„o sei ainda
+	 * @param string $table_col&nbsp;=&nbsp;false T√≠tulo da coluna
+	 * @param const $options&nbsp;=&nbsp;BZC_STRING Tipo do campo para que haja formata√ß√£o ou n√£o
+	 * @param null $customsrc&nbsp;=&nbsp;null N√£o sei ainda
 	 * @example $tbl->addColumn("number", "Numero", BZC_STRING);
 	 */
 	public function addColumn($obj_col, $table_col = false, $options = BZC_STRING, $customsrc = null) {
@@ -45,10 +45,10 @@ class TableControl extends MvcControl {
 	}
 	
 	/**
-	* Adiciona uma coluna de conte˙do fixo
+	* Adiciona uma coluna de conte√∫do fixo
 	* @param string $obj_col Nome da coluna
-	* @param string $col_title TÌtulo da coluna
-	* @param string $col_value Conte˙do fixo
+	* @param string $col_title T√≠tulo da coluna
+	* @param string $col_value Conte√∫do fixo
 	* @example $tbl->addStaticColumn("REMOVE", "", "[Remover]");
 	*/
 	public function addStaticColumn($obj_col, $col_title, $col_value) {
@@ -59,10 +59,10 @@ class TableControl extends MvcControl {
 	}
 	
 	/**
-	 * Adiciona um evento ‡ uma coluna <b>j· adicionada</b>
+	 * Adiciona um evento √† uma coluna <b>j√° adicionada</b>
 	 * @param string $obj_col Nome do campo do DataSource, e nome da coluna
-	 * @param string $evt Nome do evento que ele dever· executar quando clicado
-	 * @param string $field&nbsp;=&nbsp;false Nome do campo ou o valor que dever· ser retornado quando o evento for acionado
+	 * @param string $evt Nome do evento que ele dever√° executar quando clicado
+	 * @param string $field&nbsp;=&nbsp;false Nome do campo ou o valor que dever√° ser retornado quando o evento for acionado
 	 * @example $tbl->addEvent("name", "clickname", "number");
 	 */
 	public function addEvent($obj_col, $evt, $field = false) {
@@ -74,7 +74,7 @@ class TableControl extends MvcControl {
 	 * Adiciona uma coluna com checkboxes
 	 * @param string $_col_name Nome do campo do DataSource
 	 * @param string $_header Nome da coluna na Tabela
-	 * @param string $_idxfield Nome do campo ou o valor que dever· ser retornado
+	 * @param string $_idxfield Nome do campo ou o valor que dever√° ser retornado
 	 * @example $tbl->addEvent("name", "clickname", "number");
 	 */
 	public function addCheck($_col_name, $_header, $_idxfield) {
