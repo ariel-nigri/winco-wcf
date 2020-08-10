@@ -310,6 +310,8 @@ class ServicePanel extends ServicePanelBase {
 	}	
 	
 	function onSave() {
+		global $db_conn;
+
 		if (!$this->checkEmptyValues()) {
 			$this->form->setError($this->last_error);
 			return false;
@@ -325,6 +327,13 @@ class ServicePanel extends ServicePanelBase {
 			if (trim($this->params['inst_nusers']) != trim($this->form->data->inst_nusers))
 				$this->do_stop = $this->do_start = true;
 		}
+		
+		if (!empty($this->params['inst_seq']) &&
+			( $this->form->data->inst_num_of_passwd_to_store > $this->params['inst_num_of_passwd_to_store']
+			||$this->form->data->inst_max_pwd_age < $this->params['inst_max_pwd_age']) )
+			$must_check_users = true;
+		else
+			$must_check_users = false;
 
 		$this->copyParamsTo($this->inst_params);
         if (empty($this->params['inst_license']))
@@ -334,6 +343,26 @@ class ServicePanel extends ServicePanelBase {
 			$this->form->setError($this->last_error);
 			return false;
 		}
+
+		if ($must_check_users) {
+			$uinst = UsersInstances::find($db_conn, [ 'inst_seq' => $this->params['inst_seq']] );
+			while ($uinst->fetch()) {
+				$user = new Users;
+				if ($this->params['inst_max_pwd_age'] &&
+						(!$uinst->usu_max_pwd_age || ($uinst->usu_max_pwd_age > $this->params['inst_max_pwd_age']) )) {
+					$user->usu_max_pwd_age = $this->params['inst_max_pwd_age'];
+					$user->usu_seq = $uinst->usu_seq;
+				}
+
+				if ($uinst->usu_num_of_passwd_to_store < $this->params['inst_num_of_passwd_to_store']) {
+					$user->usu_num_of_passwd_to_store = $this->params['inst_num_of_passwd_to_store'];
+					$user->usu_seq = $uinst->usu_seq;
+				}
+
+				if ($user->usu_seq)
+					$user->update($db_conn);
+			}
+		}	
 		return true;
-	}		
+	}
 }

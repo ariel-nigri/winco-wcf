@@ -213,9 +213,9 @@ class ServicePanel extends ServicePanelBase {
 			$info->addControl(new LabelControl('xyz', '<br /><br />Para adicionar ou excluir este usuários de instâncias, edite a instância.'));
 		}
 		$box = new MvcBoxedContainer($this->form, 'pwd policy', 'Política de senha deste usuário');
-		$box->addControl(new EditControl('usu_num_of_passwd_to_store', 'Número de senhas para guardar:', "size=\"10\""));
+		$box->addControl(new EditControl('usu_num_of_passwd_to_store', 'Número de senhas anteriores para guardar:', "size=\"10\""));
 		$box->addControl(new EditControl('usu_max_pwd_age', 'Número de dias de validade da senha:', "size=\"10\""));
-		$box->addControl(new LabelControl('usu_updated_passwd_at', 'Última atualização'));
+		$box->addControl(new LabelControl('usu_updated_passwd_at', 'Última atualização de senha:'));
 		$config->addControl($box); 
 		$this->form->addControl($abas);
 	}		
