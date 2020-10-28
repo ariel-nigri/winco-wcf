@@ -29,17 +29,19 @@ class VirtualDeviceServer extends SqlToClass {
         // $this->addColumn('vds_key',     'vds_key', BZC_STRING);
     }
 
-    function send_file($local, $remote) {
+    function send_file($local, $remote, $recurse = false) {
         $error = [];
-        exec("sudo -u {$this->vds_user} scp -P {$this->vds_port} {$local} {$this->vds_user}@{$this->vds_host}:{$remote}", $error);
-        if (!$error)
+        $flags = $recurse ? '-rp' : '-p';
+        $result = 0;
+        exec("sudo -u {$this->vds_user} scp -q -P {$this->vds_port} {$flags} {$local} {$this->vds_user}@{$this->vds_host}:{$remote} 2>&1", $error, $result);
+        if (!$error && !$result)
             return true;
         $this->error = implode(', ', $error);
         return false;
     }
 
     function remote_exec($cmd) {
-        exec("sudo -u {$this->vds_user} ssh -p {$this->vds_port} {$this->vds_user}@{$this->vds_host} '/opt/winco/vds/bin/$cmd'");
+        exec("sudo -u {$this->vds_user} ssh -p {$this->vds_port} {$this->vds_user}@{$this->vds_host} '$cmd'");
     }
 
     function afterFetch(/* $sql */) {

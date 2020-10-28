@@ -22,9 +22,11 @@ if (!empty($vd_number)) {
         die('ERROR: Inactive account');
 
     $result = [
+        "vd_number={$vd_number}",
         "vd_owner={$vd->vd_owner}",
         "vd_status={$vd->vd_status}",
-        "service_uri=/{$inst->inst_version}/vds_scripts/"
+        "service_uri=/{$inst->inst_version}/vds_scripts/",
+        "activation_token={$inst->inst_id}:12345678"
     ];
 
     foreach ([ 'worker_frontend', 'inst_id', 'inst_version' ] as $k)
