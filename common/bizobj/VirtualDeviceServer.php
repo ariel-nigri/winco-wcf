@@ -41,7 +41,12 @@ class VirtualDeviceServer extends SqlToClass {
     }
 
     function remote_exec($cmd) {
-        exec("sudo -u {$this->vds_user} ssh -p {$this->vds_port} {$this->vds_user}@{$this->vds_host} '$cmd'");
+        if ($cmd[0] != '/')
+            $cmd = '/opt/winco/vds/bin/'.$cmd;
+        $res = `sudo -u {$this->vds_user} ssh -p {$this->vds_port} {$this->vds_user}@{$this->vds_host} '$cmd'`;
+        if (empty($res))
+            $res = "cmd=sudo -u {$this->vds_user} ssh -p {$this->vds_port} {$this->vds_user}@{$this->vds_host} '$cmd'";
+        return $res;
     }
 
     function afterFetch(/* $sql */) {
