@@ -53,8 +53,10 @@ class VirtualDeviceServer extends SqlToClass {
         if (!empty($this->vds_tunnel))
             list($this->vds_host, $this->vds_port) = explode(":", $this->vds_tunnel);
 
-        else
+        else {
             $this->vds_host = $this->vds_name;
+            $this->vds_port = 22;
+        }
 
         if (strpos($this->vds_host, "@") !== FALSE)
             list($this->vds_user, $this->vds_host) = explode("@", $this->vds_host);
