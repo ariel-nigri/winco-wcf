@@ -189,7 +189,7 @@ class ServicePanel extends ServicePanelBase {
 
 		$config = new MvcBoxedContainer($this->form, 'config', 'Cadastro do contratante');
 		$config->addControl(new EditControl('inst_name', 'Nome da instância:', "size=\"40\""));
-		if ($GLOBALS['console_caps']['INST_CNPJ'])
+		if (!empty($GLOBALS['console_caps']['INST_CNPJ']))
 			$config->addControl(new EditControl("inst_cnpj", 'CNPJ:'));
 		$config->addControl(new SelectControl("lang", 'Idioma:', $this->lang));
 		$config->addControl(new SelectControl("worker_seq", 'Worker:', $this->session->workers));
