@@ -1,0 +1,27 @@
+#!/usr/bin/php
+<?php
+
+require_once dirname(__DIR__)."/common/wcf.php";
+
+if ($argc < 2) {
+	echo "usage: ".basename($argv[0])." id property=value [...]\n";
+	exit(1);
+}
+
+$instances = new $instance_classname;
+$instances->inst_seq = $argv[1];
+
+for ($i = 2; $i < $argc; $i++) {
+    $k = strtok($argv[$i], '=');
+    $v = strtok('');
+    if (empty($k) || $v === false)
+        die("Wrong argument for {$argv[0]}: Type {$program_name} without arguments for help.\n");
+    $instances->{$k} = $v;
+}
+
+if (!$instances->update(getDbConn())) {
+    echo "$instances->error\n";
+    exit(1);
+}
+
+exit(0);
