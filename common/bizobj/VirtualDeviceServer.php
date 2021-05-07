@@ -49,6 +49,24 @@ class VirtualDeviceServer extends SqlToClass {
         return $res;
     }
 
+    function remote_popen($cmd) {
+        // alright: lets register directly into the phone.
+        $pipes = [];
+
+        $proc = proc_open("sudo -u {$this->vds_user} ssh -p {$this->vds_port} {$this->vds_user}@{$this->vds_host} '$cmd'", [
+                0 => [ 'pipe', 'r' ],
+                1 => [ 'pipe', 'w' ],
+                2 => [ 'file', '/dev/null', 'w']
+            ], $pipes);
+        $pipes['proc'] = $proc;
+
+        return $pipes;
+    }
+    function remote_pclose($pipes) {
+        fclose($pipes[0]);
+        proc_close($pipes['proc']);
+    }
+
     function afterFetch(/* $sql */) {
         if (!empty($this->vds_tunnel))
             list($this->vds_host, $this->vds_port) = explode(":", $this->vds_tunnel);
