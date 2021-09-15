@@ -20,12 +20,17 @@ $full	= false;
 $verbose = false;
 $webdata = false;
 $attach = false;
+$jmsg = false;
 
 if (count($argv) == 1)
 	die("usage: ".basename($argv[0])." [verbose] webdata full dat|data regdb logs attach audio\n");
 
 for ($i = 1; $i < $argc; $i++) {
 	switch ($argv[$i]) {
+	case 'msg':			//Save json msg files
+		$jmsg = true;
+		break;
+
 	case 'webadata':
 		$webdata = true;
 		break;
@@ -65,13 +70,22 @@ for ($i = 1; $i < $argc; $i++) {
 $client = getAwsS3Client();
 $client->registerStreamWrapper();
 
-if (!$data && !$audio && !$logs && !$regdb && !$webdata && !$attach)
+if (!$data && !$audio && !$logs && !$regdb && !$webdata && !$attach && !$jmsg)
 	exit (1);
 
 while($instances->fetch()) {
 	if ($verbose)
 		echo $instances->inst_seq, "\n";
 
+	if ($jmsg) {							//Backingup message files
+		if ($verbose)
+			echo "Saving json messages\n";
+		backup_message_files($client,
+									$aws_bucket,
+									$instances->inst_seq.'/dat/messages',
+									'/home/instances/'.$instances->inst_seq.'/var/winco/dat');
+
+	}	
 	if ($audio) {
 		if ($verbose)
 			echo "Synching audio\n";
@@ -174,6 +188,44 @@ function exists_in_s3($client, $bucket, $object) {
 		return false;
 	}
 	return $result;
+}
+
+function backup_message_files($client, $bucket, $rdir, $sdir) {
+	@mkdir("$sdir/backup_messages");  //Make sure directory exists
+	if (file_exists("$sdir/backup_messages/LASTBACKUP")) {
+		$lastbackup_time = file_get_contents("$sdir/backup_messages/LASTBACKUP");
+		$start_day = date('y-m-d', $lastbackup_time);
+	} else
+		$start_day = '1970-01-01'; 	//Never have done backup
+
+	$end_day  = date('y-m-d', time()- 86400);	//We don´t backup current day's files
+	$pattern = '/\d\d\d\d-\d\d-\d\d-messages-.*/';
+	foreach (glob("$sdir/*") as $filename) {
+		$basename = basename($filename);
+		if (!preg_match($pattern, $basename))
+			continue;			//Not a message file
+		$file_date = substr($basename, 0, 10);
+		if ($file_date < $start_day || $file_date > $end_day)	
+			continue;		//Not in date range to be backuped
+
+		//Compress file
+		$compressedfile = "$sdir/backup_messages/$basename.gz";
+		exec("gzip -c $filename > $compressedfile ", $void, $ret);
+		if ($ret) {
+			echo "Error compressing file $filename\n";
+			continue;
+		}
+
+		//Send it to S3
+		$rfile = "${rdir}/" . "${basename}.gz";
+		sync_file_simple($client, $bucket, $rfile, $compressedfile);
+		//Test if file really is on S3
+		if (!exists_in_s3($client, $bucket, $rfile)) {
+			echo "Error: File $rfile not backuped\n";
+		}
+		unlink("${compressedfile}");
+	}
+	file_put_contents("$sdir/backup_messages/LASTBACKUP", time()-86400);
 }
 
 function backup_log_files($client, $bucket, $rdir, $sdir) {

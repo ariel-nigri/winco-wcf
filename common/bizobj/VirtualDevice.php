@@ -15,7 +15,7 @@ class VirtualDevice extends SqlToClass {
     const   VDS_CODESENT    = 3;        // in the process of activating whastapp to a phone number. must have a timeout.
     const   VDS_ACTIVATED   = 4;        // whastapp is activated in this device. (it may be assoiated with a browser or not)
     const   VDS_SUSPENDED   = 5;        // all is fine, but we are in maintenance or something the like.
-    
+    const   VDS_INACTIVE    = 6;        // for some reason the number once activated will not be used anymore.
     const   VDS_PROCESSING  = 0x100;    // Same as a lock. It is bitwise-encoded.
 
     // Whatsapp versions
@@ -25,9 +25,10 @@ class VirtualDevice extends SqlToClass {
     static $status_array = array(
         VirtualDevice::VDS_DBONLY      => 'Cadastrado',
         VirtualDevice::VDS_CREATED     => 'Alocado',
-        VirtualDevice::VDS_CODESENT    => 'Código enviado',
+        // VirtualDevice::VDS_CODESENT    => 'Código enviado',
         VirtualDevice::VDS_ACTIVATED   => 'Ativado',
         VirtualDevice::VDS_SUSPENDED   => 'Suspenso',
+        VirtualDevice::VDS_INACTIVE    => 'Desativado',
         VirtualDevice::VDS_PROCESSING  => 'Processando...'
     );
 
