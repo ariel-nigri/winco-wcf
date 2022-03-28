@@ -40,7 +40,8 @@ if (!empty($vd_number)) {
             "vd_status={$vd->vd_status}",
             "service_uri=/{$inst->inst_version}/vds_scripts/",
             "activation_token={$inst->inst_id}:12345678",
-            "inst_id={$inst->inst_id}"
+            "inst_id={$inst->inst_id}",
+	        "pode_anex={$vd->vd_pode_anexar}"
         ];
     }
 
