@@ -41,7 +41,7 @@ if (!empty($vd_number)) {
             "service_uri=/{$inst->inst_version}/vds_scripts/",
             "activation_token={$inst->inst_id}:12345678",
             "inst_id={$inst->inst_id}",
-	        "pode_anex={$vd->vd_pode_anexar}"
+	        "send_attachments={$vd->vd_send_attachments}"
         ];
     }
 

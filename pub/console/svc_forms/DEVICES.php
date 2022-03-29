@@ -13,7 +13,7 @@ class ServicePanel extends ServicePanelBase {
 			if (!$device->valid)
 				die('invalid params');
 	
-			foreach ([ 'vd_seq', 'vds_seq', 'vd_owner', 'vd_number', 'vd_key', 'vd_status', 'vds_seq', 'vds_name', 'inst_seq', 'vd_wtype', 'vd_pode_anexar' ] as $prop)
+			foreach ([ 'vd_seq', 'vds_seq', 'vd_owner', 'vd_number', 'vd_key', 'vd_status', 'vds_seq', 'vds_name', 'inst_seq', 'vd_wtype', 'vd_send_attachments' ] as $prop)
 				$this->form->data->{$prop} = $device->{$prop};
 		}
 		else {
@@ -49,7 +49,7 @@ class ServicePanel extends ServicePanelBase {
 		$device = new VirtualDevice;
 		$device->vd_seq = $this->params['vd_seq'];
 
-		foreach ([ 'vd_owner', 'vd_number', 'vd_status', 'inst_seq', 'vds_seq', 'vd_wtype', 'vd_pode_anexar' ] as $prop)
+		foreach ([ 'vd_owner', 'vd_number', 'vd_status', 'inst_seq', 'vds_seq', 'vd_wtype', 'vd_send_attachments' ] as $prop)
 			$device->{$prop} = $this->form->data->{$prop};
 
 		if ($device->inst_seq === '')
