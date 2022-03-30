@@ -65,7 +65,7 @@ if (!empty($_REQUEST['vd_send_attachments'])){
         "send_attachments={$vd->vd_send_attachments}"
     ];
 
-    echo "implode("\r\n", $result)";
+    echo implode("\r\n", $result);
     exit;
 };
 
