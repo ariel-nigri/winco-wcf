@@ -52,6 +52,23 @@ if (!empty($vd_number)) {
     exit;
 }
 
+if (!empty($_REQUEST['vd_send_attachments'])){
+    $vd = VirtualDevice::find(getDbConn(), [ 'vd_number' => $_REQUEST['vd_send_attachments'], 'vd_key' => $vd_key ]);
+    if (!$vd->valid || !$vd->inst_seq)
+        die('ERROR: Bad device number or key');
+
+    $x= getDbConn()->exec("UPDATE virt_device SET vd_send_attachments = {$_REQUEST['can_send']} WHERE vd_number = {$_REQUEST['vd_send_attachments']}"); 
+
+    $result = [
+        "vd_number={$vd->vd_number}",
+        "vd_owner={$vd->vd_owner}",
+        "send_attachments={$vd->vd_send_attachments}"
+    ];
+
+    echo "implode("\r\n", $result)";
+    exit;
+};
+
 if (!empty($_GET['id'])) {
     /**
         recebe uma chave ativada e devolve o hostname do fronend, ip do worker e porta. 
