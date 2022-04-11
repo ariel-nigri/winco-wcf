@@ -50,6 +50,7 @@ class VirtualDevice extends SqlToClass {
     var     $vd_status;
     var     $vds_name;
     var     $vds_maxdevs;
+    var     $vd_send_attachments;
 
     function __construct() {
         $this->addTable('virt_device');
@@ -63,6 +64,7 @@ class VirtualDevice extends SqlToClass {
         $this->addColumn('vd_status',   'vd_status', BZC_INTEGER | BZC_NOTNULL);
         $this->addColumn('vd_wtype',    'vd_wtype', BZC_STRING | BZC_NOTNULL);
         $this->addColumn('vd_activated','vd_activated', BZC_TIMESTAMP);
+        $this->addColumn('vd_send_attachments','vd_send_attachments', BZC_INTEGER);
 
         $this->addColumn('virt_device_server.vds_name', 'vds_name', BZC_STRING | BZC_READONLY);
         $this->addColumn('virt_device_server.vds_maxdevs', 'vds_maxdevs', BZC_INTEGER | BZC_READONLY);
