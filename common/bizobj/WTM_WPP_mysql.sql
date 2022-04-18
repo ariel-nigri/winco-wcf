@@ -94,7 +94,7 @@ CREATE TABLE virt_device (
     vd_status      INTEGER NOT NULL DEFAULT 1,
     vd_wtype       VARCHAR(20) NOT NULL,
     vd_activated   TIMESTAMP NULL,
-    vd_send_attachments BIT
+    vd_send_attachments BIT DEFAULT 1
 );
 
 --
