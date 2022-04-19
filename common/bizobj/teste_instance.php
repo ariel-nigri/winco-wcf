@@ -1,4 +1,4 @@
-<?
+<?php
 	require "../config_master.php";
 
 	$instances = new WTM_Instances;
@@ -9,4 +9,3 @@
 	while($instances->fetch()) {
 		echo ++$line, ": ", $instances->inst_email, ", ",  $instances->inst_passwd, "\n";
 	}
-?>

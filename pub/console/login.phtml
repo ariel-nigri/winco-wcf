@@ -63,9 +63,9 @@
 					</table>
 					<div class="checkbox"><div style="width:20px; float:left; margin-top:1px;"><input type="checkbox" name="continue_connected" /></div><span><?= LOGIN_MSG_CONTINUE_CONNECTED ?></span></div>
 					<div class="btn-submit"><input type="submit" name="submit" value="<?= LOGIN_MSG_BUTTON ?>" class="button" /></div>
-					<? if (!empty($erromsg)): ?>
+					<?php if (!empty($erromsg)): ?>
 						<p class="loginError" style="margin-left: 10px;"> <?= $erromsg ?><br /><br /></p>
-					<? endif; ?>		
+					<?php endif; ?>		
 				</form>
 			</div>
 		</div>

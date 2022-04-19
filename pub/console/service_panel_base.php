@@ -22,7 +22,7 @@ class ServicePanelBase {
 	function copyParamsTo($params) {
 		foreach($params as $param) {
 			if (isset($this->form->data->{$param}))
-				$this->params[$param] = $this->form->data->{$param};
+				$this->params[$param] = trim($this->form->data->{$param});
 		}
 	}
 }

@@ -1,4 +1,4 @@
-<?
+<?php
 
 class ModalForm {
 	var $parentForm;
@@ -100,5 +100,3 @@ class ModalForm {
 		return $form->data->__modal_return != "";
 	}
 }
-
-?>

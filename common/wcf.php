@@ -1,8 +1,9 @@
 <?php
 
 require_once dirname(__DIR__)."/config/install_params.php";
-$awd_sdk_dir = '/opt/amazon/aws-sdk-php';
-$wcf_db_conn = $wcf_db_conn_pdo = null;
+
+$awd_sdk        = '/opt/amazon/aws.phar';
+$wcf_db_conn    = $wcf_db_conn_pdo = null;
 
 $wcf_search_dirs = ['bizobj', 'mvc3/db'];
 
@@ -41,4 +42,28 @@ function getDbConn() {
         $wcf_db_conn = new Sql($wcf_db_conn_pdo);
     }
     return $wcf_db_conn;
+}
+
+/**
+ * Returns an AMX handle for use with the amazon AWS api.
+ * 
+ * @return Aws\S3\S3Client;
+ */
+function getAwsS3Client($params = null) {
+    global $aws_key, $aws_secret;
+
+    require_once "/opt/amazon/aws.phar";
+    require_once dirname(__DIR__)."/config/s3_config.php";
+
+    if (!$params) {
+        $params = [
+            'credentials' => [
+                'key' 		=> $aws_key,
+                'secret' 	=> $aws_secret
+            ],
+            'region' 	=> 'sa-east-1',
+            'version'	=> '2006-03-01'
+        ];
+    }
+    return new Aws\S3\S3Client($params);
 }

@@ -29,25 +29,52 @@ class VirtualDeviceServer extends SqlToClass {
         // $this->addColumn('vds_key',     'vds_key', BZC_STRING);
     }
 
-    function send_file($local, $remote) {
+    function send_file($local, $remote, $recurse = false) {
         $error = [];
-        exec("sudo -u {$this->vds_user} scp -P {$this->vds_port} {$local} {$this->vds_user}@{$this->vds_host}:{$remote}", $error);
-        if (!$error)
+        $flags = $recurse ? '-rp' : '-p';
+        $result = 0;
+        exec("sudo -u {$this->vds_user} scp -q -P {$this->vds_port} {$flags} {$local} {$this->vds_user}@{$this->vds_host}:{$remote} 2>&1", $error, $result);
+        if (!$error && !$result)
             return true;
         $this->error = implode(', ', $error);
         return false;
     }
 
     function remote_exec($cmd) {
-        exec("sudo -u {$this->vds_user} ssh -p {$this->vds_port} {$this->vds_user}@{$this->vds_host} '/opt/winco/vds/bin/$cmd'");
+        if ($cmd[0] != '/')
+            $cmd = '/opt/winco/vds/bin/'.$cmd;
+        $res = `sudo -u {$this->vds_user} ssh -p {$this->vds_port} {$this->vds_user}@{$this->vds_host} '$cmd'`;
+        if (empty($res))
+            $res = "cmd=sudo -u {$this->vds_user} ssh -p {$this->vds_port} {$this->vds_user}@{$this->vds_host} '$cmd'";
+        return $res;
+    }
+
+    function remote_popen($cmd) {
+        // alright: lets register directly into the phone.
+        $pipes = [];
+
+        $proc = proc_open("sudo -u {$this->vds_user} ssh -p {$this->vds_port} {$this->vds_user}@{$this->vds_host} '$cmd'", [
+                0 => [ 'pipe', 'r' ],
+                1 => [ 'pipe', 'w' ],
+                2 => [ 'file', '/dev/null', 'w']
+            ], $pipes);
+        $pipes['proc'] = $proc;
+
+        return $pipes;
+    }
+    function remote_pclose($pipes) {
+        fclose($pipes[0]);
+        proc_close($pipes['proc']);
     }
 
     function afterFetch(/* $sql */) {
         if (!empty($this->vds_tunnel))
             list($this->vds_host, $this->vds_port) = explode(":", $this->vds_tunnel);
 
-        else
+        else {
             $this->vds_host = $this->vds_name;
+            $this->vds_port = 22;
+        }
 
         if (strpos($this->vds_host, "@") !== FALSE)
             list($this->vds_user, $this->vds_host) = explode("@", $this->vds_host);

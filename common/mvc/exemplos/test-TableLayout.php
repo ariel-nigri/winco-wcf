@@ -24,13 +24,13 @@
 			$this->addControl(new EditControl('pis', 'PIS:', 'size="15" style="font-style: monospace"'));
 			//linha 3
 			$this->addControl(new EditControl('email', 'E-mail:'), CTLPOS_COLSPAN);
-			$this->addControl(new TextAreaControl('comentarios', 'Comentários:', 'cols="50" rows="8"'));
+			$this->addControl(new TextAreaControl('comentarios', 'ComentÃ¡rios:', 'cols="50" rows="8"'));
 			//linha 4
-			$this->addControl(new TextAreaControl('filiacao', 'Filiação:', 'cols="10" rows="5"'));
+			$this->addControl(new TextAreaControl('filiacao', 'FiliaÃ§Ã£o:', 'cols="10" rows="5"'));
 			//linha 5
-				$fs2 = new MvcContainer($this, "fs2", "Endereço");
+				$fs2 = new MvcContainer($this, "fs2", "EndereÃ§o");
 					$fs2->addControl(new EditControl("rua", 'Rua:'));
-					$fs2->addControl(new EditControl("numero", 'Número:', 'size="4"'));
+					$fs2->addControl(new EditControl("numero", 'NÃºmero:', 'size="4"'));
 					$fs2->addControl(new EditControl("cep", 'CEP:', 'size="9"'));
 				$this->addControl($fs2);
 				
@@ -83,6 +83,6 @@ layout;
 		</style>
 	</head>
 	<body>
-		<?$form->printForm()?>
+		<?php $form->printForm()?>
 	</body>
 </html>

@@ -5,12 +5,13 @@ require "bizobj/Users.php";
 
 class ServicePanel extends ServicePanelBase {	
 	
-	var $adminparams = array('usu_seq', 'usu_name', 'usu_email', 'usu_passwd_digest', 'usu_twofact_type', 'usu_language', 'inst_seq', 'usu_caps');	
+	var $adminparams = array('usu_seq', 'usu_name', 'usu_email', 'usu_twofact_type', 'usu_language',
+		'usu_caps', 'usu_num_of_passwd_to_store', 'usu_updated_passwd_at', 'usu_max_pwd_age');
 	
 	var $privs = array("" => "Usuário padrão", "ADMIN" => "Administrador");
 	var $lang = array("br" => "Português", "us" => "Inglês");
 	var $twofact = array("" => 'Desativada', "GOGLE" => "Google Authenticator");
-	
+
 	var $title = "Administrador";
 	
 	function init() {
@@ -25,14 +26,16 @@ class ServicePanel extends ServicePanelBase {
 		else {
 			$this->params = array(
 				'usu_seq' => null,
-				'usu_name' => '',
-				'usu_email' =>  '',
 				'usu_language' => 'br',
-				'usu_passwd' => '',
-				'usu_caps' =>  '',
-				'usu_twofact_type' => '',
 				'blocked' => false,
+				'usu_num_of_passwd_to_store' => 0,
+				'usu_max_pwd_age' => 0,
+				'usu_updated_passwd_at' => 'never'
 			);
+			foreach ($this->adminparams as $p) {
+				if (!isset($this->params[$p]))
+					$this->params[$p] = '';
+			}
 		}
 
 		$this->params['usu_caps_special'] =  isset($this->privs[$this->params['usu_caps']]) ? false: true;
@@ -48,47 +51,35 @@ class ServicePanel extends ServicePanelBase {
 
 			if ($instances->select($db_conn)) {			
 				$this->session->instname = $instances->inst_name;
-			}	
+			}
 		}
 	}	
 		
 	function readParamsFromServer() {
-		global $db_conn, $product_code;
+		global $db_conn;
 
 		$users = new Users;
 		$users->usu_seq = (int)$_REQUEST['instance'];
 		if ($users->select($db_conn)) {
-			$this->params['usu_seq'] = $users->usu_seq;
-			$this->params['usu_name'] = $users->usu_name;
-			$this->params['usu_email'] = $users->usu_email;
-			$this->params['usu_language'] = $users->usu_language;
-			$this->params['usu_caps'] = $users->usu_caps;
-			$this->params['usu_twofact_type'] = $users->usu_twofact_type;
-			$this->params['blocked'] = false;
-			/*
-			$this->params['blocked'] = $users->isBlocked(($db_conn));
-			if ($this->params['blocked'] > 0) {
-				$ae = new AuthEvents;
-				$ae->ae_event = AuthEvents::BLOCK_LOGIN_EVENT;
-				$ae->usu_seq = $users->usu_seq;
-				$ae->select($db_conn);
-				$this->params['reason'] = $ae->ae_reason;
-			}
-			*/
+			foreach ($this->adminparams as $p)
+				$this->params[$p] = $users->{$p};
+			$this->params['blocked'] = $users->isBlocked($db_conn);
 			return true;
 		} else
-		$this->form->setError("Erro lendo informações do administrador.");
+			$this->form->setError("Erro lendo informações do administrador.");
 		return false;
 	}
 		
 	function saveParamsToServer(&$error) {
-		global $db_conn, $product_code;
+		global $db_conn;
 		
 		$user = new Users;
 		$user->usu_name = $this->params['usu_name'];
 		$user->usu_language = $this->params['usu_language'];	
 		$user->usu_email = $this->params['usu_email'];
 		$user->usu_twofact_type = $this->params['usu_twofact_type'];
+		$user->usu_num_of_passwd_to_store = $this->params['usu_num_of_passwd_to_store'];
+		$user->usu_max_pwd_age = $this->params['usu_max_pwd_age'];
 
 		if (isset($_SESSION['temp_usu_twofact_token']) && $user->usu_twofact_type) {
 			$user->usu_twofact_token = $_SESSION['temp_usu_twofact_token'];
@@ -221,6 +212,11 @@ class ServicePanel extends ServicePanelBase {
 
 			$info->addControl(new LabelControl('xyz', '<br /><br />Para adicionar ou excluir este usuários de instâncias, edite a instância.'));
 		}
+		$box = new MvcBoxedContainer($this->form, 'pwd policy', 'Política de senha deste usuário');
+		$box->addControl(new EditControl('usu_num_of_passwd_to_store', 'Número de senhas anteriores para guardar:', "size=\"10\""));
+		$box->addControl(new EditControl('usu_max_pwd_age', 'Número de dias de validade da senha:', "size=\"10\""));
+		$box->addControl(new LabelControl('usu_updated_passwd_at', 'Última atualização de senha:'));
+		$config->addControl($box); 
 		$this->form->addControl($abas);
 	}		
 	

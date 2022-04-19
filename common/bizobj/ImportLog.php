@@ -1,6 +1,10 @@
 <?php
 
 class ImportLog extends SqlToClass {
+    var $implog_seq;
+    var $implog_network;
+    var $implog_dataset_name;
+
     public function __construct() {
         $this->addTable('import_log');
         

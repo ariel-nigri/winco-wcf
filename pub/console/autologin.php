@@ -1,4 +1,4 @@
-<?
+<?php
 
 /** PRIVATE STUFF. Starting with the crypto related routines**/
 $autologin_cypher = MCRYPT_3DES;
@@ -135,6 +135,3 @@ if ($login_ok && $_POST['save_login_info']) {
 	SetCookie('AUTOID', $newcookie);
 }
 */
-
-
-?>

@@ -9,6 +9,7 @@ class EikonInstances extends SqlToClass {
 		$this->addColumn('eikon_instances.eikon_user', 'eikon_user', BZC_STRING | BZC_NOTNULL);
 		$this->addColumn('eikon_instances.eikon_passwd', 'eikon_passwd', BZC_STRING | BZC_NOTNULL);       
 		$this->addColumn('eikon_instances.eikon_company_id', 'eikon_company_id', BZC_STRING | BZC_NOTNULL);
+		$this->addColumn('eikon_instances.eikon_location', 'eikon_location', BZC_STRING);
 		$this->eikon_active = true;
 	}
 }

@@ -1,4 +1,4 @@
-<?
+<?php
 
 require "../MvcForm.php";
 require "../LayoutManager.php";
@@ -22,7 +22,7 @@ class ListviewTest extends MvcForm {
 			array("nome" => "Mariano", "endereco" => "Flamengo", "ativo" => true),
 			array("nome" => "Ariel", "endereco" => "Barra"),
 			array("nome" => "Mariano", "endereco" => "Flamengo"),
-			array("nome" => "Leandro Mantovam", "endereco" => "São Caetano do Sul", "nomenovo" => "Paulista")
+			array("nome" => "Leandro Mantovam", "endereco" => "SÃ£o Caetano do Sul", "nomenovo" => "Paulista")
 		);
 		$lv = new ListView("mylistview", "Minha lista", $data);
 		$lv->setOption(
@@ -39,7 +39,7 @@ class ListviewTest extends MvcForm {
 		$values = array("ok" => "OK", "bad" => "BAD");
 		$lv->addControl(new SelectControl("situacao", "Situacao", $values), 100);
 		$lv->addColumn("nome", "Nome", 80);
-		$lv->addColumn("endereco", "Endereço", 100);
+		$lv->addColumn("endereco", "EndereÃ§o", 100);
 		$lv->addControl(new CheckControl("ativo", "Ativo"), 50);
 		$lv->addControl(new EditControl("nomenovo", "Nome Novo"), 80);
 		$this->addControl($lv);
@@ -98,6 +98,6 @@ $form->handle($_REQUEST);
 </style>
 <title>Teste de listview</title></head>
 <body>
-	<?$form->printForm();?>
+	<?php $form->printForm();?>
 </body>
 </html>

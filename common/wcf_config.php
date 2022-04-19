@@ -32,7 +32,7 @@ function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $us
                 }
             }
             // get our own worker_seq;
-            $worker = Workers::find($dbconn, ['worker_hostname' => $my_worker_hostname, 'worker_active' => true]);
+            $worker = Workers::find($dbconn, ['worker_frontend' => $my_worker_hostname, 'worker_active' => true]);
             if (!$worker->valid) {
                 $error = 'Cannot find worker or it is not active';
                 break;
@@ -106,21 +106,22 @@ function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $us
 function wcf_extend_license($inst_id, $lic_expiration, &$error)
 //lic_period has the license new  ending day in the format:   yyyy-mm-dd
 {
-	 $db = getDbConn();
+    $db = getDbConn();
 
     $instance = VPND_Instances::find($db, ['inst_id' => $inst_id]);
     if (!$instance->valid) {
         $error = 'Invalid instance';
         return false;
     }
-	 $instance->inst_expiration = $lic_expiration;
-	 if (!$instance->update($db)) {
-            $error = 'Cannot update Instance: '.$instance->error;
-            return false;
-	  }
-	  $instance->stop();
-	  $instance->start();
-     return true;
+    $instance->inst_expiration = $lic_expiration;
+    if (!$instance->update($db)) {
+        $error = 'Cannot update Instance: '.$instance->error;
+        return false;
+    }
+    // No need to restart instance on 'renew'
+    //$instance->stop();
+	//$instance->start();
+    return true;
 }
 
 // change caps, dont change expiration
@@ -168,7 +169,7 @@ function wcf_list_info($usu_email, &$info, &$error)
         'usu_name'      			=> $user->usu_name,
         'usu_language'  			=> $user->usu_language,
 		'usu_updated_passwd_at'	    => $user->usu_updated_passwd_at,
-		'usu_passwd_digest'         => $user->usu_passwd_digest,
+		'usu_passwd_digest'         => md5($user->usu_seq.$user->usu_updated_passwd_at),
         'usu_caps'      			=> $user->usu_caps
     ];
 
@@ -211,7 +212,7 @@ function wcf_set_password($usu_email, $password, &$error)
 	}
 	if (!$user->setPassword($db, $password)) {
 		$error = 'Error setting password';
-		break;
+		return false;
 	}
 	if (!$user->update($db)) {
 		$error = 'Cannot update password: '.$user->error;

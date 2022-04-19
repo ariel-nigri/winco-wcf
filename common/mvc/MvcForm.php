@@ -1,21 +1,21 @@
-<?
-/** formataÁ„o padr„o */
+<?php
+/** formata√ß√£o padr√£o */
 	define("CTLPOS_DEFAULT", 0);
-/** N„o quebra linha apÛs o controle */
+/** N√£o quebra linha ap√≥s o controle */
 	define("CTLPOS_NOBREAK", 1);
 	define("CTLPOS_NOSPACE", 2);
 	define("CTLPOS_RIGHT", 4);
 	define("CTLPOS_LEFT", 8);
 	define("CTLPOS_CENTER", 16);
 /**
- * Usado em botıes ou links que ativam um mÈtodo;
- * indica que aquele È o evento padr„o para quando o usu·rio apertar a tecla Enter.
- * Se n„o for utilizado dentro do formul·rio, Enter n„o funcionar·.
+ * Usado em bot√µes ou links que ativam um m√©todo;
+ * indica que aquele √© o evento padr√£o para quando o usu√°rio apertar a tecla Enter.
+ * Se n√£o for utilizado dentro do formul√°rio, Enter n√£o funcionar√°.
  */
 	define("CTLEVT_DEFAULT", 32);
-/** N„o cria label antes do controle, mesclando as duas cÈlulas geradas por um controle padr„o numa sÛ. */
+/** N√£o cria label antes do controle, mesclando as duas c√©lulas geradas por um controle padr√£o numa s√≥. */
 	define("CTLPOS_COLSPAN", 64);
-/** N„o cria as tags de <tr> e </tr> antes e depois do controle respectivamente. */
+/** N√£o cria as tags de <tr> e </tr> antes e depois do controle respectivamente. */
 	define("CTLPOS_NOTABLE", 128);
 /** Coloca o controle a esquerda e o label a direita. Implica em colspan*/
 	define("CTLPOS_LABELRIGHT", 256);
@@ -30,22 +30,22 @@ define("CTLVAL_NOTNULL", 4096);
 define("CTLVAL_IPNUMBER", 8192);
 
 /**
- * Classe utilizada para a criaÁ„o de formul·rios em HTML.
+ * Classe utilizada para a cria√ß√£o de formul√°rios em HTML.
  */
 class MvcForm {
 	/**
-	 * Nome do formul·rio. Usado quando h· mais de um formul·rio (duas classes extendendo a MvcForm na mesma p·gina.
+	 * Nome do formul√°rio. Usado quando h√° mais de um formul√°rio (duas classes extendendo a MvcForm na mesma p√°gina.
 	 * @var string */				public $name;
 	/**
-	 * Os controles "imprimÌveis" do formul·rio
+	 * Os controles "imprim√≠veis" do formul√°rio
 	 * @var array */				private $controls;
 	private $controls_opt;
 	/**
-	 * Os controles ocultos do formul·rio
+	 * Os controles ocultos do formul√°rio
 	 * @var array */				private $hidden;
 	private $layout;
 	/**
-	 * ForÁar· o uso do LayoutManager TopLabelLayout se for true
+	 * For√ßar√° o uso do LayoutManager TopLabelLayout se for true
 	 * @var boolean */			private $toplabel;
 	/** @var LayoutManager */	private $lman;
 	private $evt_def;
@@ -57,7 +57,7 @@ class MvcForm {
 	private $useValidator;
 
 	/**
-	 * Onde ficam todos os dados enviados pelo formul·rio
+	 * Onde ficam todos os dados enviados pelo formul√°rio
 	 * @var StdClass */			public $data;
 
 	function __construct(LayoutManager $lman = null) {
@@ -67,7 +67,7 @@ class MvcForm {
 									$lman;
 		}
 		elseif (!is_null($lman)) {
-			trigger_error('VocÍ est· tentando definir um LayoutManager via argumento do construtor do MvcForm quando esse j· foi definido no corpo da classe.');
+			trigger_error('Voc√™ est√° tentando definir um LayoutManager via argumento do construtor do MvcForm quando esse j√° foi definido no corpo da classe.');
 		}
 	}
 
@@ -76,12 +76,12 @@ class MvcForm {
 	}
 
 	/**
-	 * Imprime o inÌcio do formul·rio:
+	 * Imprime o in√≠cio do formul√°rio:
 	 * <ul>
-	 *		<li>Tag <i>script</i> se necess·rio</li>
+	 *		<li>Tag <i>script</i> se necess√°rio</li>
 	 *		<li>Tag <i>form</i></li>
-	 *		<li>Um <i>input hidden</i> que conter· a aÁ„o</li>
-	 *		<li>Todos os possÌveis <i>hiddens</i> que o form possa ter</li>
+	 *		<li>Um <i>input hidden</i> que conter√° a a√ß√£o</li>
+	 *		<li>Todos os poss√≠veis <i>hiddens</i> que o form possa ter</li>
 	 * </ul>
 	 */
 	private function printHeader() {
@@ -158,11 +158,11 @@ class MvcForm {
 	}
 	
 	/**
-	 * MÈtodo p˙blico usado para a criaÁ„o dos controles HTML. Ex.: TextBox, ComboBox, Check etc.
-	 * @param object $controle controle de formul·rio que vai ser adicionado
-	 * @param string $controle_de_posicao opÁ„o a ser adicionada no controle [opcional]
+	 * M√©todo p√∫blico usado para a cria√ß√£o dos controles HTML. Ex.: TextBox, ComboBox, Check etc.
+	 * @param object $controle controle de formul√°rio que vai ser adicionado
+	 * @param string $controle_de_posicao op√ß√£o a ser adicionada no controle [opcional]
 	 * @return sem retorno
-	 * @example $this->addControl(new EditControl("cli_endereco", "EndereÁo: ", "size=80"))
+	 * @example $this->addControl(new EditControl("cli_endereco", "Endere√ßo: ", "size=80"))
 	 */
 	public function addControl($_ctl, $pos = CTLPOS_DEFAULT) {
 		if (isset($_ctl->jsFiles)) {
@@ -220,7 +220,7 @@ class MvcForm {
 	}
 	
 	/**
-	 * Imprime o form HTML na p·gina.
+	 * Imprime o form HTML na p√°gina.
 	 * @example $form->printForm();
 	 */
 	public function printForm() {
@@ -243,16 +243,16 @@ class MvcForm {
 	}
 
 	/**
-	 * Indica qual vai ser o array de Request HTTP que vai ser usado nesse formul·rio.<br />
-	 * … daqui que ser„o extraÌdos os dados para serem incluÌdos em $this->data.<br />
+	 * Indica qual vai ser o array de Request HTTP que vai ser usado nesse formul√°rio.<br />
+	 * √â daqui que ser√£o extra√≠dos os dados para serem inclu√≠dos em $this->data.<br />
 	 * <ul>
-	 *		<li>Seta o nome do formul·rio. Se n„o for chamado, aÁıes como o bot„o do DateControl n„o funcionar„o;</li>
+	 *		<li>Seta o nome do formul√°rio. Se n√£o for chamado, a√ß√µes como o bot√£o do DateControl n√£o funcionar√£o;</li>
 	 *		<li>Transforma os dados do argumento em <tt>$this->data</tt>;</li>
-	 *		<li>Chama o mÈtodo requerido na tela anterior, ou <tt>init()</tt> caso n„o haja nenhum;</li>
-	 *		<li>Chama o mÈtodo <tt>beforeshow()</tt>, se houver.</li>
+	 *		<li>Chama o m√©todo requerido na tela anterior, ou <tt>init()</tt> caso n√£o haja nenhum;</li>
+	 *		<li>Chama o m√©todo <tt>beforeshow()</tt>, se houver.</li>
 	 * </ul>
-	 * <b>Nota:</b> <u>N√O</u> È possÌvel usar $_GET aqui. … necess·rio acessar os dados via POST pois
-	 * È como o formul·rio ir· submeter seus dados padrıes
+	 * <b>Nota:</b> <u>N√ÉO</u> √© poss√≠vel usar $_GET aqui. √â necess√°rio acessar os dados via POST pois
+	 * √© como o formul√°rio ir√° submeter seus dados padr√µes
 	 * @param array $vars $_POST ou $_REQUEST
 	 */
 	public function handle(&$vars) {
@@ -288,7 +288,7 @@ class MvcForm {
 	}
 
 	/**
-	 * Esvazia todas as vari·veis de $this->data que pertencem a um controle
+	 * Esvazia todas as vari√°veis de $this->data que pertencem a um controle
 	 */
 	public function clean() {
 		if (!is_array($this->controls))
@@ -368,4 +368,3 @@ class MvcForm {
 	}
 
 }
-?>

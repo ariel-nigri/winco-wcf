@@ -1,4 +1,4 @@
-<? require "instance_info.php" ?> 
+<?php require "instance_info.php" ?> 
 <html>
 <head>
 	<title>Instância</title>
@@ -42,25 +42,25 @@
 					<tr><td><strong>ID:</strong></td><td><?= $instance->inst_id ?></td></tr>
 					<tr><td><strong>Data de criação:</strong></td><td><?= $instance->inst_created ?></td></tr>
 					<tr><td><strong>Registrado para:</strong></td><td><?= $instance->inst_name ?></td></tr>
-					<? if ($product_code == "WTM"): ?>
+					<?php if ($product_code == "WTM"): ?>
 					<tr><td><strong>CPF/CNPJ:</strong></td><td><?= $instance->inst_cnpj ?></td></tr>
 					<tr><td><strong>E-mail:</strong></td><td><?= $instance->inst_email ?></td></tr>
 					<tr><td><strong>Telefone:</strong></td><td><?= $instance->inst_phone ?></td></tr>
-					<? endif; ?>
+					<?php endif; ?>
 					<tr><td><strong>Licença:</strong></td><td><?= $instance->inst_license ?></td></tr>
-					<? if ($product_code == "WTM"): ?>
+					<?php if ($product_code == "WTM"): ?>
 					<tr><td><strong>Tipo:</strong></td><td><?= $inst_type ?></td></tr>
 					<tr><td><strong>Usuários:</strong></td><td><?= $instance->inst_nusers ?></td></tr>
-					<? endif; ?>
+					<?php endif; ?>
 					<tr><td><strong>Worker:</strong></td><td><?= $workers->worker_hostname ?></td></tr>
 					<tr><td><strong>Admin port:</strong></td><td><?= $instance->inst_adm_port ?></td></tr>
-					<? if ($product_code == "WTM"): ?>
+					<?php if ($product_code == "WTM"): ?>
 					<tr><td><strong>MSN port:</strong></td><td><?= $instance->inst_msn_port ?></td></tr>
 					<tr><td><strong>Policy port:</strong></td><td><?= $instance->inst_pol_port ?></td></tr>
 					<tr><td><strong>AD Sync port:</strong></td><td><?= 10003 + 4 * $instance->inst_seq ?></td></tr>
-					<? else: ?>
+					<?php else: ?>
 					<tr><td><strong>Sync port:</strong></td><td><?= $instance->inst_sync_port ?></td></tr>
-					<? endif; ?>					
+					<?php endif; ?>					
 					<tr><td><strong>Idioma:</strong></td><td><?= $instance->inst_lang == "us" ? "Inglês" : "Português"; ?></td></tr>
 				</tbody>
 			</table>			
