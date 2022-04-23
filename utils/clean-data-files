@@ -1,0 +1,67 @@
+#!/bin/env php
+<?php
+
+require dirname(__DIR__).'/common/wcf.php';
+
+$inst_seq = $argv[1];
+$date = $argv[2];
+
+
+$ldir = "/home/instances/{$inst_seq}/var/winco/dat/attach/";
+$rdir = "{$inst_seq}/dat/attach/";
+
+if ($argc < 3 || !file_exists($ldir.$date) || !is_dir($ldir.$date))
+    die("usage: clean-data-files <inst> <date_dir>\n");
+
+
+// create the amazon client object.
+$client = getAwsS3Client();
+
+clean_files($client, $aws_bucket, $ldir, $rdir, $date);
+
+function clean_files($client, $aws_bucket, $ldir, $rdir, $date)
+{
+    $d = opendir($ldir.$date);
+    if (!$d)
+        die("Error opening local directory {$ldir}${$date}");
+    $freed = 0;
+    while ($e = readdir($d)) {
+        // 2021-01-30_23-39-00#5511975033373#whatsapp-100#RAmxnT0HyfdwTWNzSOJxB9IfkjXzaZglUbbmIZuVUfw=!IMG-20210130-WA0043.jpg
+        if (strpos($e, $date) == 0 && $e[7] != '-')
+            continue;
+
+        echo "Checking {$e}...";
+
+        // get from amazon
+        try {
+            $resp = $client->headObject([
+                'Bucket'    => $aws_bucket,
+                'Key'       => "{$rdir}{$date}/{$e}"
+            ]);
+        }
+        catch (Exception $exc) {
+            if ($exc->getStatusCode() == '404') {
+                echo "not uploaded. NOT DELETED\n";
+                continue;
+            }
+            else {
+                echo $exc->getMessage();
+                exit;
+            }
+        }
+
+        // compare size.
+        $res = $resp->toArray();
+        $size = $res['@metadata']['headers']['content-length'];
+
+        if ($size == filesize("{$ldir}{$date}/{$e}")) {
+            echo "same size, DELETED\n";
+            $freed += $size;
+            unlink("{$ldir}{$date}/{$e}");
+        }
+    	else
+	        echo "sizes differ, NOT DELETED\n";
+    }
+    closedir($d);
+    echo "+++++ total of {$freed} bytes freed +++++++\n";
+}
