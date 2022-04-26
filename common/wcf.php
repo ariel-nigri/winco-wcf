@@ -50,7 +50,9 @@ function getDbConn() {
  * @return Aws\S3\S3Client;
  */
 function getAwsS3Client($params = null) {
-    global $aws_key, $aws_secret;
+    // the variables bellow are global to make sure that they are exported correctly from the config file.
+    // do not remove unused ones.
+    global $aws_key, $aws_secret, $aws_bucket;
 
     require_once "/opt/amazon/aws.phar";
     require_once dirname(__DIR__)."/config/s3_config.php";
