@@ -89,7 +89,7 @@ class ServicePanel extends ServicePanelBase {
 		$config->addControl(new EditControl('inst_seq', 'Instância:', "size=\"40\""));
 		$config->addControl(new EditControl('vd_owner', 'Usuário:', "size=\"40\""));
 		$config->addControl(new EditControl('vd_number', 'Número:', "size=\"40\""));
-		$config->addControl(new SelectControl('vd_wtype', 'Vers. Whatsapp:', [ 'wpp' => 'wpp', 'w4b' => 'w4b' ]));
+		$config->addControl(new SelectControl('vd_wtype', 'Vers. Whatsapp:', [ 'wpp' => 'wpp', 'w4b' => 'w4b', 'w4b_new' => 'w4b_new' ]));
 		$config->addControl(new SelectControl('vd_status', 'Status:', VirtualDevice::$status_array));
 		$config->addControl(new LabelControl('vd_key', 'Chave:', "size=\"40\""), CTLPOS_NOBREAK);
 		$config->addControl(new ButtonControl('changeKey', 'Mudar a chave de acesso'));
