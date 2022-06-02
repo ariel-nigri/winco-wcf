@@ -9,13 +9,13 @@ $vd_number = @preg_replace('/[^0-9]/', '', $_REQUEST['vd_number']);
 
 if (!empty($vd_number)) {
     if ($_SERVER['HTTP_HOST'] != 'wtm-wpp.talkmanager.net' && $_SERVER['HTTP_HOST'] != 'wppdev.winco.com.br') {
-        $p = '';
+        $c = curl_init("https://wtm-wpp.talkmanager.net{$_SERVER['REQUEST_URI']}");
+        curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
         if (!empty($_POST)) {
-            foreach ($_POST as $k => $v)
-                $p .=  "&{$k}=".urlencode($v);
+            curl_setopt($c, CURLOPT_POST, true);
+            curl_setopt($c, CURLOPT_POSTFIELDS, $_POST);
         }
-        $x = file_get_contents("https://wtm-wpp.talkmanager.net{$_SERVER['REQUEST_URI']}&{$p}");
-        echo $x;
+        echo curl_exec($c);
         exit;
     }
     $vd_key    = @preg_replace('/[^a-zA-Z0-9]/', '', $_REQUEST['vd_key']);
