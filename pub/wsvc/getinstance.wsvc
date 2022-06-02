@@ -8,6 +8,16 @@ header('Content-type: text/plain');
 $vd_number = @preg_replace('/[^0-9]/', '', $_REQUEST['vd_number']);
 
 if (!empty($vd_number)) {
+    if ($_SERVER['HTTP_HOST'] != 'wtm-wpp.talkmanager.net' && $_SERVER['HTTP_HOST'] != 'wppdev.winco.com.br') {
+        $p = '';
+        if (!empty($_POST)) {
+            foreach ($_POST as $k => $v)
+                $p .=  "&{$k}=".urlencode($v);
+        }
+        $x = file_get_contents("https://wtm-wpp.talkmanager.net{$_SERVER['REQUEST_URI']}&{$p}");
+        echo $x;
+        exit;
+    }
     $vd_key    = @preg_replace('/[^a-zA-Z0-9]/', '', $_REQUEST['vd_key']);
 
     if (empty($vd_key)) {
