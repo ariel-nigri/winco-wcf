@@ -1,0 +1,16 @@
+#!/bin/bash
+
+instances=$(inst-query -q worker_seq=2 inst_seq)
+
+for i in $instances; do
+	echo "Checking $i.."
+	instver=$(inst-query -q inst_seq=$i inst_version)
+	if [ "$instver" != "$1" ]; then
+		echo "Instance $i will be upgraded from $instver to $1"
+		inst-ctl status $i | grep 'not running'
+		notrunning=$?
+		[ $notrunning -ne 0 ] && inst-ctl stop $i
+		inst-set $i inst_version=$1
+		[ $notrunning -ne 0 ] && inst-ctl start $i
+	fi
+done

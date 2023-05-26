@@ -1,0 +1,233 @@
+#!/bin/env php
+<?php
+
+ini_set('display_errors', 1);
+require dirname(__DIR__)."/common/wcf.php";
+
+$me = basename(array_shift($argv));
+$opt = [];
+
+while ($argv[0]) {
+	if ($argv[0][0] != '-')
+		break;
+
+	$opt[array_shift($argv)] = true;
+}
+
+if (isset($opt['-h'])) {
+	fputs(STDERR, "usage: {$me} [-v|-d|-m]|-a instance\n");
+	exit(1);
+}
+
+$inst = @$argv[0];
+
+if (!$inst || !is_dir("/home/instances/{$inst}/var/winco/dat")) {
+	fputs(STDERR, "{$me}: missing or invalid instance\n");
+	exit(1);
+}
+
+if (isset($opt['-d']) || isset($opt['-a']))
+	backup_db($inst);
+
+if (isset($opt['-m']) || isset($opt['-a']))
+	backup_msg($inst);
+
+/*
+ * LIB
+ */
+function backup_db($inst)
+{
+	global $aws_instance_bucket;
+
+	$tmpfile = "/home/instances/{$inst}/var/winco/dat/imfilter-tmp-bck.gz";
+	$s3client = getAwsS3Client();
+
+	// enumerate files, save all but look for files newer than the timestamp.
+	$files = glob("/home/instances/{$inst}/var/winco/dat/imfilter_20??_??.db");
+	if (count($files) == 0)
+		blog("No database files found");
+
+	$current_ym1 = gmdate('Y_m', time() - (4 *86400));
+	$current_ym2 = gmdate('Y_m', time() + 86400);
+
+	foreach ($files as $file) {
+		$base_file = basename($file);
+		if ($base_file == "imfilter_{$current_ym1}.db" || $base_file == "imfilter_{$current_ym2}.db") {
+			blog("Skipping current imfilter file {$base_file}");
+			continue;
+		}
+		$marker = strtok($file,'.').'.backup';
+
+		$oldsha = strtok(@file_get_contents($marker), ':');
+		$oldts	= strtok(" \t\r\n");
+		$ts = gmdate('YmdHis', filemtime($file));
+		if ($oldts == $ts)
+			continue;
+
+		blog("Backing up {$file}: compressing...");
+
+		// WARNING: the line bellow is tricky. it sends the output to a file and STDERR to STDOUT to capture it into $out
+		$out = [];
+		exec("gzip {$file} -c 2>&1 > {$tmpfile}", $out, $rc);
+		if ($rc || !empty($out)) {
+			// maybe the file changed sizes? well, it doesn't matter.
+			blog("Error compressing {$file}: ".trim(@$out[0]), true);
+			continue;
+		}
+		$newsha = hash_file('sha256', $tmpfile);
+		if ($newsha === false) {
+			blog("File {$file} is empty or cannot be read. Skipping..", true);
+			continue;
+		}
+		if ($newsha == $oldsha) {
+			blog("File {$file} changed timestamp but not the data. Skipping..", true);
+		}
+		else {
+			blog("Backing up {$file}: uploading...");
+
+			try {
+				$res = $s3client->putObject([
+				'Bucket'        => $aws_instance_bucket,
+				'Key'           => "{$inst}/dat/db/".$base_file.".gz-{$ts}",
+				'SourceFile' 	=> $tmpfile,
+				'ContentLength' => filesize($tmpfile),
+				'ContentSHA256' => $newsha,
+				'ContentType'   => 'application/gzip'
+				])->toArray();
+				// echo "Returned {$res['@metadata']['statusCode']}\n";
+			} catch(Exception $e) {
+				$err = strtok($e->getMessage(), "\r\n");
+				do {
+					blog("Error sending {$file} to storage: {$err}", true);
+				} while ($err = strtok("\r\n"));
+				
+				continue;
+			}
+		}
+		unlink($tmpfile);
+
+		if (!file_put_contents($marker, "{$newsha}:{$ts}\n"))
+			blog("Error saving marker file {$marker}. Backup will be retried next time", true);
+
+		blog("Backp of {$file} successfull");
+	}
+	blog("Backing of {$inst} finished.");
+}
+
+function backup_msg($inst)
+{
+	global $aws_instance_bucket;
+
+	$backup_dir = "/home/instances/{$inst}/var/winco/dat/messages/";
+	$tmpfile	= "{$backup_dir}backup-tmp.tar";
+
+	$s3client = getAwsS3Client();
+
+	// enumerate files, save all but look for files newer than the timestamp.
+	$months = glob("{$backup_dir}20??-??");
+	if (count($months) == 0) {
+		blog("No compressed message files for this instance");
+		return;
+	}
+	$today = gmdate("Y-m-d");
+	$tomorrow = gmdate("Y-m-d", time() + 86400);
+
+	foreach ($months as $month) {
+		$files = glob("{$month}/20??-??-??-messages-*.gz");
+		if (count($files) == 0)
+			blog("No message files found");
+
+		$days = [];
+		foreach ($files as $file) {
+			$day = substr(basename($file), 0, 10);
+			$days[$day][] = $file;
+		}
+
+		// now we can build the backup batch
+		foreach ($days as $day => $dayfiles) {
+			// do not backup today or tomorrow...
+			if ($day == $today || $day == $tomorrow) {
+				blog("Skipping current day...");
+				continue;
+			}
+			$marker = "{$month}/{$day}.backup";
+
+			// read marker.
+			$oldsha = strtok(@file_get_contents($marker), ':');
+			$oldts	= intval(strtok(" \t\r\n"));
+
+			// check with batch.
+			$ts = 0;
+			$flist = [];
+			$skip = strlen($backup_dir);
+			foreach ($dayfiles as $file) {
+				$ts = max(
+					intval(gmdate('YmdHis', filemtime($file))),
+					$ts);
+				$flist[] = substr($file, $skip);
+			}
+
+			if ($ts == $oldts)
+				// echo newest file is the one that names the backup, nothing to do.
+				continue;
+
+			// if new files are found, build a new batch.
+			$out = [];
+			$rc = 0;
+			exec("tar --append -f {$tmpfile} -C {$backup_dir} '".implode("' '", $flist)."' 2>&1\n", $out, $rc);
+
+			if ($rc || !empty($out)) {
+				// maybe the file changed sizes? well, it doesn't matter.
+				blog("Error compressing {$file}: ".trim(@$out[0]), true);
+				continue;
+			}
+	
+			$newsha = hash_file('sha256', $tmpfile);
+			if ($newsha === false) {
+				blog("File {$file} is empty or cannot be read. Skipping..", true);
+				continue;
+			}
+			if ($newsha == $oldsha) {
+				blog("File {$file} changed timestamp but not the data. Skipping..", true);
+				continue;
+			}
+	
+			// send it.
+			$fname = substr($day, 0, 7).'/'.$day.".tar-{$ts}";
+			blog("Backing up {$fname}: with ".count($flist)." files and ".filesize($tmpfile)."bytes. Uploading...", true);
+			try {
+				$res = $s3client->putObject([
+				'Bucket'        => $aws_instance_bucket,
+				'Key'           => "{$inst}/dat/skype_messages/{$fname}",
+				'SourceFile' 	=> $tmpfile,
+				'ContentLength' => filesize($tmpfile),
+				'ContentSHA256' => $newsha,
+				'ContentType'   => 'application/gzip'
+				])->toArray();
+				// echo "Returned {$res['@metadata']['statusCode']}\n";
+			} catch(Exception $e) {
+				$err = strtok($e->getMessage(), "\r\n");
+				do {
+					blog("Error sending {$file} to storage: {$err}", true);
+				} while ($err = strtok("\r\n"));
+				
+				continue;
+			}
+			// save new marker.
+			if (!file_put_contents($marker, "{$newsha}:{$ts}\n"))
+				blog("Error saving marker file {$marker}. Backup will be retried next time", true);
+
+			// delete the temp file
+			unlink($tmpfile);
+			blog("Backup of {$day} successfull");
+		}
+	}
+}
+
+function blog($msg, $force = false)
+{
+	global $opt;
+
+	if ($force || isset($opt['-v']))
+		echo $msg."\n";
+}

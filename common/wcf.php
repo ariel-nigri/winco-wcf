@@ -2,7 +2,7 @@
 
 require_once dirname(__DIR__)."/config/install_params.php";
 
-$awd_sdk        = '/opt/amazon/aws.phar';
+$aws_sdk        = '/opt/amazon/aws.phar';
 $wcf_db_conn    = $wcf_db_conn_pdo = null;
 
 $wcf_search_dirs = ['bizobj', 'mvc3/db'];
@@ -52,9 +52,9 @@ function getDbConn() {
 function getAwsS3Client($params = null) {
     // the variables bellow are global to make sure that they are exported correctly from the config file.
     // do not remove unused ones.
-    global $aws_key, $aws_secret, $aws_bucket;
+    global $aws_key, $aws_secret, $aws_bucket, $aws_sdk, $aws_instance_bucket;
 
-    require_once "/opt/amazon/aws.phar";
+    require_once $aws_sdk;
     require_once dirname(__DIR__)."/config/s3_config.php";
 
     if (!$params) {
