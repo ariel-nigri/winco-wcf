@@ -1,1 +1,0 @@
-ALTER TABLE virt_device ADD vd_send_attachments BIT DEFAULT 1

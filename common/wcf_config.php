@@ -1,6 +1,6 @@
 <?php
 
-// Create or update a WCF instance.
+// Create or update an admin and then, ALWAYS create a new Instance.
 function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $user_email, $user_name, $inst_expiration, &$error, $pwd = null)
 {
     global $instance_classname, $product_code, $default_license, $my_worker_hostname;
@@ -38,7 +38,7 @@ function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $us
                 break;
             }
 
-            // create a new instance
+            // Find instances for thet user or create a new one. If there is an instance that is not trial, then there is something wrong.
             $instance = new $instance_classname;
             $instance->inst_name = $inst_name;
             $instance->inst_lang = $inst_lang;
@@ -103,24 +103,25 @@ function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $us
 }
 
 // renew, same everything.
-function wcf_extend_license($inst_id, $lic_expiration, &$error)
 //lic_period has the license new  ending day in the format:   yyyy-mm-dd
+function wcf_extend_license($inst_id, $inst_expiration, &$error)
 {
     $db = getDbConn();
 
-    $instance = VPND_Instances::find($db, ['inst_id' => $inst_id]);
+    $instance = VPND_Instances::find($db, ['inst_id' => $inst_id, 'inst_active' => null]);
     if (!$instance->valid) {
         $error = 'Invalid instance';
         return false;
     }
-    $instance->inst_expiration = $lic_expiration;
+    $instance->inst_expiration = $inst_expiration;
     if (!$instance->update($db)) {
         $error = 'Cannot update Instance: '.$instance->error;
         return false;
     }
-    // No need to restart instance on 'renew'
-    //$instance->stop();
-	//$instance->start();
+
+    // No need to restart instance on 'renew', but we must start it if it is stopped
+    if (!$instance->status())
+	    $instance->start();
     return true;
 }
 
@@ -139,7 +140,7 @@ function wcf_change_caps($inst_id, $inst_caps, &$inst_expiration, &$error)
         //
         // must change the capabilities for instance
         //
-		$instance->inst_expiration = NULL; // do not update this.
+		$instance->inst_expiration = null; // do not update this.
         $instance->inst_type = $inst_caps;
         if (!$instance->update($db)) {
             $error = 'Cannot update Instance: '.$instance->error;
@@ -151,7 +152,7 @@ function wcf_change_caps($inst_id, $inst_caps, &$inst_expiration, &$error)
     return true;
 }
 
-// Retrieve informationa bout the instance of a user.
+// Retrieve information about the instance of a user.
 function wcf_list_info($usu_email, &$info, &$error)
 {
     global $instance_classname;
@@ -196,7 +197,7 @@ function wcf_list_info($usu_email, &$info, &$error)
             'usuinst_perms' => $perms[$instances->inst_seq],
             'inst_type'     => $instances->inst_type,
             'inst_name'     => $instances->inst_name,
-            'inst_expiration' => $instances->inst_expiration
+            'inst_expiration' => str_replace('-', '', $instances->inst_expiration)
         ];
     }
     return true;

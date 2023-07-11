@@ -19,8 +19,6 @@ COMPRESS_DATE_STR=$(date +%Y%m%d -d @$COMPRESS_DATE)
 touch -t ${COMPRESS_DATE_STR}0000 /tmp/compress_reference
 
 for DIR in /home/instances/*/var/winco/dat; do
-
-for DIR in /home/instances/*/var/winco/dat; do
 	echo $DIR
 	(cd $DIR; ls) | \
 		while read file; do
