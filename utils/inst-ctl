@@ -52,3 +52,5 @@ fi
 ${ctl} ${oper} ${inst}
 
 [ ! -z "${ctl_link}" ] && rm -f ${ctl_link}
+
+exit 0

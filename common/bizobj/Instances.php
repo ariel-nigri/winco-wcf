@@ -77,7 +77,8 @@ class Instances extends SqlToClass {
         $redir = ($cmd == 'start' ? '> /dev/null' : '' );
         $utils = dirname(dirname(__DIR__)).'/utils';
         $output = [];
-        exec("sudo product_code={$product_code} ${utils}/inst-ctl {$cmd} {$this->inst_seq} {$redir} 2>&1 < /dev/null", $output);
+        //exec("sudo product_code={$product_code} ${utils}/inst-ctl {$cmd} {$this->inst_seq} {$redir} 2>&1 < /dev/null", $output);
+        exec("sudo /bin/systemctl $cmd wcf@{$this->inst_seq}", $output);
         return $output;
     }
 
