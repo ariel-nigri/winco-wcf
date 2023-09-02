@@ -44,9 +44,15 @@ function wcf_login($username, $password, $filter = [])
 		if (!$ret['instance']->valid)
 			$ret['result'] = 'LOGIN_ERROR';
 		else {
-			if (!empty($filter['inst_version']) && $filter['inst_version'] != $ret['instance']->inst_version)
-				$ret['result'] = 'FILTER_FAILED';
-			else
+			if (!empty($filter)) {
+				foreach ($filter as $k => $val) {
+					if ($ret['instance']->{$k} != $val) {
+						$ret['result'] = 'FILTER_FAILED';
+						break;
+					}
+				}
+			}
+			if ($ret['result'] != 'FILTER_FAILED')
 				aux_checkCredentials($usu_inst, $password, $ret);
 		}
 	}

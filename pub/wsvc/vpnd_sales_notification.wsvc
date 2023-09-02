@@ -90,7 +90,7 @@ $inst_id = null;
 if (!empty($inst_lic)) {
     $prd = strtok($inst_lic, '-');
     $inst_id = strtok('-');
-    if ($prd != 'VPND' || empty($inst_id)) {
+    if (($prd != 'VPND' && $prd != 'VPN') || empty($inst_id)) {
         $result->message = "this operation requires inst_lic";
         die (json_encode($result));
     }
@@ -98,6 +98,29 @@ if (!empty($inst_lic)) {
 
 
 switch ($oper) {
+case 'GET_ENDPOINT':
+    if ($inst_id) {
+        // find by instance ID
+        if ($inst_id && ($inst = Instances::find(getDbConn(), [ 'inst_id' => $inst_id ]))) {
+            $result->endpoint = "https://{$inst->worker_frontend}/wsvc/".basename(__FILE__);
+            $result->success = true;
+            break;
+        }
+    }
+    if ($usu_email) {
+        // find by email
+        $usuinst = UsersInstances::find(getDbConn(), [ 'usu_email' => $usu_email ]);
+        if ($usuinst) {
+            $inst = Instances::find(getDbConn(), [ 'inst_seq' => $usuinst->inst_seq, 'inst_active' => null ]);
+            if ($inst->valid) {
+                $result->endpoint = "https://{$inst->worker_frontend}/wsvc/".basename(__FILE__);
+                $result->success = true;
+                break;
+            }
+        }
+    }
+    $result->message = 'Neither the instance or the email exists in the database.';
+    break;
 case 'NEWLICENSE':
     if (empty($inst_caps) || empty($lic_period) || (!$inst_lic && !$usu_email)) {
         $result->message = 'Missing license, email, caps or period';
