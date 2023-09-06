@@ -1,6 +1,15 @@
 <?php
 
 class Instances extends SqlToClass {
+    var $error;
+    var $inst_seq;
+    var $inst_id;
+    var $inst_active;
+    var $inst_type;
+    var $inst_version;
+    var $inst_name;
+    var $inst_created;
+
     public function __construct() {
         $this->addTable('instances');
         $this->addTable('workers', 'worker_seq');
