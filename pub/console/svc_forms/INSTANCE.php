@@ -2,8 +2,8 @@
 
 class ServicePanel extends ServicePanelBase {
 	var $inst_params = array('worker_seq', 'inst_active', 'inst_version', 'inst_type', 'inst_license', 'inst_lang', 'inst_name',
-		'inst_cnpj', 'inst_nusers', 'inst_num_of_passwd_to_store', 'inst_max_pwd_age');
-	var $inst_stat	 = array('inst_id', 'inst_created', 'inst_adm_port');
+		'inst_cnpj', 'inst_nusers', 'inst_num_of_passwd_to_store', 'inst_max_pwd_age', 'inst_expiration');
+	var $inst_stat	 = array('inst_id', 'inst_created', 'inst_adm_port', 'inst_expiration');
 
 	var $lang = array('br' => 'Português', 'us' => 'Inglês');
 	var $title;
@@ -78,7 +78,12 @@ class ServicePanel extends ServicePanelBase {
 		$this->params['inst_lang'] = $instance->inst_lang;
 		$this->params['inst_num_of_passwd_to_store']	= $instance->inst_num_of_passwd_to_store;
 		$this->params['inst_max_pwd_age']	= $instance->inst_max_pwd_age;
-		$this->params['inst_name'] = $instance->inst_name;
+		$this->params['inst_name'] = $instance->inst_name;		
+		$arr = explode('/', $instance->inst_expiration);
+		if (count($arr) == 3)
+			$this->params['inst_expiration'] = "{$arr[2]}-{$arr[1]}-{$arr[0]}";
+		else
+			$this->params['inst_expiration'] = null;
 		@$this->params['inst_cnpj'] = $instance->inst_cnpj;
 	}
 		
@@ -96,6 +101,7 @@ class ServicePanel extends ServicePanelBase {
 		$instance->inst_cnpj = $this->params['inst_cnpj'];
 		$instance->inst_num_of_passwd_to_store = $this->params['inst_num_of_passwd_to_store']; 
 		$instance->inst_max_pwd_age = $this->params['inst_max_pwd_age'];
+		$instance->inst_expiration = $this->params['inst_expiration'];
 
 		if ($this->show_nusers)
 			$instance->inst_nusers = $this->params['inst_nusers'];
@@ -195,6 +201,8 @@ class ServicePanel extends ServicePanelBase {
 		$config->addControl(new SelectControl("worker_seq", 'Worker:', $this->session->workers));
 		$config->addControl(new SelectControl('inst_version', 'Versão do backend:', $versions /*, "size=\"40\"" */));
 		$config->addControl(new EditControl('inst_type', 'Tipo ou Capabilites:', "size=\"40\""));
+		$config->addControl(new RawControl('inst_expiration2', 'Expiração: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.
+			"<input type=\"date\" name=\"inst_expiration\" value=\"{$this->form->data->inst_expiration}\"></input>"));
 		$config->addControl(new EditControl('inst_license', 'Licença:', "size=\"40\""));
 		if ($this->show_nusers)
 			$config->addControl(new EditControl('inst_nusers', 'Número de usuários:', "size=\"10\""));
@@ -336,6 +344,7 @@ class ServicePanel extends ServicePanelBase {
 			$must_check_users = false;
 
 		$this->copyParamsTo($this->inst_params);
+
         if (empty($this->params['inst_license']))
             $this->params['inst_license'] = $GLOBALS['default_license'];
 

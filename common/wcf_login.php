@@ -40,7 +40,7 @@ function wcf_login($username, $password, $filter = [])
 		$ret['privs']	= $usu_inst->usuinst_privs;
 
 		// Retrieve instance info if necessary
-		$ret['instance'] = $instance_classname::find(getDbConn(), [ 'inst_seq' => $usu_inst->inst_seq ]);
+		$ret['instance'] = $instance_classname::find(getDbConn(), [ 'inst_seq' => $usu_inst->inst_seq, 'inst_active' => null ]);
 		if (!$ret['instance']->valid)
 			$ret['result'] = 'LOGIN_ERROR';
 		else {
