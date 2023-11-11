@@ -98,6 +98,7 @@ class ServiceForm extends MvcForm {
 }
 
 $db_conn = getDbConn();
+Sql::$date_format = 'iso';
 
 $form = new ServiceForm;
 $form->handle($_REQUEST);

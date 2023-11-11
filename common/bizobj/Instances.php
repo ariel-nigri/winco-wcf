@@ -9,6 +9,8 @@ class Instances extends SqlToClass {
     var $inst_version;
     var $inst_name;
     var $inst_created;
+    var $inst_num_of_passwd_to_store;
+    var $inst_max_pwd_age;
 
     public function __construct() {
         $this->addTable('instances');
@@ -31,7 +33,7 @@ class Instances extends SqlToClass {
 		$this->inst_active = true;
     }
     
-    function beforeSave($create) {
+    protected function beforeSave($create, $sql) {
         if ($create) {
             if (empty($this->inst_id))
                 $this->inst_id = substr(sprintf("%08X%08X", rand(), rand()), 1, 14);
@@ -43,7 +45,7 @@ class Instances extends SqlToClass {
         }
         return true;
     }
-    function afterSave($create, $sql) {
+    protected function afterSave($create, $sql) {
         if ($create) {
             $classname = get_class($this);
             $inst = new $classname;

@@ -3,7 +3,7 @@
 class ServicePanel extends ServicePanelBase {
 	var $inst_params = array('worker_seq', 'inst_active', 'inst_version', 'inst_type', 'inst_license', 'inst_lang', 'inst_name',
 		'inst_cnpj', 'inst_nusers', 'inst_num_of_passwd_to_store', 'inst_max_pwd_age', 'inst_expiration');
-	var $inst_stat	 = array('inst_id', 'inst_created', 'inst_adm_port', 'inst_expiration');
+	var $inst_stat	 = array('inst_id', 'inst_created', 'inst_adm_port');
 
 	var $lang = array('br' => 'Português', 'us' => 'Inglês');
 	var $title;
@@ -78,12 +78,8 @@ class ServicePanel extends ServicePanelBase {
 		$this->params['inst_lang'] = $instance->inst_lang;
 		$this->params['inst_num_of_passwd_to_store']	= $instance->inst_num_of_passwd_to_store;
 		$this->params['inst_max_pwd_age']	= $instance->inst_max_pwd_age;
-		$this->params['inst_name'] = $instance->inst_name;		
-		$arr = explode('/', $instance->inst_expiration);
-		if (count($arr) == 3)
-			$this->params['inst_expiration'] = "{$arr[2]}-{$arr[1]}-{$arr[0]}";
-		else
-			$this->params['inst_expiration'] = null;
+		$this->params['inst_name'] = $instance->inst_name;
+		$this->params['inst_expiration'] = $instance->inst_expiration;
 		@$this->params['inst_cnpj'] = $instance->inst_cnpj;
 	}
 		

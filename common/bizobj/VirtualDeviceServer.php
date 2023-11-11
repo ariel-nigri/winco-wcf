@@ -67,7 +67,7 @@ class VirtualDeviceServer extends SqlToClass {
         proc_close($pipes['proc']);
     }
 
-    function afterFetch(/* $sql */) {
+    protected function afterFetch($sql) {
         if (!empty($this->vds_tunnel))
             list($this->vds_host, $this->vds_port) = explode(":", $this->vds_tunnel);
 

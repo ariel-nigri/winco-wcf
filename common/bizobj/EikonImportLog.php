@@ -20,7 +20,7 @@ class EikonImportLog extends ImportLog {
 		return parent::insert($sql);
 	}
 
-	public function afterFetch($sql) {
+	protected function afterFetch($sql) {
 
 		$dt = new DateTime($this->implog_import_date);
 		$this->implog_import_date = $dt->format('U');
