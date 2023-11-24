@@ -73,7 +73,7 @@ require "{$common_dir}/wcf.php";
 require "{$common_dir}/wcf_config.php";
 
 // Read params from request
-$params = ['oper', 'inst_lic', 'inst_caps', 'inst_name', 'usu_email', 'usu_name', 'lic_period', 'password'];
+$params = ['oper', 'inst_lic', 'inst_caps', 'inst_name', 'usu_email', 'usu_name', 'lic_period', 'password', 'usu_lang'];
 foreach ($params as $p)
     ${$p} = @$_REQUEST[$p];
 
@@ -128,9 +128,13 @@ case 'NEWLICENSE':
     }
     $inst_expiration = date('Ymd', time() + round($lic_period * 86400));
 
+    // check for the language
+    if (empty($usu_lang))
+        $usu_lang = 'br';
+
     // check if the email has instances registerred
     if (!wcf_list_info($usu_email, $info, $error))
-        $result->success = wcf_create_or_update($inst_id, $inst_caps, $inst_name, 'br', $usu_email, $usu_name, $inst_expiration, $result->message);
+        $result->success = wcf_create_or_update($inst_id, $inst_caps, $inst_name, $usu_lang, $usu_email, $usu_name, $inst_expiration, $result->message);
     else {
         // update the instance only if the capabilities define it as trial.
         $inst_id = $info['instances'][0]['inst_id'];

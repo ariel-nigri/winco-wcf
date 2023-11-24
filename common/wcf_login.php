@@ -41,6 +41,9 @@ function wcf_login($username, $password, $filter = [])
 
 		// Retrieve instance info if necessary
 		$ret['instance'] = $instance_classname::find(getDbConn(), [ 'inst_seq' => $usu_inst->inst_seq, 'inst_active' => null ]);
+		// HACK HACK. some frontends check expiration and some check expiration in iso format, so we must define both for a while.
+		// after we switch all frontends and backends to dates in ISO, we can change this
+		$ret['instance']->inst_expiration_iso = trim(getDbConn()->formatdate2($ret['instance']->inst_expiration), "'");
 		if (!$ret['instance']->valid)
 			$ret['result'] = 'LOGIN_ERROR';
 		else {
