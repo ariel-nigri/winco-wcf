@@ -91,6 +91,11 @@ function wcf_login_support($username, $password, $inst_seq, $privs = 'A')
 		else
 			aux_checkCredentials($usr, $password, $ret);
 	}
+	// HACK HACK. some frontends check expiration and some check expiration in iso format, so we must define both for a while.
+	// after we switch all frontends and backends to dates in ISO, we can change this
+	if ($ret['instance'])
+		$ret['instance']->inst_expiration_iso = trim(getDbConn()->formatdate2($ret['instance']->inst_expiration), "'");
+
 	return $ret;
 }
 
