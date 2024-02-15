@@ -101,7 +101,8 @@ switch ($oper) {
 case 'GET_ENDPOINT':
     if ($inst_id) {
         // find by instance ID
-        if ($inst_id && ($inst = Instances::find(getDbConn(), [ 'inst_id' => $inst_id ]))) {
+        $inst = Instances::find(getDbConn(), [ 'inst_id' => $inst_id, 'inst_active' => null ]);
+        if ($inst->valid) {
             $result->endpoint = "https://{$inst->worker_frontend}/wsvc/".basename(__FILE__);
             $result->success = true;
             break;

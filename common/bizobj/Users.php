@@ -90,7 +90,7 @@ class Users extends SqlToClass {
         $digest_pass = md5($usr_passwd_salt.$pass);
         // Check password policy
         if (!empty($users_pwd_complexity_regex) && !preg_match($users_pwd_complexity_regex, $pass)) {
-            $this->error = 'Senha inválida. A senha deve ter pelo menos 6 caracteres, sendo pelo menos uma letra maiúscula, uma letra minúscula e um número';
+            $this->error = 'Senha inválida. A senha deve ter pelo menos 8 caracteres, sendo pelo menos uma letra maiúscula, uma letra minúscula e um número';
             return false;
         }
 
