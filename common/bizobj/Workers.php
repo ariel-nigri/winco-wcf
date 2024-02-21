@@ -1,6 +1,9 @@
 <?php
 
 class Workers extends SqlToClass {
+    var $worker_active;
+    var $worker_seq;
+
     public function __construct() {
         $this->addTable('workers');
         $this->addColumn('workers.worker_seq', 'worker_seq', BZC_INTEGER | BZC_TABLEKEY);

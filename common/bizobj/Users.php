@@ -22,6 +22,7 @@ class Users extends SqlToClass {
     var $usu_num_of_passwd_to_store;
     var $usu_caps;
     var $usu_status;
+    var $usu_lang;
 
     private     $pwd_changed;
     protected   $usu_pwd_history;
