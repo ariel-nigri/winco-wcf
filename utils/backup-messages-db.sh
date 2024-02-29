@@ -33,6 +33,6 @@ cd /home/instances
 
 for i in *; do
 	if [ -d $i/var/winco/dat ]; then
-		/opt/winco/cloud_framework-php7/util/backup-instance -v -d -m $i
+		/opt/winco/cloud_framework-php7/utils/backup-instance -v -d -m $i
 	fi
 done
