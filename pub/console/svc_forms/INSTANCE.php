@@ -43,7 +43,7 @@ class ServicePanel extends ServicePanelBase {
 			$this->params['inst_lang'] 		= 'br';
 			$this->params['inst_active'] 	= true;
 			$this->params['inst_name'] 		= '';
-			$this->params['inst_license'] 	= '';
+			$this->params['inst_license'] 	= $GLOBALS['default_license'];
 			$this->params['inst_type'] 		= '';
 			$this->params['inst_cnpj']		= '';
 			$this->params['inst_nusers']	= 5;
