@@ -9,6 +9,7 @@
  */
 class UsersInstances extends SqlToClass {
     var $usuinst_privs;
+    var $usuinst_seq;
 
     protected $usu_passwd_digest;
 

@@ -70,7 +70,7 @@ class VirtualDevice extends SqlToClass {
         $this->addColumn('virt_device_server.vds_maxdevs', 'vds_maxdevs', BZC_INTEGER | BZC_READONLY);
     }
 
-    public function beforeSave($create, $sql) {
+    protected  function beforeSave($create, $sql) {
         // Make sure vd_number is all numeric.
         if (!empty($this->vd_number)) {
             $c = strlen($this->vd_number);

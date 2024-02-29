@@ -114,6 +114,7 @@ function wcf_extend_license($inst_id, $inst_expiration, &$error)
         return false;
     }
     $instance->inst_expiration = $inst_expiration;
+    $instance->inst_active = true;
     if (!$instance->update($db)) {
         $error = 'Cannot update Instance: '.$instance->error;
         return false;
@@ -186,6 +187,7 @@ function wcf_list_info($usu_email, &$info, &$error)
     
     $instances = new $instance_classname;
     $instances->inst_seq = SqlExpr("IN", "(".implode(',', array_keys($perms)).")");
+    $instances->inst_active = null;
     if (!$instances->select($db)) {
         $error = "Cannot retrieve instance information. Please contact support";
         return false;

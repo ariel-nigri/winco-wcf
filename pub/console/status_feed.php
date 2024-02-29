@@ -72,9 +72,13 @@ function get_inst_status(&$inst_status) {
 
 	$inst_status = $procs = array();
 
-	exec("ps aux | grep {$binname} | grep -v grep | awk '{ print \$15\" \"$2}'", $procs);
-	foreach ($procs as $proc)
-		$inst_status[strtok($proc, ' ')]['status'] = "PID ".strtok('');
+	exec("ps aux | grep {$binname} | grep -v grep | awk '{ print \$13\" \"\$2}'", $procs);
+	foreach ($procs as $proc) {
+		$dir=strtok($proc, ' ');
+		$pid=strtok(" \n");
+		$arr=explode('/', $dir);
+		$inst_status[$arr[3]]['status'] = "PID {$pid}";
+	}	
 }
 
 $response = array();

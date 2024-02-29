@@ -63,7 +63,7 @@ class AuthEvents extends SqlToClass {
 		return $count;
 	}
 
-	protected function beforeSave($insert) {
+	protected function beforeSave($insert, $sql) {
 		if (!$insert) {
 			$this->error = 'Não é permitido alterar eventos de autenticação';
 			return false;

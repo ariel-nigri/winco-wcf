@@ -1,6 +1,17 @@
 <?php
 
 class Instances extends SqlToClass {
+    var $error;
+    var $inst_seq;
+    var $inst_id;
+    var $inst_active;
+    var $inst_type;
+    var $inst_version;
+    var $inst_name;
+    var $inst_created;
+    var $inst_num_of_passwd_to_store;
+    var $inst_max_pwd_age;
+
     public function __construct() {
         $this->addTable('instances');
         $this->addTable('workers', 'worker_seq');
@@ -22,7 +33,7 @@ class Instances extends SqlToClass {
 		$this->inst_active = true;
     }
     
-    function beforeSave($create) {
+    protected function beforeSave($create, $sql) {
         if ($create) {
             if (empty($this->inst_id))
                 $this->inst_id = substr(sprintf("%08X%08X", rand(), rand()), 1, 14);
@@ -34,7 +45,7 @@ class Instances extends SqlToClass {
         }
         return true;
     }
-    function afterSave($create, $sql) {
+    protected function afterSave($create, $sql) {
         if ($create) {
             $classname = get_class($this);
             $inst = new $classname;
@@ -77,7 +88,8 @@ class Instances extends SqlToClass {
         $redir = ($cmd == 'start' ? '> /dev/null' : '' );
         $utils = dirname(dirname(__DIR__)).'/utils';
         $output = [];
-        exec("sudo product_code={$product_code} ${utils}/inst-ctl {$cmd} {$this->inst_seq} {$redir} 2>&1 < /dev/null", $output);
+        //exec("sudo product_code={$product_code} ${utils}/inst-ctl {$cmd} {$this->inst_seq} {$redir} 2>&1 < /dev/null", $output);
+        exec("sudo /bin/systemctl $cmd wcf@{$this->inst_seq}", $output);
         return $output;
     }
 

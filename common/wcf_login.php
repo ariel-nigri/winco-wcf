@@ -40,13 +40,22 @@ function wcf_login($username, $password, $filter = [])
 		$ret['privs']	= $usu_inst->usuinst_privs;
 
 		// Retrieve instance info if necessary
-		$ret['instance'] = $instance_classname::find(getDbConn(), [ 'inst_seq' => $usu_inst->inst_seq ]);
+		$ret['instance'] = $instance_classname::find(getDbConn(), [ 'inst_seq' => $usu_inst->inst_seq, 'inst_active' => null ]);
+		// HACK HACK. some frontends check expiration and some check expiration in iso format, so we must define both for a while.
+		// after we switch all frontends and backends to dates in ISO, we can change this
+		$ret['instance']->inst_expiration_iso = trim(getDbConn()->formatdate2($ret['instance']->inst_expiration), "'");
 		if (!$ret['instance']->valid)
 			$ret['result'] = 'LOGIN_ERROR';
 		else {
-			if (!empty($filter['inst_version']) && $filter['inst_version'] != $ret['instance']->inst_version)
-				$ret['result'] = 'FILTER_FAILED';
-			else
+			if (!empty($filter)) {
+				foreach ($filter as $k => $val) {
+					if ($ret['instance']->{$k} != $val) {
+						$ret['result'] = 'FILTER_FAILED';
+						break;
+					}
+				}
+			}
+			if ($ret['result'] != 'FILTER_FAILED')
 				aux_checkCredentials($usu_inst, $password, $ret);
 		}
 	}
@@ -82,6 +91,11 @@ function wcf_login_support($username, $password, $inst_seq, $privs = 'A')
 		else
 			aux_checkCredentials($usr, $password, $ret);
 	}
+	// HACK HACK. some frontends check expiration and some check expiration in iso format, so we must define both for a while.
+	// after we switch all frontends and backends to dates in ISO, we can change this
+	if ($ret['instance'])
+		$ret['instance']->inst_expiration_iso = trim(getDbConn()->formatdate2($ret['instance']->inst_expiration), "'");
+
 	return $ret;
 }
 

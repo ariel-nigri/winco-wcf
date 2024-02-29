@@ -1,0 +1,14 @@
+#
+# The purpose of this file is to start a main console for our app at the screen of tty1
+#
+[Unit]
+Description=Winco Cloud Framework wrapper for instance %I
+After=rc-local.service
+
+[Service]
+Type=forking
+ExecStart=/opt/winco/cloud_framework-vpnd/utils/inst-ctl start %I
+ExecStop=/opt/winco/cloud_framework-vpnd/utils/inst-ctl stop %I
+
+[Install]
+WantedBy=multi-user.target
