@@ -1,3 +1,3 @@
 [submodule "common/mvc3"]
 	path = common/mvc3
-	url = https://git.winco.com.br/winco-mvc
+	url = git:/home/git-devel/winco-mvc
