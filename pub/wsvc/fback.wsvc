@@ -16,7 +16,7 @@ if (!empty($_FILES)) {
 	// create the email message.
 	$msg = new Rfc822Message;
 	$msg->setFrom('no-reply@winco.com.br', 'WTM Agent');
-	$msg->setRecipient('to', '"Suporte Winco" <nigri@winco.com.br>');
+	$msg->setRecipient('to', '"Suporte Winco" <suporte@winco.com.br>');
 	$msg->setEncodedHeader('Subject', 'Informação de Logs e Debug');
 	$msg->setBody('plain', $text);
 	$msg->attachments[] = array('name' => $_FILES['file']['name'], 'type' => 'text/plain', 'filename' => $_FILES['file']['tmp_name']);
