@@ -27,7 +27,7 @@ class PHPGangsta_GoogleAuthenticator
 
         $secret = '';
         for ($i = 0; $i < $secretLength; $i++) {
-            $secret .= $validChars[array_rand($validChars)];
+            $secret .= $validChars[random_int(0,31)];
         }
         return $secret;
     }
@@ -75,7 +75,7 @@ class PHPGangsta_GoogleAuthenticator
      */
     public function getQRCodeGoogleUrl($name, $secret) {
         $urlencoded = urlencode('otpauth://totp/'.$name.'?secret='.$secret.'');
-        return 'https://chart.googleapis.com/chart?chs=200x200&chld=M|0&cht=qr&chl='.$urlencoded.'';
+        return 'https://quickchart.io/chart?chs=200x200&chld=M|0&cht=qr&chl='.$urlencoded.'';
     }
 
     /**

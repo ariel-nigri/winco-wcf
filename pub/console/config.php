@@ -31,6 +31,10 @@ if (empty($open_page)) {
 	}
 }
 
+// Appliction logging. Apache will log this header's value to the apache log.
+if (!empty($_SESSION['LOGGED_USER']['usu_email']))
+	header('X-Logged-User: '.$_SESSION['LOGGED_USER']['usu_email']);
+
 // Language settings
 if (empty($_SESSION['LANGUAGE'])) {
 	if (defined("CFM_DEFAULT_LANGUAGE"))

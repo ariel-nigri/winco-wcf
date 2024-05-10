@@ -52,6 +52,7 @@ class ServicePanel extends ServicePanelBase {
 			$this->params['inst_version'] 	= file_get_contents("{__DIR__}/../../../config/current_version_{$product_code}.cfg");
 		}
 		$this->copyParamsFrom($this->inst_params);
+		$this->form->data->new_privs = 'A';
 	}	
 		
 	function readParamsFromServer() {
@@ -260,6 +261,7 @@ class ServicePanel extends ServicePanelBase {
             $abaAdmins->addControl($admins);
 
             $abaAdmins->addControl(new EditControl("new_admin", "Novo admin (e-mail)"), CTLPOS_NOBREAK);
+			$abaAdmins->addControl(new EditControl("new_privs", "Permissões"), CTLPOS_NOBREAK);
             $abaAdmins->addControl(new ButtonControl("add_admin", "Adicionar"));
         }
 		$this->form->addControl($abas);
@@ -278,7 +280,7 @@ class ServicePanel extends ServicePanelBase {
 			$usuinst = new UsersInstances;
 			$usuinst->inst_seq = $this->params['inst_seq'];
 			$usuinst->usu_seq = $usu->usu_seq;
-			$usuinst->usuinst_privs = 'A';
+			$usuinst->usuinst_privs = $this->form->data->new_privs;
 			if (!$usuinst->insert($db_conn)) {
 				$this->form->setError($usuinst->error);
 				return;

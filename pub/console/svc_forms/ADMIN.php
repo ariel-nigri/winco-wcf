@@ -120,7 +120,7 @@ class ServicePanel extends ServicePanelBase {
 		global $product_name;
 		$secret = "";
 		$qr_code_url = "";
-		genGoogleAuthenticatorSecretAndUrl($product_name, $secret, $qr_code_url);
+		genGoogleAuthenticatorSecretAndUrl("{$product_name}: {$this->form->data->usu_email}", $secret, $qr_code_url);
 		$_SESSION['temp_usu_twofact_token'] = $secret;
 		echo "
 		<div style=\"
