@@ -13,10 +13,8 @@ class ServicePanelBase {
 	}
 	
 	function copyParamsFrom($params) {
-		foreach($params as $param) {
-			if (isset($this->params[$param]))
-				$this->form->data->{$param} = $this->params[$param];
-		}
+		foreach($params as $param)
+			$this->form->data->{$param} = @$this->params[$param];
 	}
 	
 	function copyParamsTo($params) {
