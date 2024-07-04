@@ -287,6 +287,18 @@ switch ($_REQUEST['service']) {
 			{ label:'Max. devices', width: 100 }],
 				defcols: [0, 1, 2, 3, 4], actions: {$vds_ops}, register: $vds_actions, ";
 		break;
+	case 'USAGE':
+		// list network usage by vpn instances
+		$response = [];
+		$usage = json_decode(file_get_contents('/var/vpnd/current_usage.json'), true);
+		foreach ($usage as $inst => $data)
+			$response[] = [ "{$inst}", "{$data['local1'][0]}" ];
+
+		$list_format = 	"title:'Uso da internet', label: 'Uso da internet', format: [
+			{ label:'ID', width: 40, id: true },
+			{ label:'UsoVirtual Device', width: 250, type: 'quantity' }],
+				defcols: [0, 1], actions: [], register: [], ";
+		break;
 }
 
 echo "({",$list_format,"data: \r\n", json_encode($response),"})";

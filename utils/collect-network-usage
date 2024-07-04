@@ -1,0 +1,20 @@
+#!/bin/bash
+
+export IFACE_LIST="local1 winco0 tun0"
+
+dump_statistics() {
+	netns=$1
+	ip netns exec vpnd-${netns} bash <<-EOF
+		for iface in ${IFACE_LIST}; do
+			[ ! -d /sys/class/net/\${iface} ] && continue
+			read tx < /sys/class/net/\${iface}/statistics/tx_bytes
+			read rx < /sys/class/net/\${iface}/statistics/rx_bytes
+			echo ${netns}:\${iface}:\${tx}:\${rx}
+		done
+	EOF
+}
+
+inst_list=$(ip netns list | cut -c6-10)
+for inst in $inst_list; do
+	dump_statistics $inst
+done

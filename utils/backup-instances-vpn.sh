@@ -17,11 +17,12 @@ EOF
 fi
 
 mydir=$(dirname $(realpath $0))
+cd $mydir
 
 . ../config/mirror_params.sh
 
 inst_list=$(./inst-query -q worker_frontend=$(hostname) inst_seq)
-
+inst_list="${inst_list} $(./inst-query -q worker_frontend=vpnd-02.winco.com.br inst_seq)"
 # What to backup
 CONFIG_DIRS="etc var/pki var/winco/regdb/ var/vars"
 
@@ -91,11 +92,12 @@ for inst in $inst_list; do
 	# first we manage the configurations
 	pushd /home/instances/${inst}
 
+	# Backup dir will be used a lot
+	backup_dir=var/winco/backup
+
 	if need_backup_config $CONFIG_DIRS; then
 		echo "Needs to backup instance $inst"
 
-		# Backup dir will be used a lot
-		backup_dir=var/winco/backup
 		mkdir -p ${backup_dir}
 
 		# we will mark one second behind to catch racing conditions (too much, but..)
@@ -109,18 +111,23 @@ for inst in $inst_list; do
 		# All went well. Rename the local file and touch the reference
 		# file with the start date of the backup
 		mv -f ${backup_dir}/${inst}-config-tmp.tgz ${backup_dir}/${new_config}.tgz
+		rm -f ${backup_dir}/backup_synced
 		echo $(date +%Y%m%d%H%M.%S -d @$timestamp) > ${backup_dir}/backup_reference 
 
-		# backup to s3 will also delete very old config files in the disk and in the AWS EC2 system
-		${mydir}/backup-config-to-s3 $inst
+		# there isn't a send queue and this is bad. the script above should keep track of what works and what doesnt
 
 		# Lastly we do the live backup of the current config
-		rsync -av --delete var etc --exclude 'var/winco/logs/20??/' ${mirror_worker}:/home/instances/${inst}/
+		rsync -a --delete var etc --exclude 'var/winco/logs/20??/' ${mirror_worker}:/home/instances/${inst}/
 	else
 		# No config changes, so sync only the logs and the ipp.txt file
 		echo "No changes in the config of instance $inst"
 		[ -f var/ipp.txt ] && ipp=var/ipp.txt || ipp=''
-		rsync -av --delete -R ${ipp} var/winco/logs --exclude 'var/winco/logs/20??/' ${mirror_worker}:/home/instances/${inst}/
+		rsync -a --delete -R ${ipp} var/winco/logs --exclude 'var/winco/logs/20??/' ${mirror_worker}:/home/instances/${inst}/
+	fi
+
+	# backup to s3 will also delete very old config files in the disk and in the AWS EC2 system
+	if [ ! -f ${backup_dir}/backup_synced ]; then
+		${mydir}/backup-config-to-s3 $inst && touch ${backup_dir}/backup_synced
 	fi
 
 	# Now we manage the log files, but only once a DAY
