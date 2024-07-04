@@ -41,7 +41,7 @@ function sync_files($client, $bucket, $rdir, $sdir, $glob)
 			echo 'Caught exception [', get_class($e), ']: ', $e->getMessage(), "\n";
 		exit(1);
 	}
-
+	echo "syncing {$sdir}/{$glob} to {$rdir}\n";
 	$files = glob("{$sdir}/{$glob}");
 	foreach ($files as $lfile) {
 		$rfile = "{$rdir}/".basename($lfile);

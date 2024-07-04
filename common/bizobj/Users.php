@@ -12,6 +12,12 @@
  * @property int $usu_max_pwd_age 
  */
 class Users extends SqlToClass {
+    const ST_INVITED        = 'I';
+    const ST_BLOCKED        = 'B';
+    const ST_EXPIRED_PASS   = 'X';
+    const ST_DECLINED       = 'D';
+    const ST_VALID          = '';
+
     var $usu_seq;
     var $usu_email;
     var $usu_name;
@@ -77,6 +83,13 @@ class Users extends SqlToClass {
         return $this->comparePassword($pass, $this->usu_passwd_digest);
     }
 
+    public function insert($db) {
+        if ($this->usu_passwd_digest == '')
+            // no password, then we must fill with something to be able to save. it can be any garbage, like an invalid sequence for hex data
+            $this->usu_passwd_digest = '--NOT_SET--';
+        return parent::insert($db);
+    }
+
     // This function has 2 call modes:
     // setPassword(pwd), and
     // setPassword(db, pwd)
@@ -134,11 +147,11 @@ class Users extends SqlToClass {
     public function isBlocked($db = null) {
         if (empty($this->usu_status))
             return false;
-        if (strchr($this->usu_status, 'B'))
+        if (strchr($this->usu_status, self::ST_BLOCKED))
             // explicitily blocked
             return true;
 
-        if (strchr($this->usu_status, 'X') && 
+        if (strchr($this->usu_status, self::ST_EXPIRED_PASS) && 
                 (time() - strtotime($this->usu_updated_passwd_at)) > (2 * 86400)) {
             // change password for over 48 hours.
             /*
@@ -152,30 +165,30 @@ class Users extends SqlToClass {
 
     public function block($db, $reason = '') {
         $shadow = $this->getShadow($db);
-        if (strchr($shadow->usu_status, 'B'))
+        if (strchr($shadow->usu_status, self::ST_BLOCKED))
             return true;
 
-        return $this->updateStatus($db, $shadow->usu_status . 'B', AuthEvents::BLOCK_LOGIN_EVENT, $reason);
+        return $this->updateStatus($db, $shadow->usu_status . self::ST_BLOCKED, AuthEvents::BLOCK_LOGIN_EVENT, $reason);
     }
 
     public function unblock($db, $reason = '') {
         if (empty($this->usu_status))
             return true;
-        $fields = strchr($this->usu_status, 'X') ? [ 'usu_updated_passwd_at' => date("Y-m-d H:i:s") ] : [];
-        return $this->updateStatus($db, str_replace('B', '', $this->usu_status), AuthEvents::USER_UNBLOCKED_EVENT, $reason, $fields);
+        $fields = strchr($this->usu_status, self::ST_EXPIRED_PASS) ? [ 'usu_updated_passwd_at' => date("Y-m-d H:i:s") ] : [];
+        return $this->updateStatus($db, str_replace(self::ST_BLOCKED, '', $this->usu_status), AuthEvents::USER_UNBLOCKED_EVENT, $reason, $fields);
     }
 
     public function expirePassword($db, $reason = '') {
         $shadow = $this->getShadow($db);
-        if (!strchr($shadow->usu_status, 'X'))
-            $this->usu_status .= 'X';
+        if (!strchr($shadow->usu_status, self::ST_EXPIRED_PASS))
+            $this->usu_status .= self::ST_EXPIRED_PASS;
 
         $fields = [ 'usu_updated_passwd_at' => date("Y-m-d H:i:s") ];
         return $this->updateStatus($db, $this->usu_status, AuthEvents::CHANGE_PASSWD_NEXT_LOGIN, $reason, $fields);
     }
 
     public function isExpired($db) {
-        return strchr($this->usu_status, 'X');        
+        return strchr($this->usu_status, self::ST_EXPIRED_PASS);        
     }
 
     protected function afterSave($insert, $sql) {

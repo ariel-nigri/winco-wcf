@@ -44,15 +44,15 @@ $vds_actions = "[
 ]";
 
 function list_workers($refresh) {
-	global $workername, $my_worker_hostname, $our_worker_seq, $filtersList, $string_workers;
+	global $workername, $my_worker_names, $our_worker_seqs, $filtersList, $string_workers;
 
 	$db_conn = getDbConn();
 	$workers = new Workers;
 	if ($workers->select($db_conn)) {			
 		while ($workers->fetch()) {
 			$workername[$workers->worker_seq] = $workers->worker_hostname;
-			if ($workers->worker_hostname == $my_worker_hostname)
-				$our_worker_seq = $workers->worker_seq;
+			if (in_array($workers->worker_hostname, $my_worker_names))
+				$our_worker_seqs[] = $workers->worker_seq;
 			$filtersList['worker'][] = $workers->worker_hostname;
 		}
 	} 
@@ -83,7 +83,7 @@ function get_inst_status(&$inst_status) {
 
 $response = array();
 $workername = array();
-$our_worker_seq = null;
+$our_worker_seqs = [];
 $filtersList['worker'] = array();
 $string_workers = array();
 
@@ -108,7 +108,7 @@ switch ($_REQUEST['service']) {
 									$instances->inst_license, $instances->inst_type, $instances->inst_version,
 									strtok($workername[$instances->worker_seq], '.'), $instances->inst_adm_port, $lang, $act,
 									!empty($inst_status[$instances->inst_seq]['status']) ? $inst_status[$instances->inst_seq]['status'] : 
-									( $instances->worker_seq == $our_worker_seq ? 'off' : '-'),
+									( in_array($instances->worker_seq, $our_worker_seqs) ? 'off' : '-'),
 									!empty($inst_status[$instances->inst_seq]['last_change']) ? $inst_status[$instances->inst_seq]['last_change'] : 'unknown');
 			}
 		}
@@ -286,6 +286,18 @@ switch ($_REQUEST['service']) {
 			{ label:'Status', width: 100 },
 			{ label:'Max. devices', width: 100 }],
 				defcols: [0, 1, 2, 3, 4], actions: {$vds_ops}, register: $vds_actions, ";
+		break;
+	case 'USAGE':
+		// list network usage by vpn instances
+		$response = [];
+		$usage = json_decode(file_get_contents('/var/vpnd/current_usage.json'), true);
+		foreach ($usage as $inst => $data)
+			$response[] = [ "{$inst}", "{$data['local1'][0]}" ];
+
+		$list_format = 	"title:'Uso da internet', label: 'Uso da internet', format: [
+			{ label:'ID', width: 40, id: true },
+			{ label:'UsoVirtual Device', width: 250, type: 'quantity' }],
+				defcols: [0, 1], actions: [], register: [], ";
 		break;
 }
 
