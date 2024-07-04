@@ -1,0 +1,12 @@
+#!/bin/env php
+<?php
+
+$current_usage = explode("\n", `collect-network-usage 2> /dev/null`);
+array_pop($current_usage);
+
+foreach ($current_usage as $usage) {
+	list($inst, $iface, $tx, $rx) = explode(':', $usage);
+	$usage_array[$inst][$iface] = [$tx, $rx];
+}
+
+file_put_contents("/var/vpnd/current_usage.json", json_encode($usage_array), LOCK_EX);

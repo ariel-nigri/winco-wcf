@@ -1,0 +1,126 @@
+#!/bin/env php
+<?php
+
+require dirname(__DIR__).'/common/wcf.php';
+
+$verbose = true;
+
+$inst_seq = @$argv[1];
+
+if (!is_numeric($inst_seq) || !is_dir("/home/instances/{$inst_seq}")) {
+	fputs(STDERR, "Invalid instance ID.\n\nusage: {$argv[0]} inst_id\n\n");
+	exit(1);
+}
+
+$client = getAwsS3Client();
+
+$backups_dir = "/home/instances/{$inst_seq}/var/winco/backup";
+
+// sync the log files into the bucket
+sync_files($client, $aws_instance_bucket, "{$inst_seq}/backup", $backups_dir, '*.tgz');
+
+// erase older log files (if there are more than 30 backup files)
+clean_older_files($client, $aws_instance_bucket, "{$inst_seq}/backup", $backups_dir, '*.tgz', 30);
+
+function sync_files($client, $bucket, $rdir, $sdir, $glob)
+{
+	global $verbose;
+
+	$rlist = [];
+	try {
+		$iterator = $client->getIterator('ListObjects', array(
+			'Bucket' => $bucket,
+			'Prefix' => "{$rdir}/"
+		));
+
+		foreach ($iterator as $file)
+			$rlist[$file['Key']] = $file['Size'];
+	}
+	catch (Exception $e) {
+		if ($verbose)
+			echo 'Caught exception [', get_class($e), ']: ', $e->getMessage(), "\n";
+		exit(1);
+	}
+	echo "syncing {$sdir}/{$glob} to {$rdir}\n";
+	$files = glob("{$sdir}/{$glob}");
+	foreach ($files as $lfile) {
+		$rfile = "{$rdir}/".basename($lfile);
+		$lsize = filesize($lfile);
+		if ($lsize == @$rlist[$rfile]) {
+			echo "File {$rfile} is already uploaded and with the same size\n";
+			continue;
+		}
+
+		echo "Will upload {$rfile}\n";
+		$nretries = 3;
+		$ok = false;
+		do {
+			try {
+				$client->putObject(array(
+						'Bucket'     => $bucket,
+						'Key'        => $rfile,
+						'SourceFile' => $lfile,
+						'Metadata'	 => array(
+							'originalmodificationdate' => filemtime($lfile)
+						)
+					)
+				);
+				$ok = true;
+				break;
+			}
+			catch (Exception $e) {
+				echo "Exception on upload of {$rfile}: " . $e->getMessage() . "..retrying..\n";
+			}
+		 } while (--$nretries > 0);
+		 if (!$ok) {
+			fputs(STDERR, "Too many retries: will stop.\n");
+			exit(1);
+		 }
+	}
+}
+
+function clean_older_files($client, $bucket, $rdir, $ldir, $glob, $max_files)
+{
+	global $verbose;
+
+	$lfiles = [];
+
+	$files = glob("{$ldir}/{$glob}");
+
+	foreach ($files as $lfile)
+		$lfiles["{$rdir}/".basename($lfile)] = [ filemtime($lfile), filesize($lfile) ];
+
+	if (count($lfiles) < $max_files) {
+		echo "Nothing to delete\n";
+		return;
+	}
+
+	uasort($files, function($a, $b) { return $a[0] - $b[0]; } );
+	while (count($files) > $max_files)
+		array_pop($files);
+
+	// before deleting we need to make sure the file is already uploaded.
+	$rlist = [];
+	try {
+		$iterator = $client->getIterator('ListObjects', array(
+			'Bucket' => $bucket,
+			'Prefix' => "{$rdir}/"
+		));
+
+		foreach ($iterator as $file)
+			$rlist[$file['Key']] = $file['Size'];
+	}
+	catch (Exception $e) {
+		if ($verbose)
+			echo 'Caught exception [', get_class($e), ']: ', $e->getMessage(), "\n";
+		exit(1);
+	}
+	foreach ($lfiles as $rfile => $lsize) {
+		if ($lsize == @$rlist[$rfile][1]) {
+			// file is uploaded and with correct size.
+			$lfile = $ldir."/".basename($rfile);
+			unlink($ldir."/".basename($rfile));
+			echo "Erasing {$lfile}\n";
+		}
+	}
+}
