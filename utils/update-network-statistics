@@ -1,12 +1,70 @@
 #!/bin/env php
 <?php
 
-$current_usage = explode("\n", `collect-network-usage 2> /dev/null`);
-array_pop($current_usage);
+// use the same time for all calculations
+$now = time();
 
-foreach ($current_usage as $usage) {
+// calculate all filenames
+$me = strtok(gethostname(), '.');
+$dailyname = "/var/vpnd/{$me}/usage-".date('Y-m-d/', $now). 'daily.json';
+$nowname   = "/var/vpnd/{$me}/usage-".date('Y-m-d/Y-m-d_Hi', $now) . ".json";
+$lastname  = "/var/vpnd/{$me}/usage-current.json";
+
+// create directory structure
+@mkdir(dirname($nowname), 0755, true);
+
+// get the current usage from the network
+$usage_data = explode("\n", `./collect-network-usage 2> /dev/null`);
+array_pop($usage_data);
+
+// reads the previous data from daily file and current to calculate the diff
+$previous = json_decode(@file_get_contents($lastname), true);
+if (!$previous)
+	$previous = [];
+
+$daily = json_decode(@file_get_contents($dailyname), true);
+if (!$daily)
+	$daily = [];
+	
+// parse the usage data into JSON structure
+// while parsing we also calculate the diff between the current and previous
+// and the daily aggregate (lots of meat here!)
+$current_usage = [];
+
+foreach ($usage_data as $usage) {
 	list($inst, $iface, $tx, $rx) = explode(':', $usage);
-	$usage_array[$inst][$iface] = [$tx, $rx];
+	
+	$tx = intval($tx);
+	$rx = intval($rx);
+	$diff0 = $diff1 = 0;
+
+	if (isset($previous[$inst][$iface])) {
+		$diff0 = $tx - $previous[$inst][$iface][0];
+		$diff1 = $rx - $previous[$inst][$iface][1];
+		if ($diff0 < 0 || $diff1 < 0) {
+			$diff0 = $tx;
+			$diff1 = $rx;
+		}
+
+		// add to the daily.
+		if (isset($daily[$inst][$iface])) {
+			$daily[$inst][$iface][0] += $diff0;
+			$daily[$inst][$iface][1] += $diff1;
+		}
+		else {
+			$daily[$inst][$iface] = [$diff0, $diff1];
+		}
+	}
+
+	$current_usage[$inst][$iface] = [$tx, $rx, $diff0, $diff1];
 }
 
-file_put_contents("/var/vpnd/current_usage.json", json_encode($usage_array), LOCK_EX);
+//
+// Save into our current usage file, and the daily aggregate. then changes the link
+// NOTICE, BUG! BUG!: if any of the operations bellow fails, all measures will be off
+//
+if (file_put_contents($dailyname, json_encode($daily)) && file_put_contents($nowname,   json_encode($current_usage))) {
+
+	// Change the link to the current usage file to point to 'ourselves'
+	exec("ln -sf {$nowname} {$lastname}");
+}
