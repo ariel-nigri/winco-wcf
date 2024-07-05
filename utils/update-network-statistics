@@ -1,6 +1,24 @@
 #!/bin/env php
 <?php
 
+if (@$argv[1] == '-v') {
+	$verbose = true;
+	array_shift($argv);
+}
+else {
+	$verbose = false;
+}
+
+if (@$argv[1] != "run") {
+	echo "usage: {$argv[0]} [-v] run\n";
+	echo "\n\tThis script will collect network usage data from all VPND instances and save the results.\n";
+	echo "\tinto the /var/vpnd directory. It also calculates the daily usage and the diff between the\n";
+	echo "\tcurrent and previous usage.\n\n";
+	exit(1);
+}
+// must run in the local directory.
+chdir(__DIR__);
+
 // use the same time for all calculations
 $now = time();
 
@@ -14,7 +32,9 @@ $lastname  = "/var/vpnd/{$me}/usage-current.json";
 @mkdir(dirname($nowname), 0755, true);
 
 // get the current usage from the network
-$usage_data = explode("\n", `./collect-network-usage 2> /dev/null`);
+$usage_data = explode("\n", `./collect-network-usage 2> /tmp/collect-network-usage.err`);
+if ($verbose)
+	print_r($usage_data);
 array_pop($usage_data);
 
 // reads the previous data from daily file and current to calculate the diff
@@ -33,7 +53,7 @@ $current_usage = [];
 
 foreach ($usage_data as $usage) {
 	list($inst, $iface, $tx, $rx) = explode(':', $usage);
-	
+
 	$tx = intval($tx);
 	$rx = intval($rx);
 	$diff0 = $diff1 = 0;
