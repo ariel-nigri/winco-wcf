@@ -3,7 +3,7 @@
 // Create or update an admin and then, ALWAYS create a new Instance.
 function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $user_email, $user_name, $inst_expiration, &$error, $pwd = null)
 {
-    global $instance_classname, $product_code, $default_license, $my_worker_hostname;
+    global $instance_classname, $product_code, $default_license;
 
     $dbconn = getDbConn();
 
@@ -32,13 +32,13 @@ function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $us
                 }
             }
             // get our own worker_seq;
-            $worker = Workers::find($dbconn, ['worker_frontend' => $my_worker_hostname, 'worker_active' => true]);
+            $worker = Workers::find($dbconn, ['worker_frontend' => gethostname(), 'worker_active' => true]);
             if (!$worker->valid) {
                 $error = 'Cannot find worker or it is not active';
                 break;
             }
 
-            // Find instances for thet user or create a new one. If there is an instance that is not trial, then there is something wrong.
+            // Find instances for that user or create a new one. If there is an instance that is not trial, then there is something wrong.
             $instance = new $instance_classname;
             $instance->inst_name = $inst_name;
             $instance->inst_lang = $inst_lang;
