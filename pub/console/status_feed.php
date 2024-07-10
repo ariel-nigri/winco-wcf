@@ -289,15 +289,15 @@ switch ($_REQUEST['service']) {
 		break;
 	case 'USAGE':
 		// list network usage by vpn instances
-		$response = [];
-		$usage = json_decode(file_get_contents('/var/vpnd/current_usage.json'), true);
-		foreach ($usage as $inst => $data)
-			$response[] = [ "{$inst}", "{$data['local1'][0]}" ];
-
+		require "usage_feed.php";
+		$response = generate_usage_feed();
 		$list_format = 	"title:'Uso da internet', label: 'Uso da internet', format: [
 			{ label:'ID', width: 40, id: true },
-			{ label:'UsoVirtual Device', width: 250, type: 'quantity' }],
-				defcols: [0, 1], actions: [], register: [], ";
+			{ label:'2 min', width: 150, type: 'quantity' },
+			{ label:'Dia', width: 150, type: 'quantity' },
+			{ label:'Mês', width: 150, type: 'quantity' },
+			{ label:'Desde o boot', width: 150, type: 'quantity' }],
+				defcols: [0, 1, 2, 3, 4], actions: [], register: [], ";
 		break;
 }
 
