@@ -44,15 +44,15 @@ $vds_actions = "[
 ]";
 
 function list_workers($refresh) {
-	global $workername, $my_worker_hostname, $our_worker_seq, $filtersList, $string_workers;
+	global $workername, $my_worker_names, $our_worker_seqs, $filtersList, $string_workers;
 
 	$db_conn = getDbConn();
 	$workers = new Workers;
 	if ($workers->select($db_conn)) {			
 		while ($workers->fetch()) {
 			$workername[$workers->worker_seq] = $workers->worker_hostname;
-			if ($workers->worker_hostname == $my_worker_hostname)
-				$our_worker_seq = $workers->worker_seq;
+			if (in_array($workers->worker_hostname, $my_worker_names))
+				$our_worker_seqs[] = $workers->worker_seq;
 			$filtersList['worker'][] = $workers->worker_hostname;
 		}
 	} 
@@ -83,7 +83,7 @@ function get_inst_status(&$inst_status) {
 
 $response = array();
 $workername = array();
-$our_worker_seq = null;
+$our_worker_seqs = [];
 $filtersList['worker'] = array();
 $string_workers = array();
 
@@ -108,7 +108,7 @@ switch ($_REQUEST['service']) {
 									$instances->inst_license, $instances->inst_type, $instances->inst_version,
 									strtok($workername[$instances->worker_seq], '.'), $instances->inst_adm_port, $lang, $act,
 									!empty($inst_status[$instances->inst_seq]['status']) ? $inst_status[$instances->inst_seq]['status'] : 
-									( $instances->worker_seq == $our_worker_seq ? 'off' : '-'),
+									( in_array($instances->worker_seq, $our_worker_seqs) ? 'off' : '-'),
 									!empty($inst_status[$instances->inst_seq]['last_change']) ? $inst_status[$instances->inst_seq]['last_change'] : 'unknown');
 			}
 		}
@@ -289,15 +289,15 @@ switch ($_REQUEST['service']) {
 		break;
 	case 'USAGE':
 		// list network usage by vpn instances
-		$response = [];
-		$usage = json_decode(file_get_contents('/var/vpnd/current_usage.json'), true);
-		foreach ($usage as $inst => $data)
-			$response[] = [ "{$inst}", "{$data['local1'][0]}" ];
-
+		require "usage_feed.php";
+		$response = generate_usage_feed();
 		$list_format = 	"title:'Uso da internet', label: 'Uso da internet', format: [
 			{ label:'ID', width: 40, id: true },
-			{ label:'UsoVirtual Device', width: 250, type: 'quantity' }],
-				defcols: [0, 1], actions: [], register: [], ";
+			{ label:'2 min', width: 150, type: 'quantity' },
+			{ label:'Dia', width: 150, type: 'quantity' },
+			{ label:'Mês', width: 150, type: 'quantity' },
+			{ label:'Desde o boot', width: 150, type: 'quantity' }],
+				defcols: [0, 1, 2, 3, 4], actions: [], register: [], ";
 		break;
 }
 

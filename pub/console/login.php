@@ -29,7 +29,7 @@ if (!empty($_POST)) {
 			if ($ret['pwd_status'] != 'OK')
 				$_SESSSION['LOGGED_USER']['notices'][] = $ret['pwd_status'];
 
-			header("Location: https://{$my_worker_hostname}".dirname($_SERVER['REQUEST_URI']).'/');
+			header("Location: https://".gethostname().dirname($_SERVER['REQUEST_URI']).'/');
 			break;
 		}
 		switch ($ret['result']) {

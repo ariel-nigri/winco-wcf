@@ -205,7 +205,7 @@ function wcf_dbcreate_instance($inst_caps, $inst_name, $inst_lang, $user_email, 
             }
         }
         // get our own worker_seq;
-        $worker = Workers::find($dbconn, ['worker_frontend' => $my_worker_hostname, 'worker_active' => true]);
+        $worker = Workers::find($dbconn, ['worker_frontend' => gethostname(), 'worker_active' => true]);
         if (!$worker->valid) {
             $error = 'Cannot find worker or it is not active';
             break;
