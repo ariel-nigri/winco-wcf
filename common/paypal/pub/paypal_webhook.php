@@ -1,6 +1,6 @@
 <?php
 
-require dirname(__DIR__).'/paypal_config.php';
+require dirname(dirname(__DIR__)).'/paypal/paypal_config.php';
 require dirname(dirname(__DIR__)).'/wcf_paypal.php';
 
 $wh  	= new PaypalWebhook;

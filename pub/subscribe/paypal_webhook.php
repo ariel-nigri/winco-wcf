@@ -1,1 +1,0 @@
-../../common/paypal/pub/paypal_webhook.php

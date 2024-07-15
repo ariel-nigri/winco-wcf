@@ -1,1 +1,0 @@
-../../common/paypal/pub/on_approve.php

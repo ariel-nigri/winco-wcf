@@ -1,0 +1,35 @@
+{
+    "transactions": [
+        {
+            "status": "COMPLETED",
+            "id": "72099748F6888181F",
+            "amount_with_breakdown": {
+                "gross_amount": {
+                    "currency_code": "USD",
+                    "value": "9.90"
+                },
+                "fee_amount": {
+                    "currency_code": "USD",
+                    "value": "0.69"
+                },
+                "net_amount": {
+                    "currency_code": "USD",
+                    "value": "9.21"
+                }
+            },
+            "payer_name": {
+                "given_name": "John",
+                "surname": "Doe"
+            },
+            "payer_email": "nigri-us@winco.com.br",
+            "time": "2024-04-18T18:39:27.000Z"
+        }
+    ],
+    "links": [
+        {
+            "href": "https:\/\/api-m.sandbox.paypal.com\/v1\/billing\/subscriptions\/I-6USSH0GVE0HE\/transactions?start_time=2024-03-01T00%3A00%3A00Z&end_time=2024-04-30T00%3A00%3A00Z",
+            "rel": "SELF",
+            "method": "GET"
+        }
+    ]
+}

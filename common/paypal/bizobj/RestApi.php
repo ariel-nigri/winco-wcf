@@ -63,31 +63,24 @@ class RestApi {
 	private function getAccessToken() {
 		/* this->auth = [ 'scope' , 'accesso_token', 'token_type', 'app_id', 'expires_in', 'nonce', 'timeout']; */
 		$now = time();
+		if (!$this->auth)
+			$this->auth = json_decode(@file_get_contents("/tmp/paypal-{$this->key}.json"));
+
 		if (!$this->auth || $this->auth->timeout < time()) {
 			// check the cache first
-			$sid = substr($this->key, 0, 16);
-			if (session_status() === PHP_SESSION_NONE) {
-				session_name('PHPCLISESSION');
-				session_id($sid);
-				session_start();
+			$c = curl_init("{$this->endpoint}/v1/oauth2/token");
+			curl_setopt($c, CURLOPT_POSTFIELDS, 'grant_type=client_credentials');
+			curl_setopt($c, CURLOPT_USERPWD, "{$this->key}:{$this->secret}");
+			curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+			$this->auth = json_decode(curl_exec($c));
+			if ($this->auth && $this->auth->access_token) {
+				$this->auth->timeout = $now + $this->auth->expires_in - 30;
+				file_put_contents("/tmp/paypal-{$this->key}.json", json_encode($this->auth));
 			}
-			$this->auth = @$_SESSION['wncpp_authtoken'];
-			if (!$this->auth || $this->auth->timeout < time()) {
-				$c = curl_init("{$this->endpoint}/v1/oauth2/token");
-				curl_setopt($c, CURLOPT_POSTFIELDS, 'grant_type=client_credentials');
-				curl_setopt($c, CURLOPT_USERPWD, "{$this->key}:{$this->secret}");
-				curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
-				$this->auth = json_decode(curl_exec($c));
-				if ($this->auth && $this->auth->access_token)
-					$this->auth->timeout = $now + $this->auth->expires_in - 30;
-				else {
-					$this->error = json_encode($this->auth);
-					$this->auth = null;
-				}
+			else {
+				$this->error = json_encode($this->auth);
+				$this->auth = null;
 			}
-			@$_SESSION['wncpp_authtoken'] = $this->auth;
-			if (session_id() == $sid)
-				session_write_close();
 		}
 		return $this->auth->access_token;
 	}

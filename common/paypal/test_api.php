@@ -1,7 +1,10 @@
 <?php
 
+set_include_path('bizobj');
+
 require "RestApi.php";
 require "PaypalWebhook.php";
+require "PaypalSubscription.php";
 require "/etc/winco/cloudvpn_paypal.php";
 
 $api = new RestApi(PAYPAL_API_ENDPOINT, PAYPAL_API_KEY, PAYPAL_API_SECRET);
@@ -22,11 +25,39 @@ if (in_array('webhook', $argv)) {
  * Subscription management
  */
 if (in_array('subscription', $argv)) {
-    $subscriptionID = 'I-6USSH0GVE0HE';
+    $subscriptionID = $argv[2];
+    $sbs = new PaypalSubscription($api);
+    if ($sbs->retrieve($subscriptionID))
+        print_r($sbs->data);
+    else
+        echo "Error: {$sbs->error}\n";
+    /*
     $resp = $api->call('GET', "/v1/billing/subscriptions/{$subscriptionID}");
-    var_dump($resp);
-    $resp = $api->call('GET', "/v1/billing/subscriptions/{$subscriptionID}/transactions", 
+    echo json_encode($resp, JSON_PRETTY_PRINT);// print_r($resp);
+    /*$resp = $api->call('GET', "/v1/billing/subscriptions/{$subscriptionID}/transactions", 
         [ 'start_time' => '2024-03-01T00:00:00Z', 'end_time' => '2024-04-30T00:00:00Z' ]);
+    echo json_encode($resp, JSON_PRETTY_PRINT);// print_r($resp);*/
+
+}
+/*
+ * Subscription management
+ */
+if (in_array('transactions', $argv)) {
+    $subscriptionID = $argv[2];
+
+    $sbs = new PaypalSubscription($api);
+    if ($sbs->list_transactions($subscriptionID))
+        print_r($sbs->data);
+    else
+        print_r($sbs->error);
+}
+/*
+ * Cancel subscription
+ */
+if (in_array('cancel', $argv)) {
+    $subscriptionID = $argv[2];
+    $sbs = new PaypalSubscription($api);
+    $resp = $sbs->cancel($subscriptionID, $argv[3]);
     print_r($resp);
 }
 
