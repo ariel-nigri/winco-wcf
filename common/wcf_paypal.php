@@ -25,10 +25,30 @@ function wcf_paypal_subscribe($subs, &$error)
 				// the instance was already created by another thread or process
 				return true;
 
-			$inst_new = true;
-			$vpnd = wcf_dbcreate_instance("USERS={$subs->quantity}", $name, 'us', $subs->subscriber->email_address, $name, $expiration, $error);
-			if (!$vpnd)
-				return false;
+			$vpnd = null;
+
+			// check if the email has instances registerred
+			$userinst = UsersInstances::find($dbconn, [ 'user_email' => $subs->subscriber->email_address ]);
+			if ($userinst && $userinst->valid) {
+				$tmp = VPND_Instances::find($dbconn, [ 'inst_id' => $userinst->inst_id, 'inst_active' => null]);
+
+				if ($tmp && $tmp->valid) {
+					if (strpos($tmp->inst_type, 'TRIAL=Y') === false) {
+						// if it is expired over 15 days, then we just reactivate it.
+						mail('ti@winco.com.br', 'Compra do paypal para email que já tem instância ativa na CONNECTA.cloud', "email: {$subs->subscriber->email_address}\n".
+							"Paypal subscription: {$subs->id}\n\n");
+						return false;
+					}
+					$vpnd = $tmp;
+				}
+			}
+
+			if (!$vpnd) {
+				$inst_new = true;
+				$vpnd = wcf_dbcreate_instance("USERS={$subs->quantity}", $name, 'us', $subs->subscriber->email_address, $name, $expiration, $error);
+				if (!$vpnd)
+					return false;
+			}
 		}
 		else {
 			$vpnd = VPND_Instances::find(getDbConn(), [ 'inst_id' => $inst_id, 'inst_active' => null]);
