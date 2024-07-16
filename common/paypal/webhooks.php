@@ -2,7 +2,7 @@
 
 require 'paypal_config.php';
 
-$hook_api = new PaypalWebhookRegistry($api);
+$hook_api = new PaypalWebhookRegistry($paypal);
 
 $resp = null;
 switch (@$argv[1]) {
@@ -24,4 +24,4 @@ switch (@$argv[1]) {
 if ($resp)
 	echo json_encode($resp, JSON_PRETTY_PRINT),"\n";
 else
-	echo "=== ERROR ===\n".json_encode($api->error, JSON_PRETTY_PRINT),"\n";
+	echo "=== ERROR ===\n".json_encode($paypal->error, JSON_PRETTY_PRINT),"\n";
