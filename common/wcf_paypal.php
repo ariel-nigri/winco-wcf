@@ -47,7 +47,7 @@ function wcf_paypal_subscribe($subs, &$error)
 		}
 		$vpnd->inst_payprovider = 'PAYPAL';
 		$vpnd->inst_paysbs_id	= $subs->id;
-		$vpnd->inst_payplan		= $subs->plan_id;
+		//$vpnd->inst_payplan		= $subs->plan_id;
 		$vpnd->inst_users		= $subs->quantity;
 
 		if (!$vpnd->update($dbconn)) {

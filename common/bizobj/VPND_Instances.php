@@ -11,7 +11,7 @@ class VPND_Instances extends Instances {
         $this->addColumn('instances.inst_service_port', 'inst_service_port', BZC_INTEGER);
         $this->addColumn('instances.inst_expiration',   'inst_expiration',   BZC_DATE);
         $this->addColumn('instances.inst_payprovider',  'inst_payprovider',  BZC_STRING);
-        $this->addColumn('instances.inst_payplan',      'inst_payplan',      BZC_STRING);
+        //$this->addColumn('instances.inst_payplan',      'inst_payplan',      BZC_STRING);
         $this->addColumn('instances.inst_paysbs_id',    'inst_paysbs_id',    BZC_STRING);
     }
 
