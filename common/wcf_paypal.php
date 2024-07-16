@@ -12,7 +12,6 @@ function wcf_paypal_subscribe($subs, &$error)
 	$retried  = 0;
 	$vpnd 	  = null;
 	$inst_new = false;
-
 	while (true) {
 		$inst_new = false;
 		$dbconn = getDbConn();
@@ -28,9 +27,9 @@ function wcf_paypal_subscribe($subs, &$error)
 			$vpnd = null;
 
 			// check if the email has instances registerred
-			$userinst = UsersInstances::find($dbconn, [ 'user_email' => $subs->subscriber->email_address ]);
+			$userinst = UsersInstances::find($dbconn, [ 'usu_email' => $subs->subscriber->email_address ]);
 			if ($userinst && $userinst->valid) {
-				$tmp = VPND_Instances::find($dbconn, [ 'inst_id' => $userinst->inst_id, 'inst_active' => null]);
+				$tmp = VPND_Instances::find($dbconn, [ 'inst_seq' => $userinst->inst_seq, 'inst_active' => null]);
 
 				if ($tmp && $tmp->valid) {
 					if (strpos($tmp->inst_type, 'TRIAL=Y') === false) {
@@ -43,7 +42,12 @@ function wcf_paypal_subscribe($subs, &$error)
 				}
 			}
 
-			if (!$vpnd) {
+			if ($vpnd) {
+				$vpnd->inst_expiration	= $expiration;
+				$vpnd->inst_active		= true;
+				$vpnd->inst_type		= "USERS={$subs->quantity}";
+			}
+			else {
 				$inst_new = true;
 				$vpnd = wcf_dbcreate_instance("USERS={$subs->quantity}", $name, 'us', $subs->subscriber->email_address, $name, $expiration, $error);
 				if (!$vpnd)
@@ -68,7 +72,7 @@ function wcf_paypal_subscribe($subs, &$error)
 		$vpnd->inst_payprovider = 'PAYPAL';
 		$vpnd->inst_paysbs_id	= $subs->id;
 		//$vpnd->inst_payplan		= $subs->plan_id;
-		$vpnd->inst_users		= $subs->quantity;
+		$vpnd->inst_nusers		= $subs->quantity;
 
 		if (!$vpnd->update($dbconn)) {
 			$error = "Error updating instance {$vpnd->error}";
