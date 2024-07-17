@@ -3,7 +3,7 @@
 // Create or update an admin and then, ALWAYS create a new Instance.
 function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $user_email, $user_name, $inst_expiration, &$error, $pwd = null)
 {
-    global $instance_classname, $product_code, $default_license;
+    global $instance_classname;
 
     $dbconn = getDbConn();
 
@@ -13,69 +13,26 @@ function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $us
             return false;
         }
 
-        $ok = false;
         $dbconn->begin();
-        do {
-            // create a new user
-            $user = Users::find($dbconn, ['usu_email' => $user_email]);
-            if (!$user->valid) {
-                $user = new Users;
-                $user->usu_email = $user_email;
-                $user->usu_language = $inst_lang;
-                $user->usu_name = $user_name;
-                if (empty($pwd))
-                    $pwd = uniqid();
-                $user->setPassword($pwd);
-                if (!$user->insert($dbconn)) {
-                    $error = 'Cannot create administrator';
-                    break;
-                }
-            }
-            // get our own worker_seq;
-            $worker = Workers::find($dbconn, ['worker_frontend' => gethostname(), 'worker_active' => true]);
-            if (!$worker->valid) {
-                $error = 'Cannot find worker or it is not active';
-                break;
-            }
+        $instance = wcf_dbcreate_instance($inst_caps, $inst_name, $inst_lang, $user_email, $user_name, $inst_expiration, $error, $pwd);
 
-            // Find instances for that user or create a new one. If there is an instance that is not trial, then there is something wrong.
-            $instance = new $instance_classname;
-            $instance->inst_name = $inst_name;
-            $instance->inst_lang = $inst_lang;
-            $instance->inst_type = $inst_caps;
-            $instance->inst_license = $default_license;
-			$instance->inst_expiration = substr($inst_expiration, 0, 4).'-'.substr($inst_expiration, 4, 2).'-'.substr($inst_expiration, 6, 2);
-            $instance->worker_seq = $worker->worker_seq;
-            $instance->inst_version = trim(file_get_contents(__DIR__."/../config/current_version_{$product_code}.cfg"));
-            if (!$instance->insert($dbconn)) {
-                $error = 'Cannot create or start the new instance: '.$instance->error;
-                break;
+        if ($instance) {
+            if (!$dbconn->commit()) {
+                $instance = null;
+                $error = $dbconn->errormessage();
             }
+            else {
+                $inst_id = $instance->inst_id;
 
-            // usuinst
-            $usu_inst = new UsersInstances;
-            $usu_inst->inst_seq = $instance->inst_seq;
-            $usu_inst->usu_seq = $user->usu_seq;
-            $usu_inst->usuinst_privs = 'A';
-            if (!$usu_inst->insert($dbconn)) {
-                $error = 'Error inserting usu_inst'.$usu_inst->error;
-                break;
+                // materialize the instance and start it
+                $instance->init_directory();
+                $instance->start();
             }
-            $ok = true;
-        } while (false);
-        if ($ok) {
-            $dbconn->commit();
-            $inst_id = $instance->inst_id;
-            // materialize the instance and start it
-
-            $instance->init_directory();
-            $instance->start();
-
         }
         else
             $dbconn->rollback();
 
-        return $ok;
+        return $instance != null;
     }
     else {
         // get the instance of
@@ -222,4 +179,63 @@ function wcf_set_password($usu_email, $password, &$error)
 		return false;
    }
 	return true;
+}
+
+/* PRIVATE STUFF */
+function wcf_dbcreate_instance($inst_caps, $inst_name, $inst_lang, $user_email, $user_name, $inst_expiration, &$error, $pwd = null)
+{
+    global $instance_classname, $product_code, $default_license, $my_worker_hostname;
+
+    $dbconn = getDbConn();
+    $ret = null;
+    do {
+        // create a new user
+        $user = Users::find($dbconn, ['usu_email' => $user_email]);
+        if (!$user->valid) {
+            $user = new Users;
+            $user->usu_email = $user_email;
+            $user->usu_language = $inst_lang;
+            $user->usu_name = $user_name;
+            if (empty($pwd))
+                $pwd = Users::generatePassword();
+            $user->setPassword($pwd);
+            if (!$user->insert($dbconn)) {
+                $error = 'Cannot create administrator';
+                break;
+            }
+        }
+        // get our own worker_seq;
+        $worker = Workers::find($dbconn, ['worker_frontend' => gethostname(), 'worker_active' => true]);
+        if (!$worker->valid) {
+            $error = 'Cannot find worker or it is not active';
+            break;
+        }
+
+        // Find instances for thet user or create a new one. If there is an instance that is not trial, then there is something wrong.
+        $instance = new $instance_classname;
+        $instance->inst_name = $inst_name;
+        $instance->inst_lang = $inst_lang;
+        $instance->inst_type = $inst_caps;
+        $instance->inst_license = $default_license;
+        $instance->inst_expiration = substr($inst_expiration, 0, 4).'-'.substr($inst_expiration, 4, 2).'-'.substr($inst_expiration, 6, 2);
+        $instance->worker_seq = $worker->worker_seq;
+        $instance->inst_version = trim(file_get_contents(__DIR__."/../config/current_version_{$product_code}.cfg"));
+        if (!$instance->insert($dbconn)) {
+            $error = 'Cannot create or start the new instance: '.$instance->error;
+            break;
+        }
+
+        // usuinst
+        $usu_inst = new UsersInstances;
+        $usu_inst->inst_seq = $instance->inst_seq;
+        $usu_inst->usu_seq = $user->usu_seq;
+        $usu_inst->usuinst_privs = 'A';
+        if (!$usu_inst->insert($dbconn)) {
+            $error = 'Error inserting usu_inst'.$usu_inst->error;
+            break;
+        }
+        $ret = $instance;
+    } while (false);
+
+    return $ret;
 }

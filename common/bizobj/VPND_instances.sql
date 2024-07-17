@@ -40,7 +40,10 @@ CREATE TABLE instances (
     inst_nusers    	INT DEFAULT 5,
     inst_passwd_digest VARCHAR(100),
     inst_lang      	VARCHAR(5),
-	inst_name       VARCHAR(100)
+	inst_name       VARCHAR(100),
+    inst_payprovider VARCHAR(200),  -- The payment provider. can be PAYPAL or SISVENDAS.
+//    inst_payplan    VARCHAR(100),   -- The payment plan chosen in the provider. useful to know how much is being charged.
+    inst_paysbs_id  VARCHAR(100) UNIQUE,    -- The payment subscription. Only valid when in a monthly subscription, otherwise is null.
 );
 ALTER TABLE instances AUTO_INCREMENT = 1000;
 

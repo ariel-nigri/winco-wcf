@@ -11,11 +11,12 @@
 class LinkControl extends MvcControl {
 	var $caption;
 	var $value;
+	var $extra;
 
 	/**
 	 * Construtor da tag &lt;a&gt; que chama um método do MvcForm
 	 */
-	function LinkControl($_name, $_caption, $_value = "", $_extra = '') {
+	function __construct($_name, $_caption, $_value = "", $_extra = '') {
 		parent::__construct($_name, null);
 		$this->caption = $_caption;
 		$this->value = $_value;

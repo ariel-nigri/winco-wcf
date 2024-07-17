@@ -6,7 +6,7 @@ require dirname(__DIR__).'/common/wcf.php';
 define('MULTIPART_SIZE', 5242880);
 
 $instances = new Instances;
-$instances->worker_frontend = gethostname();
+$instances->worker_frontend = $my_worker_names;
 $instances->inst_active = true;
 
 if (!$instances->select(getDbConn()))
