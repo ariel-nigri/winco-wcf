@@ -91,7 +91,7 @@ class UsersInstances extends SqlToClass {
         return strchr($this->usu_status, Users::ST_EXPIRED_PASS);
     }
 
-    public function invite($db, $inst_seq, $usu_email, $usuinst_perms = '', $usu_lang = 'br') {
+    public function invite($db, $inst_seq, $usu_email, $usuinst_privs = '', $usu_lang = 'br') {
         $this->clear();
         $ret = self::ST_ERROR;
         try {
@@ -123,7 +123,7 @@ class UsersInstances extends SqlToClass {
             // All ready for the user's insertion to our instance
             $this->usu_seq  = $user->usu_seq;
             $this->inst_seq = $inst_seq;
-            $this->usuinst_privs = $usuinst_perms;
+            $this->usuinst_privs = $usuinst_privs;
             $this->usuinst_status = self::ST_INVITED;
             if (!$this->insert($db))
                 throw new Exception("Error associating user to our instance: ".$this->error);

@@ -153,7 +153,7 @@ function wcf_list_info($usu_email, &$info, &$error)
     while ($instances->fetch()) {
         $info['instances'][] = [
             'inst_id'       => $instances->inst_id,
-            'usuinst_perms' => $perms[$instances->inst_seq],
+            'usuinst_privs' => $perms[$instances->inst_seq],
             'inst_type'     => $instances->inst_type,
             'inst_name'     => $instances->inst_name,
             'inst_expiration' => str_replace('-', '', $instances->inst_expiration)
