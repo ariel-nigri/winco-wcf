@@ -141,6 +141,9 @@ class Users extends SqlToClass {
         $this->usu_updated_passwd_at = date("Y-m-d H:i:s");
         $this->usu_status = '';
         $this->pwd_changed = true;
+        if ($this->usu_status == self::ST_INVITED)
+            $this->usu_status = self::ST_VALID;
+
         return true;
     }
 

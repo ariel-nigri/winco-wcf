@@ -115,6 +115,7 @@ class UsersInstances extends SqlToClass {
                 $user->usu_email    = $usu_email;
                 $user->usu_name     = ucwords(strtr(strtok($usu_email, '@'), '.', ' '));
                 $user->usu_language = $usu_lang;
+                $user->usu_twofact_type = 'GOGLE';
                 $user->usu_status   = Users::ST_INVITED;
                 if (!$user->insert($db))
                     throw new Exception("Cannot invite user: ".$user->error);
