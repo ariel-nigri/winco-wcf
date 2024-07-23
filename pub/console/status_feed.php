@@ -155,7 +155,23 @@ switch ($_REQUEST['service']) {
 		$privs = 'admin';
 		if ($admins->select(getDbConn())) {
 			while ($admins->fetch()) {
-				$lang = $admins->usu_language == "us" ? "Ingl&ecirc;s" : "Portugu&ecirc;s";
+				switch ($admins->usu_language) {
+				case 'us':
+					$lang = 'Ingl&ecirc;s';
+					break;
+				case 'it':
+					$lang = 'Italiano';
+					break;
+				case 'fr':
+					$lang = 'Franc&ecirc;s';
+					break;
+				case 'de':
+					$lang = 'Alem&atilde;o';
+					break;
+				case 'es':
+					$lang = 'Espanhol';
+					break;
+				}
 				$usu_name = $admins->usu_name;
 				$inst = '';
 				if (!empty($inst_users[$admins->usu_seq]))

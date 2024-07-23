@@ -9,7 +9,7 @@ class ServicePanel extends ServicePanelBase {
 		'usu_caps', 'usu_num_of_passwd_to_store', 'usu_updated_passwd_at', 'usu_max_pwd_age');
 	
 	var $privs = array("" => "Usuário padrão", "ADMIN" => "Administrador");
-	var $lang = array("br" => "Português", "us" => "Inglês");
+	var $lang = array("br" => "Português", "us" => "Inglês", "es" => "Espanhol", "fr" => "Francês", "de" => "Alemão", 'it' => 'Italiano');
 	var $twofact = array("" => 'Desativada', "GOGLE" => "Google Authenticator");
 
 	var $title = "Administrador";

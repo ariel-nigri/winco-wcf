@@ -20,6 +20,7 @@ class UsersInstances extends SqlToClass {
     const ST_DECLINED  = 'D';
     const ST_ALREADY   = 'Z'; // used only as a return of 'invite'
     const ST_ERROR     = 'E'; // used only as a return of 'invite'
+    const ST_UNAVAIL   = 'U'; // used only as a return of 'invite'
 
     var $usuinst_seq;
     var $usuinst_privs;
@@ -96,6 +97,9 @@ class UsersInstances extends SqlToClass {
         $ret = self::ST_ERROR;
         try {
             $user = Users::find($db, [ 'usu_email' => $usu_email ]);
+            if ($user->valid)
+                // for now we cannot duplicate e-mails.
+                return self::ST_UNAVAIL;
 
             if ($user->valid) {
                 if ($user->isBlocked()) {
