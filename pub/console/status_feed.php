@@ -154,6 +154,7 @@ switch ($_REQUEST['service']) {
 		$admins = new Users;
 		$privs = 'admin';
 		if ($admins->select(getDbConn())) {
+			$lang = 'br';
 			while ($admins->fetch()) {
 				switch ($admins->usu_language) {
 				case 'us':
