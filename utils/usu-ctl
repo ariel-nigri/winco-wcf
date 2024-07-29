@@ -12,7 +12,7 @@ $dbconn = getDbConn();
 $users = new Users;
 $users->usu_name = $argv[2];
 $users->usu_email = $argv[3];
-$users->usu_lang = 'br';
+$users->usu_language = 'br';
 $users->usu_caps = 'ADMIN';
 $users->setPassword($argv[4]);
 if (!$users->insert($dbconn))

@@ -28,6 +28,7 @@ class UsersInstances extends SqlToClass {
     var $inst_seq;
     var $usu_seq;
     var $usu_name;
+    var $usu_language;
     var $usu_email;
     var $usu_status;
     var $usu_max_pwd_age;
@@ -92,7 +93,7 @@ class UsersInstances extends SqlToClass {
         return strchr($this->usu_status, Users::ST_EXPIRED_PASS);
     }
 
-    public function invite($db, $inst_seq, $usu_email, $usuinst_privs = '', $usu_lang = 'br') {
+    public function invite($db, $inst_seq, $usu_email, $usu_name, $usuinst_privs = '', $usu_language = 'br') {
         $this->clear();
         $ret = self::ST_ERROR;
         try {
@@ -117,8 +118,8 @@ class UsersInstances extends SqlToClass {
             else {
                 // create a new user that is invited, in the invited mode.
                 $user->usu_email    = $usu_email;
-                $user->usu_name     = ucwords(strtr(strtok($usu_email, '@'), '.', ' '));
-                $user->usu_language = $usu_lang;
+                $user->usu_name     = $usu_name;
+                $user->usu_language = $usu_language;
                 $user->usu_twofact_type = 'GOGLE';
                 $user->usu_status   = Users::ST_INVITED;
                 if (!$user->insert($db))

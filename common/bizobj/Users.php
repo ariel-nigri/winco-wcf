@@ -87,6 +87,8 @@ class Users extends SqlToClass {
         if ($this->usu_passwd_digest == '')
             // no password, then we must fill with something to be able to save. it can be any garbage, like an invalid sequence for hex data
             $this->usu_passwd_digest = '--NOT_SET--';
+        if (empty($this->usu_language))
+            $this->usu_language = 'br';
         return parent::insert($db);
     }
 
