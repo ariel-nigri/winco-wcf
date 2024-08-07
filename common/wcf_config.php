@@ -64,7 +64,6 @@ function wcf_create_or_update(&$inst_id, $inst_caps, $inst_name, $inst_lang, $us
 function wcf_extend_license($inst_id, $inst_expiration, &$error)
 {
     $db = getDbConn();
-
     $instance = VPND_Instances::find($db, ['inst_id' => $inst_id, 'inst_active' => null]);
     if (!$instance->valid) {
         $error = 'Invalid instance';
@@ -80,6 +79,37 @@ function wcf_extend_license($inst_id, $inst_expiration, &$error)
     // No need to restart instance on 'renew', but we must start it if it is stopped
     if (!$instance->status())
 	    $instance->start();
+    return true;
+}
+
+// renew, same everything.
+//lic_period has the license new  ending day in the format:   yyyy-mm-dd
+function wcf_extend_license2($inst_id, $lic_period, &$resp)
+{
+    $db = getDbConn();
+    Sql::$date_format = 'iso';
+    $instance = VPND_Instances::find($db, ['inst_id' => $inst_id, 'inst_active' => null]);
+    if (!$instance->valid) {
+        $resp = 'Invalid instance';
+        return false;
+    }
+
+    $tm = strtotime($instance->inst_expiration);
+    $now = time();
+    if ($tm < $now)
+        $tm = $now;
+    $instance->inst_expiration = date('Ymd', $tm + round($lic_period * 86400));
+    $instance->inst_active = true;
+    if (!$instance->update($db)) {
+        $resp = 'Cannot update Instance: '.$instance->error;
+        return false;
+    }
+
+    // No need to restart instance on 'renew', but we must start it if it is stopped
+    if (!$instance->status())
+	    $instance->start();
+
+    $resp = $instance->inst_expiration;
     return true;
 }
 

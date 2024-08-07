@@ -157,11 +157,17 @@ case 'EXTEND':
         $result->message = "this operation requires inst_lic";
         break;
     }
-    $inst_expiration = date('Ymd', time() + round($lic_period * 86400));
-    $result->success = wcf_extend_license($inst_id, $inst_expiration, $result->message);
-    $lic_array = explode('-',$inst_lic);
-    $inst_caps = $lic_array[2];
-    $result->license = "VPND-{$inst_id}-{$inst_caps}-{$inst_expiration}";
+
+    if (wcf_extend_license2($inst_id, $lic_period, $resp)) {
+        $result->success = true;
+        $lic_array = explode('-',$inst_lic);
+        $inst_caps = $lic_array[2];
+        $result->license = "VPND-{$inst_id}-{$inst_caps}-{$resp}";
+    }
+    else {
+        $result->success = false;
+        $result->message = $resp;
+    }
     break;
 case 'CHANGECAPS':
     // add/remove users, add/remove features.

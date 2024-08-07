@@ -4,6 +4,7 @@ require_once "Instances.php";
 
 class VPND_Instances extends Instances {
     var $inst_expiration;
+    var $inst_payprovider;
 
     public function __construct() {
         parent::__construct();
