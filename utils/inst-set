@@ -3,6 +3,8 @@
 
 require_once dirname(__DIR__)."/common/wcf.php";
 
+$program_name = basename(__FILE__);
+
 if ($argc < 2) {
 	echo "usage: ".basename($argv[0])." id property=value [...]\n";
 	exit(1);
