@@ -101,6 +101,7 @@ $db_conn = getDbConn();
 Sql::$date_format = 'iso';
 
 $form = new ServiceForm;
+$form->data = new stdclass;
 $form->handle($_REQUEST);
 $service_name = $form->data->service;
 
