@@ -8,7 +8,7 @@ class ServiceForm extends MvcForm {
 	var $realEvent;
 	var $errors = array();	
 
-	function ServiceForm() {
+	function __construct() {
 		parent::__construct();
 			
 		$this->data = new stdclass;

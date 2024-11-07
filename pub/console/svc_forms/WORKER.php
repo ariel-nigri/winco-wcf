@@ -75,7 +75,7 @@ class ServicePanel extends ServicePanelBase {
 		$abaConfig 	= $abas->addPage(new MvcContainer($this->form, 'pageConfig', 'Geral', 'div'));
 
 		$config = new MvcBoxedContainer($this->form, 'config', '');
-		$config->addControl(new CheckControl("worker_active", "Ativo"), CTLPOS_LABELRIGHT);
+		$config->addControl(new CheckControl("worker_active", "Padrão"), CTLPOS_LABELRIGHT);
 		$config->addControl(new RawControl('br', '<br />'));
 		$config->addControl(new EditControl('worker_hostname', 'Hostname:', "size=\"40\""));
 		$config->addControl(new EditControl('worker_frontend', 'FrontEnd:', "size=\"40\""));

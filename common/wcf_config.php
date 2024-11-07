@@ -214,7 +214,7 @@ function wcf_set_password($usu_email, $password, &$error)
 /* PRIVATE STUFF */
 function wcf_dbcreate_instance($inst_caps, $inst_name, $inst_lang, $user_email, $user_name, $inst_expiration, &$error, $pwd = null)
 {
-    global $instance_classname, $product_code, $default_license, $my_worker_hostname;
+    global $instance_classname, $product_code, $default_license, $my_worker_names;
 
     $dbconn = getDbConn();
     $ret = null;
@@ -235,9 +235,9 @@ function wcf_dbcreate_instance($inst_caps, $inst_name, $inst_lang, $user_email, 
             }
         }
         // get our own worker_seq;
-        $worker = Workers::find($dbconn, ['worker_frontend' => gethostname(), 'worker_active' => true]);
+        $worker = Workers::find($dbconn, ['worker_frontend' => $my_worker_names, 'worker_active' => true]);
         if (!$worker->valid) {
-            $error = 'Cannot find worker or it is not active';
+            $error = 'Either this worker is not registered or is not active';
             break;
         }
 

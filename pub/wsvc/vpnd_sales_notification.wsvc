@@ -120,7 +120,14 @@ case 'GET_ENDPOINT':
             }
         }
     }
-    $result->message = 'Neither the instance or the email exists in the database.';
+    // New Instance. We redirect to the active node
+    $worker = Workers::find(geDbConn(), [ 'inst_active' => true ]);
+    if ($worker->active) {
+        $result->endpoint = "https://{$worker->worker_frontend}/wsvc/".basename(__FILE__);
+        $result->success = true;
+    }
+    else
+        $result->message = 'Neither the instance or the email exists in the database.';
     break;
 case 'NEWLICENSE':
     if (empty($inst_caps) || empty($lic_period) || (!$inst_lic && !$usu_email)) {
