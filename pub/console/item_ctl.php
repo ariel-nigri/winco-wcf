@@ -19,16 +19,15 @@ $result->error = 'Unknown error';
 
 if ($svc == "WORKER") {
 	if ($cmd == "DEL") {
-		$db_conn->begin();
+		$db_conn = getDbConn();
 		$worker = new Workers;
 		$worker->worker_seq = $id;
-		if ($worker->delete($db_conn)) {			
-			$db_conn->commit();
+		if ($worker->delete($db_conn)) {	
+			$result->error = 'Worker excluído com sucesso';		
 			$result->status = true;
-		} else {
-			$db_conn->rollback();	
+		}
+		else
 			$result->error = "Erro excluindo {$svc}";
-		}	
 	}
 }
 else if ($svc == "ADMIN") {

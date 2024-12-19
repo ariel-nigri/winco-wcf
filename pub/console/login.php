@@ -29,7 +29,13 @@ if (!empty($_POST)) {
 			if ($ret['pwd_status'] != 'OK')
 				$_SESSSION['LOGGED_USER']['notices'][] = $ret['pwd_status'];
 
-			header("Location: https://".gethostname().dirname($_SERVER['REQUEST_URI']).'/');
+			$dir = dirname($_SERVER['REQUEST_URI']);
+			if ($dir != '/')
+				$dir .= '/';
+
+			// we do not change host to ourselves because this was causing problems. But this must be reviewed in case of access
+			// to the cluster URL.
+			header("Location: {$dir}");
 			break;
 		}
 		switch ($ret['result']) {
