@@ -1,0 +1,105 @@
+
+define wcf_dir     		%%wcf_dir%%
+define versions_dir		%%versions_dir%%
+define base_domain		%%base_domain%%
+define my_host			%%my_host%%
+
+# Certificate stuff
+define cert_file		%%cert_file%%
+define key_file			%%key_file%%
+define chain_file		%%chain_file%%
+
+ServerName      ${my_host}.${base_domain}
+
+<Directory ${versions_dir}>
+	Require all granted
+</Directory>
+
+<Directory ${wcf_dir}/pub/wsvc>
+	Require all granted
+</Directory>
+
+<Directory ${wcf_dir}/pub/console>
+	Require all granted
+	#    SSLVerifyClient require
+	#    SSLRequire %{SSL_CLIENT_S_DN_CN} in { \
+	#            "nigri@winco.com.br", \
+	#            "luis.felipe@winco.com.br", \
+	#            "driely.silva@winco.com.br", \
+	#            "danilo.almeida@winco.com.br", \
+	#            "alex.monteiro@winco.com.br", \
+	#            "angelica.zanatta@winco.com.br", \
+	#            "vinicius.prado@winco.com.br", \
+	#   }
+	# when using client CERT, pass the username
+	# SSLUserName SSL_CLIENT_S_DN_CN
+</Directory>
+
+<VirtualHost _default_:80>
+	RewriteEngine   on
+
+	TransferLog     logs/${base_domain}-transfer_log
+	ErrorLog        logs/${base_domain}-error_log
+
+	RewriteRule     ^/(\.well\-known)/(.*)          /var/www/html/$1/$2                                             [L]
+	RewriteRule     ^/(.*)                          https://%{HTTP_HOST}/$1                                         [L,R]
+</VirtualHost>
+
+#
+# Console configuration
+#
+<VirtualHost *:443>
+	ServerName  console.${my_host}.${base_domain}
+	ServerAlias console.${base_domain}
+
+	SSLEngine       on
+
+	TransferLog     logs/${base_domain}-transfer_log
+	ErrorLog        logs/${base_domain}-error_log
+
+	SSLCertificateFile        ${cert_file}
+	SSLCertificateKeyFile     ${key_file}
+	SSLCertificateChainFile   ${chain_file}
+	#
+	# uncomment if using client certificate security
+	# SSLCACertificateFile    /etc/pki/tls/certs/ca.winco.com.br.crt
+
+	DocumentRoot    	${wcf_dir}/pub/console
+
+	SSLVerifyClient require
+</VirtualHost>
+
+#
+# Connectas instances configuration
+#
+<VirtualHost _default_:443>
+	ServerName	${my_host}.${base_domain}
+    	ServerAlias     *.${base_domain}
+	ServerAlias	${base_domain}
+
+	SSLEngine       on
+	RewriteEngine   on
+
+	TransferLog     logs/${base_domain}-transfer_log
+	ErrorLog        logs/${base_domain}-error_log
+
+	SSLCertificateFile        ${cert_file}
+	SSLCertificateKeyFile     ${key_file}
+	SSLCertificateChainFile   ${chain_file}
+
+	LogFormat       "%h %l %{X-Logged-User}o %t \"%r\" %>s %b"
+	DirectoryIndex  dashboard.phtml index.phtml index.php
+
+	RewriteCond 	%{HTTP_HOST}	^(.+)-([hHsS][0-9]*)-([0-9a-fA-F]{6})\.connectas\.net$
+	RewriteRule 	^/(.*)$		http://0xac%3:9090/http/%1-%2/$1 	[P,L]
+
+	RewriteCond 	%{HTTP_HOST}	^(.+)-([hHsS][0-9]*)-([0-9a-fA-F]{6})\.gru01\.connectas\.net$
+	RewriteRule 	^/(.*)$		http://0xac%3:9090/http/%1-%2/$1 	[P,L]
+
+	RewriteRule	^/wsvc/(.*)			${wcf_dir}/pub/wsvc/$1					[L]
+	RewriteRule     ^/vpn([0-9]+)/(.*)              ${versions_dir}/vpn$1/pub/$2                   		[L]
+	RewriteRule     ^/wss/([^/]+)/([^/]+)/(.+)	ws://0xac$1:9090/$2/?token=$3				[P,L,QSA]
+	RewriteRule     ^/([^/]*)$                      ${wcf_dir}/pub/index.php				[L]
+
+	AddType         application/x-openvpn-profile   .ovpn
+</VirtualHost>

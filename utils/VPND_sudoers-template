@@ -1,0 +1,7 @@
+Defaults:apache   ! requiretty
+
+Defaults env_keep += "product_code"
+
+apache      ALL = (ALL) NOPASSWD: %%wcf_dir%%/utils/inst-ctl,/bin/systemctl
+apache      ALL = (ALL) NOPASSWD: %%versions_dir%%/*/util/create_instance.sh, %%versions_dir%%/*/util/service_config, %%versions_dir%%/*/util/delete_instance.sh, %%versions_dir%%/*/util/openvpn-fix-stat
+apache 		ALL = (ALL) NOPASSWD: /usr/share/easy-rsa/3/easyrsa

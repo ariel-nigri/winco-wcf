@@ -3,7 +3,6 @@
 require "config.php";
 
 // actions
-
 if (empty($_SESSION['view_disabled_instances'])) {
 	$show_disabled 		= 'SHOW_DISABLED';
 	$show_disabled_str	= 'Mostrar inativas';
@@ -32,15 +31,10 @@ $vds_ops = "[
 	{ cmd: 'LOST_MEDIA_REPORT',	label: 'Relatório de mídias para baixar', item: true }
 ]";
 
-$admin_actions = $worker_register = $license_actions = "[
+$admin_actions = $worker_register = "[
 	{ cmd: 'NEW',				label: 'Cadastrar novo',		item: false},
 	{ cmd: 'EDIT',				label: 'Ver / Alterar',			item: true},
 	{ cmd: 'DEL',				label: 'Excluir',				item: true}
-]";
-
-$vds_actions = "[
-	{ cmd: 'NEW',				label: 'Cadastrar novo',		item: false},
-	{ cmd: 'EDIT',				label: 'Ver / Alterar',			item: true}
 ]";
 
 function list_workers($refresh) {
@@ -189,120 +183,6 @@ switch ($_REQUEST['service']) {
 		{ label:'Idioma do portal', width: 110 },
 		{ label:'Inst&acirc;ncia', width: 70 }], 
 			defcols: [1, 2, 3, 4, 5], register: $admin_actions, ";
-		break;
-	case 'LICENSE':
-		$instname = array();
-		$instances = new Instances;
-		if ($instances->select(getDbConn())) {
-			while ($instances->fetch()) 
-				$instname[$instances->inst_seq] = $instances->inst_name;
-		}
-		
-		$licenses = new NTP_RouterLicenses;
-		if ($licenses->select(getDbConn())) {			
-			while ($licenses->fetch())
-				$response[] = array($licenses->rtlic_seq, $licenses->rtlic_id, $licenses->rtlic_caps, $licenses->rtlic_owner,
-									$licenses->inst_seq, $licenses->inst_seq == 0 ? "" : utf8_encode(@$instname[$licenses->inst_seq]),
-									$licenses->rtlic_created, $licenses->rtlic_allocated);
-		}
-
-		$list_format = 	"title:'Licen&ccedil;as', label: 'Licen&ccedil;as', format: [
-		{ label:'ID', id: true, width: 60 },
-		{ label:'Licença', width: 250 },
-		{ label:'Capabilities', width: 250 },
-		{ label:'Dono', width: 250 },
-		{ label:'Instância', width: 70 },
-		{ label:'Nome instância', width: 250 },
-		{ label:'Criação', width: 130 },
-		{ label:'Alocação', width: 130 }], 
-			defcols: [1, 2, 3, 4, 5, 6], register: $license_actions, ";
-		break;
-	case 'CONNECTIONS':
-		// list workers
-		$workers = new Workers;
-		if ($workers->select($db_conn)) {			
-			while ($workers->fetch())
-				$worker[$workers->worker_ip] = $workers->worker_hostname;
-		} 
-		
-		// list instances
-		$instance_name = $instance_id = array();
-		if ($product_code == "NTP")
-			$instances = new NTP_Instances;
-		else if ($product_code == "WTM")
-			$instances = new WTM_Instances;
-				
-		if ($instances->select($db_conn)) {			
-			while ($instances->fetch()) {
-				if ($product_code == "NTP") {
-					$instance_name[$instances->inst_sync_port] = $instances->inst_name;	
-					$instance_id[$instances->inst_sync_port] = $instances->inst_seq;
-				} else if ($product_code == "WTM") {
-					$instance_name[$instances->inst_pol_port] = $instances->inst_name;	
-					$instance_id[$instances->inst_pol_port] = $instances->inst_seq;
-				}
-			}
-		}	
-		
-		if ($wc_conn->exec("@HTTP:LIST_CONNECTIONS", $send_params, $connections)) {
-			if (isset($connections['CONNECTIONS'])) {
-				foreach ($connections['CONNECTIONS'] as $conn) {
-					if ($conn['SVC_NAME'] == "https://" . $conn['IP_TO'])
-						$response[] = array($conn['ID'], $conn['IP_FROM'], $_SERVER['HOSTNAME'], $worker[$conn['IP_TO']], $instance_id[$conn['PORT_TO']], utf8_encode($instance_name[$conn['PORT_TO']]), @date('H:i:s', $conn['START_TIME']));
-				}
-			}
-		}
-		
-		$list_format = 	"title:'Conex&otilde;es', label: 'Conex&otilde;es', format: [
-		{ label:'ID', width: 60 },
-		{ label:'IP', width: 130 },
-		{ label:'FrontEnd', width: 250 },
-		{ label:'Worker', width: 250 },				
-		{ label:'Instância', width: 80 },
-		{ label:'Nome da instância', width: 300 },
-		{ label:'Hora inicial', width: 80 }], 
-			defcols: [1, 2, 3, 4, 5, 6], ";	
-		break;
-	case 'DEVICES':
-		// list workers
-		$devices = new VirtualDevice;
-		if ($devices->select(getDbConn())) {			
-			while ($devices->fetch()) {
-				$ststr = VirtualDevice::$status_array[$devices->vd_status & 0xff];
-				if ($devices->vd_status & VirtualDevice::VDS_PROCESSING)
-					$ststr .= '(locked)';
-				$response[] = array("{$devices->vd_seq}", "{$devices->inst_seq}", ''.strtok($devices->vds_name, '.'),
-					$devices->vd_owner,  $devices->vd_key, $devices->vd_number, $devices->vd_activated, $ststr);
-			}
-		} 
-		
-		$list_format = 	"title:'Dispositivos', label: 'Dispositivos', format: [
-		{ label:'ID', width: 40, id: true },
-		{ label:'Instância', width: 70 },
-		{ label:'VDS', width: 100 },
-		{ label:'Usuário', width: 150 },				
-		{ label:'Chave', width: 150 },
-		{ label:'Número', width: 120 },
-		{ label:'Ativado em', width: 120 },
-		{ label:'Status', width: 100 }], 
-			defcols: [0, 1, 2, 3, 4, 5, 6, 7], register: $admin_actions, ";
-		break;
-	case 'DEVICE_SERVER':
-		// list workers
-		$response = [];
-		$vds = new VirtualDeviceServer;
-		if ($vds->select(getDbConn())) {
-			while ($vds->fetch())
-				$response[] = array("{$vds->vds_seq}", "{$vds->vds_name}", "{$vds->inst_seq}",
-							$vds->vds_active ? 'Padrão' : '', "{$vds->vds_maxdevs}");
-		}
-		$list_format = 	"title:'Servidores de dispositivos', label: 'Servidores de dispositivos', format: [
-			{ label:'ID', width: 40, id: true },
-			{ label:'Virtual Device', width: 250 },
-			{ label:'Instancia', width: 60 },
-			{ label:'Status', width: 100 },
-			{ label:'Max. devices', width: 100 }],
-				defcols: [0, 1, 2, 3, 4], actions: {$vds_ops}, register: $vds_actions, ";
 		break;
 	case 'USAGE':
 		// list network usage by vpn instances
