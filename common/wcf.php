@@ -5,7 +5,7 @@ require_once dirname(__DIR__)."/config/install_params.php";
 $aws_sdk        = '/opt/amazon/aws.phar';
 $wcf_db_conn    = $wcf_db_conn_pdo = null;
 
-$wcf_search_dirs = ['bizobj', 'mvc3/db'];
+$wcf_search_dirs = ['bizobj', 'winco-mvc/db'];
 
 spl_autoload_register(function($class_name) {
     global $wcf_search_dirs;
@@ -27,7 +27,7 @@ spl_autoload_register(function($class_name) {
  * @return Sql
  */
 function getDbConn() {
-    require_once 'mvc3/db/db-pdo.php';
+    require_once 'winco-mvc/db/db-pdo.php';
 
     global $db_dsn, $db_user, $db_passwd, $wcf_db_conn_pdo, $wcf_db_conn;
 

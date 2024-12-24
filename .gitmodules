@@ -1,3 +1,6 @@
 [submodule "common/mvc3"]
 	path = common/mvc3
 	url = git:/home/git-devel/winco-mvc
+[submodule "common/winco-mvc"]
+	path = common/winco-mvc
+	url = git@github.com:Bluepex/winco-mvc
