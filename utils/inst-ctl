@@ -10,6 +10,7 @@ fi
 
 dir=$(dirname $(readlink -f $(which $0)))
 ver=$(${dir}/inst-query -q inst_seq=${inst} inst_version)
+versions_dir=$(echo "<?php require dirname('$dir').'/config/install_params.php'; echo \$versions_dir; " | php)
 
 if [ -z "$ver" ]; then
     echo "Instance $inst was not found or has no version assigned."
@@ -17,29 +18,10 @@ if [ -z "$ver" ]; then
     exit 1
 fi
 
-ctl=/home/instances/versions/${ver}/util/ctl.initd
-
-if [ ! -f ${ctl} ]; then
-    #
-    # Old version of the software. we try to find the old scripts.
-    #
-    if [ -f /etc/init.d/ntp-${inst} ]; then
-        ctl=/etc/init.d/ntp-${inst}
-    elif [ -f /etc/init.d/vpnd-${inst} ]; then
-        ctl=/etc/init.d/vpnd-${inst}
-    elif [ -f /etc/init.d/wtm-${inst} ]; then
-        ctl=/etc/init.d/wtm-${inst}
-    else
-        # lets create a startup script and call it!
-        ctl_link=/tmp/ctl-${inst}
-        ln -sf /home/instances/versions/${ver}/util/*.initd ${ctl_link}
-        ctl=${ctl_link}
-    fi
-    echo "calling old startup ${ctl}..."
-fi
+ctl=${versions_dir}/${ver}/util/ctl.initd
 
 if [ "${oper}" = "license" ]; then
-    lic_ctl="/home/instances/versions/${ver}/bin/lic_ctl -w /home/instances/${inst}/var/winco/regdb/"
+    lic_ctl="${versions_dir}/${ver}/bin/lic_ctl -w /home/instances/${inst}/var/winco/regdb/"
 
     lic=$(${lic_ctl}  -f list_licenses | awk '/License:/ { print $2}')
 
@@ -50,7 +32,5 @@ if [ "${oper}" = "license" ]; then
 fi
 
 ${ctl} ${oper} ${inst}
-
-[ ! -z "${ctl_link}" ] && rm -f ${ctl_link}
 
 exit 0
