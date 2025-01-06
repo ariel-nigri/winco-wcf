@@ -1,5 +1,5 @@
-CREATE DATABASE connectas;
-USE connectas;
+-- CREATE DATABASE connectas;
+-- USE connectas;
 
 --
 -- Table structure for table `auth_events`
@@ -110,7 +110,7 @@ CREATE TABLE `workers` (
   UNIQUE KEY `worker_hostname` (`worker_hostname`)
 );
 
-CREATE USER 'connectas' IDENTIFIED BY 'devel';
-GRANT SELECT, INSERT, DELETE, UPDATE ON connectas.* TO 'connectas';
+-- CREATE USER 'connectas' IDENTIFIED BY 'devel';
+-- GRANT SELECT, INSERT, DELETE, UPDATE ON connectas.* TO 'connectas';
 
-FLUSH privileges;
+-- FLUSH privileges;

@@ -24,12 +24,8 @@ ServerName      ${my_host}.${base_domain}
 	#    SSLVerifyClient require
 	#    SSLRequire %{SSL_CLIENT_S_DN_CN} in { \
 	#            "nigri@winco.com.br", \
-	#            "luis.felipe@winco.com.br", \
-	#            "driely.silva@winco.com.br", \
-	#            "danilo.almeida@winco.com.br", \
-	#            "alex.monteiro@winco.com.br", \
-	#            "angelica.zanatta@winco.com.br", \
-	#            "vinicius.prado@winco.com.br", \
+	#            "bruno.stein@bluepex.com", \
+	#            "adriano.belisia@bluepex.com" \
 	#   }
 	# when using client CERT, pass the username
 	# SSLUserName SSL_CLIENT_S_DN_CN

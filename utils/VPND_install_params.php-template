@@ -1,0 +1,39 @@
+<?php
+
+date_default_timezone_set('America/Sao_Paulo');
+
+define('CFM_DEFAULT_LANGUAGE', 'br');
+
+$product_code = 'VPND';
+
+$framework_dir = dirname(__DIR__);
+
+$usr_passwd_salt = 'XXX_123_124';
+$adm_passwd_salt = 'XXX_123_124';
+
+$product_name = 'ConnectasCloud';
+
+$console_caps = array(
+        'LICENSES' => false,
+);
+
+$db_dsn 	= 'mysql:host=%%db_host%%;dbname=%%db_name%%;';
+$db_user 	= '%%db_user%%';
+$db_passwd 	= '%%db_pass%%';
+
+$instance_classname = 'VPND_Instances';
+$my_worker_names = [ gethostname() ];
+
+$default_license = "NO_LICENSE_REQUIRED_FOR_VPND";
+
+$lic_type = array();
+$binname = 'vpnd.';
+
+$vpnd_access_token = '<put access token here>';
+
+// password complexity: minimum of 8 chars, 1 upper, 1 lower and 1 number.
+//$users_pwd_complexity_regex = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/';
+
+$vpnd_renewal_from_email = 'operacao@winco.com.br';
+$vpnd_renewal_from_name = 'Connectas.cloud';
+$vpnd_renewal_email_bcc = 'comercial@winco.com.br';

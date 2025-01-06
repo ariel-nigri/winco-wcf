@@ -1,0 +1,21 @@
+# All paths must be absolute
+
+# configuration parameters
+wcf_dir=/home/nigri/wcf					# the checkout of wcf
+versions_dir=/home/nigri/versions		# the checkout of vpn is bellow this dir
+vpn_version=vpn19						# the version number to assign to the vpn built
+cert_file=/home/nigri/cert/cert.pem		# certificate_file for web server and Winco VPN SSL
+key_file=/home/nigri/cert/privkey.pem	# key file
+chain_file=/home/nigri/cert/chain.pem	# chain file
+db_name=connectas						
+db_user=connectas
+db_pass=devel
+db_host=								# empty for localhost
+
+# Database Initialization
+create_db=yes							# it will only create if it doesnt exist
+admin_user=nigri@winco.com.br			# will only create the admin if creating the database
+admin_pass=123Mudar
+
+# We normally dont need to build the VPN, but we can
+build_vpnssl=yes
