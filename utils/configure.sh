@@ -1,6 +1,21 @@
 #!/bin/bash
 
+check_system() {
+	echo "fs.inotify.max_user_instances = 2000" > /etc/sysctl.d/99-inotify.conf
+	if [ $(getenforce) != Disabled ]; then
+		sed -i -e's/^SELINUX=.*$/SELINUX=disabled/' /etc/selinux/config
+		reboot
+	fi
+	systemctl disable --now firewalld
+	systemctl enable --now httpd php-fpm
+}
+
 create_vpn_config() {
+	# Now, the certificate used by Winco VPN
+	cat ${cert_file}  >  /etc/pki/tls/certs/vpnd.winco.com.br.pem
+	cat ${chain_file} >> /etc/pki/tls/certs/vpnd.winco.com.br.pem
+	cat ${key_file}   >> /etc/pki/tls/certs/vpnd.winco.com.br.pem
+
 	# Configure VPND?
 	cat > ${versions_dir}/${vpn_version}/config/install_params.php <<'EOF'
 <?php
@@ -50,16 +65,17 @@ app_config() {
 	# create the webserver configuration
 	eval sed ${sed_edit} VPND_httpd.conf-template > /etc/httpd/conf.d/1-connectas.conf
 
-	# create the sudoers e profile configuration
+	# create the sudoers configuration
 	eval sed ${sed_edit} VPND_sudoers-template > /etc/sudoers.d/connectas-sudoers
 
-	# cloud framework path
+	# create profile.d (path) config
 	cat > /etc/profile.d/wcf.sh <<EOF
 if [ -f ${wcf_dir}/config/current_version_VPND.cfg ]; then
     curr_ver=\$(cat ${wcf_dir}/config/current_version_VPND.cfg)
     PATH=\${PATH}:${wcf_dir}/utils:${versions_dir}/\${curr_ver}/util
 fi
 EOF
+	# creat systemd service
 }
 
 if [ -z $1 ]; then
@@ -90,6 +106,7 @@ for var in wcf_dir versions_dir base_domain my_host cert_file key_file chain_fil
 	sed_edit="${sed_edit} -e's|%%${var}%%|${val}|'"
 done
 
+check_system
 create_vpn_config
 create_wcf_config
 if [ $create_db = yes ]; then

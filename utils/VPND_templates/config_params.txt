@@ -16,6 +16,3 @@ db_host=								# empty for localhost
 create_db=yes							# it will only create if it doesnt exist
 admin_user=nigri@winco.com.br			# will only create the admin if creating the database
 admin_pass=123Mudar
-
-# We normally dont need to build the VPN, but we can
-build_vpnssl=yes

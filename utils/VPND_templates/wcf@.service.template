@@ -7,8 +7,8 @@ After=rc-local.service
 
 [Service]
 Type=forking
-ExecStart=/opt/winco/cloud_framework-vpnd/utils/inst-ctl start %I
-ExecStop=/opt/winco/cloud_framework-vpnd/utils/inst-ctl stop %I
+ExecStart=%%wcf_dir%%/utils/inst-ctl start %I
+ExecStop=%%wcf_dir%%/utils/inst-ctl stop %I
 
 [Install]
 WantedBy=multi-user.target
