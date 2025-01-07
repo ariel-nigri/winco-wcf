@@ -104,13 +104,13 @@ class Instances extends SqlToClass {
         return $output;
     }
 
-    public function init_directory() {
+    public function init_directory($versions_dir = '/home/instances/versions') {
         if (empty($this->inst_version) || empty($this->inst_seq)) {
             die("Before calling create_files(), please set the inst_seq and inst_version paramenters");
             return false;
         }
         $output = array();
-        exec("cd /home/instances/versions/{$this->inst_version}/util; sudo ./create_instance.sh {$this->inst_seq}", $output);
+        exec("cd {$versions_dir}/{$this->inst_version}/util; sudo ./create_instance.sh {$this->inst_seq}", $output);
 
         // must find 2 OK in the output.
         $n = 0;
@@ -118,20 +118,20 @@ class Instances extends SqlToClass {
             if (trim($l) == 'OK')
                 ++$n;
         }
-        if ($n != 2) {
+        if (!$n) {
             $this->error = implode(': ', $output);
             return false;
         }
         return true;
     }
 
-    public function remove_directory() {
+    public function remove_directory($versions_dir = '/home/instances/versions') {
         if (empty($this->inst_version) || empty($this->inst_seq)) {
             die("Before calling create_files(), please set the inst_seq and inst_version paramenters");
             return false;
         }
         $output = array();
-        exec("cd /home/instances/versions/{$this->inst_version}/util; sudo ./delete_instance.sh {$this->inst_seq}", $output);
+        exec("cd {$versions_dir}/{$this->inst_version}/util; sudo ./delete_instance.sh {$this->inst_seq}", $output);
         if (!empty($output))
             return false;
         // FIXME: parse output for errors.

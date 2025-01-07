@@ -113,7 +113,7 @@ else if ($svc == "INSTANCE") {
 
 		// excluir
 		// apagar diretorio.
-		if ($inst->remove_directory() && $inst->delete($dbconn) && $dbconn->commit()) {
+		if ($inst->remove_directory($versions_dir) && $inst->delete($dbconn) && $dbconn->commit()) {
 			$result->status = true;
 			$result->error = "Instância excluída";
 		}

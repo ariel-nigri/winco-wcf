@@ -50,6 +50,7 @@ class ServicePanel extends ServicePanelBase {
 			$this->params['inst_num_of_passwd_to_store']	= 0;
 			$this->params['inst_max_pwd_age']	= 0;
 			$this->params['inst_version'] 	= file_get_contents("{__DIR__}/../../../config/current_version_{$product_code}.cfg");
+			$this->params['inst_expiration'] = date('Y-m-d', time() + (30*86400));
 		}
 		$this->copyParamsFrom($this->inst_params);
 		$this->form->data->new_privs = 'A';
@@ -88,7 +89,7 @@ class ServicePanel extends ServicePanelBase {
 	}
 		
 	function saveParamsToServer() {
-		global $db_conn;
+		global $db_conn, $versions_dir;
 		
 		$instance = new $this->instance_class;
 		$instance->worker_seq = $this->params['worker_seq'];
@@ -122,8 +123,8 @@ class ServicePanel extends ServicePanelBase {
 			// materialize at worker. Notice that since inst_seq is the primary key
 			//if (!$this->instance_control('activate'))
 			//	return false;
-			if (!$instance->init_directory()) {
-				$this->last_error = 'Cannot initialize instance files';
+			if (!$instance->init_directory($versions_dir)) {
+				$this->last_error = $instance->error ? : 'Cannot initialize instance files';
 				return false;
 			}
 		}

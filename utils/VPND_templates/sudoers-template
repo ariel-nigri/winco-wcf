@@ -1,5 +1,4 @@
 Defaults:apache   ! requiretty
-
 Defaults env_keep += "product_code"
 
 apache      ALL = (ALL) NOPASSWD: %%wcf_dir%%/utils/inst-ctl,/bin/systemctl
