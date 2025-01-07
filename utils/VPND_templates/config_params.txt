@@ -11,10 +11,10 @@ key_file=/home/nigri/cert/privkey.pem	# key file
 
 db_name=connectas						
 db_user=connectas
-db_pass=devel
-db_host=				# empty for localhost
+db_pass=pass123
+db_host=localhost
 
 # Database Initialization
 create_db=yes				# it will only create if it doesnt exist
-admin_user=nigri@winco.com.br		# will only create the admin if creating the database
+admin_user=admin@bluepex.com		# will only create the admin if creating the database
 admin_pass=123Mudar
