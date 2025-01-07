@@ -65,7 +65,7 @@ db_install() {
 		./usu-ctl regadmin Admin ${admin_user} ${admin_pass}
 
 		# register ourselves as a worker
-		echo "INSERT INTO workers (worker_hostname, worker_frontend, worker_active) VALUES('${my_host}.${base_domain}', '${my_host}.${base_domain}', 1);" \
+		echo "INSERT INTO workers (worker_hostname, worker_frontend, worker_ip, worker_active) VALUES('${my_host}.${base_domain}', '${my_host}.${base_domain}', '127.0.0.1', 1);" \
 		| sudo mysql ${db_name}
 
 	fi
